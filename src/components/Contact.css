@@ -1,0 +1,64 @@
+.contactBlock .ant-form {
+    max-width: 640px;
+    margin: auto;
+  }
+  
+  .contactBlock .ant-form textarea {
+    min-height: 120px;
+    height: 120px;
+  }
+   
+  .container-fluid {
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: 0 15px;
+  }
+  
+  .ant-layout {
+    background: #fff !important;
+  }
+  
+  .mainLayout .ant-layout-header {
+    background: #f8f8f8;
+    padding: 0;
+    height: auto;
+    line-height: 1.6;
+  }
+  
+  p {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  .bgGray {
+    background: #fafafa;
+  }
+  
+  
+  .titleHolder {
+    text-align: center;
+    position: relative;
+    padding: 0 0 20px;
+    margin: 0 0 40px;
+  }
+  
+  .titleHolder:after {
+    transform: translateX(-50%);
+    content: '';
+    background: #1890ff;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    height: 3px;
+    width: 50px;
+    
+  }
+  
+  .titleHolder h2 {
+    font-size: 28px;
+    margin: 0;
+  }
+  .block {
+    padding: 150px 0;
+    border-bottom: 1px solid #d9d9d9;
+  }

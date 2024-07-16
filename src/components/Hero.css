@@ -1,0 +1,131 @@
+
+.hero{
+    width: 100%;
+    height: 100vh;
+    position: relative;
+    background-image: url('../assets/background-web1.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+}
+
+.hero-mid{
+    width: 100%;
+    height: 70vh;
+    position: relative;
+}
+.hero-mid h1{
+    padding-top: 4rem !important;
+}
+.hero-text{
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    width: 100%;
+
+}
+.hero-text h1{
+    font-size: 3rem;
+    font-weight: 800;
+    background: black;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    z-index: 2; /* Đảm bảo nội dung hiển thị trên lớp phủ và hình nền */
+}
+.hero-text p {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(75deg, #00ffff, #ff00c3);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 0.5rem 0 2rem 0;
+    z-index: 2;
+    position: relative; /* Đảm bảo bối cảnh vị trí cho các phần tử giả */
+}
+
+.hero-text p::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+    position: absolute;
+    right: 0;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+.hero-text .show{
+    text-decoration: none;
+    background:#000;
+    border-radius: 26px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #fff;
+    padding: 1rem 2rem;
+    position: relative;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    border: none;
+    gap: 12px;
+    cursor: pointer;
+}
+.hero-text .show::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    left: -4px;
+    top: -1px;
+    margin: auto;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(-45deg, #e81cff 0%, #40c9ff 100% );
+    z-index: -10;
+    pointer-events: none;
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .hero-text .show::after {
+    content: "";
+    z-index: -1;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(-45deg, #fc00ff 0%, #00dbde 100% );
+    transform: translate3d(0, 0, 0) scale(0.95);
+    filter: blur(20px);
+  }
+  
+  .hero-text .show:hover::after {
+    filter: blur(30px);
+  }
+  
+  .hero-text .show:hover::before {
+    box-shadow: 0 0 10px #ae00ff, 0 0 25px #001eff, 0 0 50px #ae00ff;
+}
+  
+
+
+.hero-text .hide{
+    display: none;
+}
+
+@media screen and (max-width:555px){
+    .hero-text h1{
+        font-size: 2.3rem;
+        align-items: center;
+
+    }
+    .hero-text p{
+        font-size: 2.3rem;
+        padding: 0 0 2rem 0;
+        align-items: center;
+    }
+    .hero-text .show{
+        padding: 0.6rem 1.1rem;
+        border-radius: 25px;
+        font-size: 1rem;
+    }
+}

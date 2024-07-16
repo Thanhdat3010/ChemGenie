@@ -1,0 +1,155 @@
+/* Container cho lưới các thẻ */
+.card-grid-mypost {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Styling cho từng thẻ */
+.card-mypost {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+/* Hiệu ứng khi hover vào thẻ */
+.card-mypost:hover {
+  transform: scale(1.05);
+}
+
+/* Ảnh bên trong thẻ */
+.card-mypost img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* Nội dung bên trong thẻ */
+.card-content-mypost {
+  padding: 10px;
+}
+
+/* Tiêu đề thẻ */
+.card-mypost h2 {
+  margin: 10px 0;
+}
+
+/* Tóm tắt của thẻ */
+.card-mypost p {
+  padding: 0 10px 10px;
+  color: #666;
+  flex-grow: 1;
+}
+
+/* Container cho menu ba chấm */
+.card-menu-mypost {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 40px; /* Chiều rộng của menu */
+  height: 40px; /* Chiều cao của menu */
+  background-color: rgba(255, 255, 255, 0.9); /* Màu nền của menu */
+  border-radius: 50%; /* Đường viền cong làm thành hình tròn */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
+  transition: background-color 0.3s, box-shadow 0.3s; /* Hiệu ứng chuyển đổi màu nền và đổ bóng */
+}
+
+/* Khi hover vào */
+.card-menu-mypost:hover {
+  background-color: rgba(255, 255, 255, 0.7); /* Đổi màu nền khi hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Tăng độ sâu của đổ bóng khi hover */
+}
+
+/* Nút ba chấm */
+.menu-button-mypost {
+  color: #555; /* Màu của biểu tượng ba chấm */
+  font-size: 18px; /* Kích thước của biểu tượng */
+  cursor: pointer;
+  background-color: transparent; /* Nền trong suốt */
+  border: none;
+  transition: color 0.3s; /* Hiệu ứng chuyển đổi màu chữ */
+}
+
+/* Khi hover vào */
+.menu-button-mypost:hover {
+  color: #333; /* Đổi màu của biểu tượng khi hover */
+}
+
+/* Dropdown menu */
+.dropdown-mypost {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+/* Item trong dropdown menu */
+.dropdown-item-mypost {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown-item-mypost:hover {
+  background-color: #f1f1f1;
+}
+
+/* Xác nhận xóa */
+.confirm-delete-mypost {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-delete-mypost p {
+  margin-bottom: 10px;
+}
+
+/* Container cho các nút xác nhận */
+.confirm-buttons-mypost {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Nút xác nhận xóa và hủy xóa */
+.confirm-delete-button-mypost,
+.cancel-delete-button-mypost {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.confirm-delete-button-mypost {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.cancel-delete-button-mypost {
+  background-color: #ccc;
+  margin-left: 10px;
+}

@@ -1,0 +1,194 @@
+
+  .content1{
+    display: flex;
+  }
+  .button-camera{
+    background:#1089ff;
+    transition: all 0.8s cubic-bezier(0.15, 0.83, 0.66, 1);
+    color: white;
+    height: 3.5rem;
+    width: 9rem;
+    padding: 0 2rem;
+    border-radius: 1rem;
+    border: none;
+    margin-top: 15px;
+    font-size: 30px; 
+  }
+  
+  .button-camera:hover{
+    transform: scale(1.05);
+  }
+  
+  #title{
+    margin-top: 100px;
+    margin-left: 40px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 40px;
+    color: #1089ff;
+  }
+  .webcam{
+    justify-content: center; 
+  } 
+  .my-box{
+    display: flex;
+    margin-top: 100px;
+  }
+  .my-box img{
+    margin-left: 200px;
+    margin-top: 35px;
+  }
+  
+  #myDIV p{
+    text-align: center;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 25px;
+    border-radius: 25px;
+    background-color: aliceblue;
+  }
+  
+  header{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 50px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: left;
+    z-index: 1000;
+  }
+  
+  header ul{
+    display: flex;
+    justify-content: center;
+    align-items: left;
+  }
+  
+  header ul li {
+    list-style: none;
+    margin-left: 20px;
+  }
+  
+  header ul li a {
+    text-decoration: none;
+    padding: 6px 15px;
+    color: white;
+    border-radius: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 400;
+    font-size: 1.3em;
+  }
+  
+  header ul li a:hover , 
+  header ul li a.active {
+    background: #fff;
+    color:black;
+  }
+  #container {
+    position: fixed;
+    z-index: 1001;
+    background-color: #1f1f1f;
+    width: 100%;
+    height: 80px;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-evenly;
+  }
+  
+  
+  #responsive-menu{
+    display: none;
+    list-style: none;
+  }
+  @media (max-width: 46.25em){
+    .menu{
+      max-height: 0;
+      overflow: hidden;
+      width: 100%;
+    }
+    #main-menu{
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    #responsive-menu{
+      display: block;
+    }
+    #responsive-menu ul.sub-menu{
+      position: absolute;
+      background-color: #1089ff;
+      padding: 15px 0px;
+      list-style: none;
+      width: 200px;
+      display: none;
+    }
+    #responsive-menu li:hover ul.sub-menu{
+      display: block;
+    }
+    #responsive-menu ul.sub-menu li a{
+      padding: 8px 15px;
+      color: white;
+    }
+    #responsive-menu ul.sub-menu li:last-child a{
+      border: none;
+    }
+    #responsive-menu li a{
+      text-decoration: none;
+      font-family: Arial, Helvetica, sans-serif;
+      color: black;
+    }
+    #responsive-menu li {
+      position: relative;
+      list-style: none;
+    }
+    .sub-menu{
+      display: block;
+    }
+    #logo{
+     width: 65%;
+    }
+    .main-footer{
+      display: none;
+    }
+    .intro{
+    text-align: center;
+    margin-left:auto;
+    background-color: transparent;
+    width: 475px;
+    height: auto;
+  }
+  .intro h1{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 25px;
+     text-align: center;
+  }
+    #pngmobile{
+      width: 35%;
+    }
+    .container label{
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    #toggler:checked ~ .menu{
+      max-height: 100%;
+    }
+    .my-box img{
+      display: none;
+    }
+  }
+  
+  /* laptop */
+  @media (max-width: 75em){
+    #title{
+    margin-top: 100px;
+    margin-left: 40px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 33px;
+    color: #1089ff;
+  }
+  }

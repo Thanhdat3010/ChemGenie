@@ -1,0 +1,354 @@
+.comments-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  font-family: Arial, sans-serif;
+}
+
+.comments-container h3 {
+  text-align: left;
+  margin-bottom: 20px;
+  font-size: 24px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.comments-container ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.author-avatar1 {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%; /* Bọc avatar thành hình tròn */
+  margin-right: 10px;
+}
+
+.comments-container li {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.comment-user {
+  margin: 0;
+  font-weight: bold;
+  color: #333;
+}
+
+.comment-content {
+  margin: 5px 0 0 0;
+  color: #555;
+  white-space: pre-wrap; /* Preserve line breaks */
+}
+
+.actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.actions .dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.actions .dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #fff;
+  min-width: 100px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.actions .dropdown-content button {
+  color: black;
+  padding: 8px 12px;
+  text-decoration: none;
+  display: block;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.actions .dropdown-content button:hover {
+  background-color: #ddd;
+}
+
+.actions .dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.actions .dropdown-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.new-comment-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+.new-comment-form textarea {
+  padding: 12px; /* Tăng padding */
+  font-size: 16px;
+  border: 1px solid #ddd; /* Sử dụng border mềm mại */
+  border-radius: 8px; /* Tăng độ cong cho border */
+  resize: vertical;
+  min-height: 100px; /* Tăng chiều cao tối thiểu */
+  transition: border-color 0.3s, box-shadow 0.3s; /* Thêm hiệu ứng transition */
+}
+
+.new-comment-form textarea:focus {
+  border-color: #007BFF; /* Thay đổi màu border khi focus */
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); /* Thêm shadow khi focus */
+  outline: none; /* Loại bỏ outline */
+}
+
+.new-comment-form textarea:hover {
+  border-color: #aaa; /* Thay đổi màu border khi hover */
+}
+
+.submit-comment {
+  align-self: flex-end;
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-comment:hover {
+  background-color: #0056b3;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.comment-content {
+  text-align: left;
+}
+
+.comment-user {
+  text-align: left;
+}
+
+.edit-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  margin-right: 5px; /* Khoảng cách giữa Edit và Cancel */
+}
+
+.cancel-button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+}
+
+.edit-button {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.edit-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+.comment-icons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: flex-start;
+}
+
+.comment-button-like,
+.comment-button-dislike,
+.comment-button-reply {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #333; /* Màu mặc định */
+  transition: color 0.3s ease; /* Hiệu ứng chuyển đổi màu */
+}
+
+.comment-button-like:hover,
+.comment-button-dislike:hover,
+.comment-button-reply:hover {
+  color: #1877f2; /* Màu xanh dương khi rê chuột vào */
+}
+
+.comment-button-like.liked ,
+.comment-button-dislike.liked,
+.comment-button-reply.liked {
+  color: #1877f2; /* Màu xanh dương khi đã thích */
+}
+
+.comment-details {
+  flex: 1;
+}
+
+.replies-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0 0 0;
+}
+
+.replies-list li {
+  margin-left: 40px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.toggle-replies-button {
+  color: #007BFF;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  background-color: white;
+  display: block;
+  width: 100%;
+  transition: box-shadow 0.3s ease; /* Hiệu ứng transition */
+}
+
+.toggle-replies-button:hover {
+  box-shadow: 0 0 5px 2px #007BFF; /* Hiệu ứng box-shadow khi hover */
+}
+
+.dots-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.dot {
+  height: 20px;
+  width: 20px;
+  margin-right: 10px;
+  border-radius: 10px;
+  background-color: #b3d4fc;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.dot:last-child {
+  margin-right: 0;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.3s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.1s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.edited-label {
+  color: #888;
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+.Timestamp{
+  color: #888;
+  font-size: 0.9em;
+  margin-left: 5px;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    background-color: #b3d4fc;
+    box-shadow: 0 0 0 0 rgba(178, 212, 252, 0.7);
+  }
+
+  50% {
+    transform: scale(1.2);
+    background-color: #6793fb;
+    box-shadow: 0 0 0 10px rgba(178, 212, 252, 0);
+  }
+
+  100% {
+    transform: scale(0.8);
+    background-color: #b3d4fc;
+    box-shadow: 0 0 0 0 rgba(178, 212, 252, 0.7);
+  }
+}
+
+/* Responsive adjustments */
+@media only screen and (max-width: 600px) {
+  .comments-container {
+    max-width: 100%;
+    margin: 10px;
+  }
+
+  .author-avatar1 {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
+  }
+
+  .comments-container h3 {
+    font-size: 20px;
+  }
+
+  .new-comment-form textarea {
+    font-size: 14px;
+  }
+
+  .new-comment-form button {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  .edit-button,
+  .cancel-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}

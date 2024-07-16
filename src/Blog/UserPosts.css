@@ -1,0 +1,48 @@
+/* Container cho lưới các thẻ */
+.card-grid-user-posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  /* Styling cho từng thẻ */
+  .card-user-post {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+    transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+  }
+  
+  /* Hiệu ứng khi hover vào thẻ */
+  .card-user-post:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Ảnh bên trong thẻ */
+  .card-user-post img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  /* Nội dung bên trong thẻ */
+  .card-content-user-post {
+    padding: 10px;
+  }
+  
+  /* Tiêu đề thẻ */
+  .card-user-post h2 {
+    margin: 10px 0;
+  }
+  
+  /* Tóm tắt của thẻ */
+  .card-user-post p {
+    padding: 0 10px 10px;
+    color: #666;
+    flex-grow: 1;
+  }

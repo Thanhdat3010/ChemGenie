@@ -1,0 +1,170 @@
+.post-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-title {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.post-meta {
+  font-size: 0.9em;
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.post-content {
+  font-size: 1.2em;
+  line-height: 1.6;
+  color: #333;
+  text-align: left; /* Đảm bảo nội dung được căn trái */
+
+}
+
+.back-link {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 20px;
+  color: #fff;
+  background-color: #333;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+.author-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.back-link:hover {
+  background-color: #555;
+}
+
+
+.avatar-container.active .dropdown-menu {
+  display: block; /* Hiển thị dropdown menu khi phần tử cha có class 'active' */
+}
+.post-actions {
+  text-align: center; /* Để căn giữa nút thích và nút bình luận */
+}
+
+.like-button {
+  display: inline-block; /* Hiển thị các nút trên cùng một hàng */
+  padding: 10px 20px;
+  font-size: 1em;
+  border-color: #3b5998; /* Màu của Facebook cho nút like */
+  background-color: transparent; /* Nền trong suốt */
+  border-radius: 40px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s; /* Hiệu ứng chuyển đổi màu */
+  margin: 0 10px; /* Khoảng cách giữa các nút */
+}
+.comment-button {
+  display: inline-block; /* Hiển thị các nút trên cùng một hàng */
+  padding: 10px 20px;
+  font-size: 1em;
+  border-color: #3b5998; /* Màu của Facebook cho nút like */
+  background-color: transparent; /* Nền trong suốt */
+  border-radius: 40px;
+  cursor: pointer;
+  transition: color 0.3s; /* Chuyển đổi màu khi di chuột qua */
+  margin: 0 10px; /* Khoảng cách giữa các nút */
+}
+
+.like-button:hover {
+  background-color: #f0f2f5; /* Màu nền khi di chuột qua */
+}
+
+.like-button.liked {
+  background-color: #0084ff; /* Màu nền xanh khi nút được nhấn */
+  color: #fff; /* Màu chữ trắng khi nút được nhấn */
+}
+.like-button .icon-like {
+  margin-right: 5px; /* Khoảng cách giữa biểu tượng và văn bản */
+  transition: transform 0.3s ease; /* Hiệu ứng chuyển đổi khi nút được nhấn */
+}
+
+.like-button.liked .icon-like {
+  animation: bounce 0.4s ease; /* Thêm hiệu ứng nhảy khi nút được nhấn */
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0); /* Không di chuyển ban đầu */
+  }
+  25% {
+    transform: translateY(-5px); /* Di chuyển lên */
+  }
+  50% {
+    transform: translateY(0); /* Di chuyển xuống */
+  }
+  75% {
+    transform: translateY(-2px); /* Di chuyển lên */
+  }
+  100% {
+    transform: translateY(0); /* Di chuyển xuống */
+  }
+}
+.comment-button:hover {
+  background-color: #f0f2f5; /* Màu nền khi di chuột qua */
+}
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Điều chỉnh chiều cao theo ý muốn */
+}
+
+.wrapper-post {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.ball {
+  --size: 16px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 11px;
+  margin: 0 10px;
+
+  animation: 2s bounce ease infinite;
+}
+
+.blue {
+  background-color: #4285f5;
+}
+
+.red {
+  background-color: #ea4436;
+  animation-delay: 0.25s;
+}
+
+.yellow {
+  background-color: #fbbd06;
+  animation-delay: 0.5s;
+}
+
+.green {
+  background-color: #34a952;
+  animation-delay: 0.75s;
+}
+
+@keyframes bounce {
+  50% {
+    transform: translateY(25px);
+  }
+}
+@media (max-width: 768px) {
+  .author-avatar {
+    max-height: 40px !important;
+    max-width: 40px !important;
+  }
+}

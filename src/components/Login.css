@@ -1,0 +1,82 @@
+.Login {
+  background-color: white;
+}
+
+.Auth-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+.Auth-form {
+  width: 420px;
+  box-shadow: rgb(0 0 0 / 16%) 1px 1px 10px;
+  padding-top: 30px;
+  padding-bottom: 20px;
+  border-radius: 8px;
+  background-color: white;
+}
+
+.Auth-form-content {
+  padding-left: 12%;
+  padding-right: 12%;
+}
+
+.Auth-form-title {
+  text-align: center;
+  margin-bottom: 1em;
+  font-size: 24px;
+  color: rgb(34, 34, 34);
+  font-weight: 800;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(34, 34, 34);
+}
+.btn-google {
+  display: inline-block;
+  background-color: transparent; /* Đổi màu nền thành trong suốt */
+  border: 2px solid #000000; /* Thay đổi màu viền thành đen */
+  color: #000000; /* Đổi màu chữ thành đen */
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 20px;
+}
+
+.btn-google:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* Hiển thị một màu nền nhẹ khi hover */
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+.Auth-form-content a {
+  color: #007bff; /* Màu của link */
+  text-decoration: none; /* Loại bỏ gạch chân */
+  cursor: pointer; /* Biểu tượng con trỏ khi hover */
+}
+
+.Auth-form-content a:hover {
+  text-decoration: underline; /* Gạch chân khi hover */
+}
+
+
+/* Kiểu cho phần hiển thị lỗi */
+.errorLabel {
+  color: #dc3545; /* Màu đỏ tương phản */
+  font-size: 0.85rem; /* Kích thước font nhỏ hơn */
+  margin-top: 0.25rem; /* Giảm khoảng cách giữa các phần tử */
+}
+
+.link-primary{
+  cursor: pointer;
+}

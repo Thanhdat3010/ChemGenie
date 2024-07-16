@@ -1,0 +1,59 @@
+.onthi-layout{
+    margin: 100px 0;
+    
+}
+.sider-menu {
+    background: #001529; /* Màu nền cho sidebar */
+  }
+  
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: white; /* Màu chữ */
+  }
+  
+  .ant-menu-item-selected {
+    background-color: #1890ff !important;
+    color: white !important;
+  }
+  
+  .ant-menu-item:hover,
+  .ant-menu-submenu-title:hover {
+    background-color: #004080 !important; /* Màu nền khi hover */
+    color: #ffffff !important;
+  }
+  
+  .ant-menu-item-icon {
+    font-size: 18px;
+  }
+  
+  .ant-menu-item .anticon,
+  .ant-menu-submenu-title .anticon {
+    font-size: 18px;
+    margin-right: 8px;
+  }
+  
+  .onthi-progress-bar {
+    margin: 20px 0;
+  }
+  
+  .onthi-content-wrapper {
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .ant-layout-sider {
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .ant-tooltip-inner {
+    background-color: #1890ff;
+    color: white;
+  }
+  
+  .ant-tooltip-arrow-content {
+    background-color: #1890ff;
+  }

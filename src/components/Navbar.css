@@ -1,0 +1,246 @@
+.NavbarItems {
+    background-color: transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    width: 100%; /* Full width */
+    height: 100px; /* Height of navbar */
+    border-radius: 0px;
+    position: fixed;
+    top: 0; /* Stick to the top */
+    left: 0; /* Stick to the left */
+    right: 0; /* Stick to the right */
+    margin-left: auto; /* Center the navbar */
+    margin-right: auto; /* Center the navbar */
+    z-index: 9999;
+    transition: 0.3s ease;
+
+}
+.NavbarItems.solid {
+    background-color: rgba(255, 255, 255, 1); /* Chuyển sang màu trắng không trong suốt */
+    border-bottom: 1px solid #cccccc; /* Thêm viền dưới màu xám */
+
+}
+.navbar-logo {
+    color: #222;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.logo {
+    height: 100px;
+    width: 100px;
+}
+
+.nav-menu {
+    display: grid;
+    grid-template-columns: repeat(7, auto);
+    list-style: none;
+    grid-gap: 10px;
+    align-items: center;
+}
+
+.nav-links {
+    text-decoration: none;
+    color: #222;
+    font-size: 1.2rem;
+    padding: 0.7rem 1rem;
+    white-space: nowrap;
+    font-weight: bold;
+    position: relative;
+}
+
+.nav-links::before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #6d92d0;
+    transition: 0.3s;
+}
+.nav-links.active::before {
+    width: 100%; /* Hiển thị gạch chân cho nav link hiện tại */
+}
+.nav-links:hover::before {
+    width: 100%;
+}
+
+.nav-links i {
+    padding-right: 10px;
+}
+.avatar-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.navbar-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover; /* Đảm bảo hình ảnh không bị méo */
+    cursor: pointer;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
+
+}
+
+.avatar-container.active .dropdown-menu {
+    display: block; /* Hiển thị dropdown menu khi phần tử cha có class 'active' */
+}
+
+.Profile a{
+    text-align: center;
+    font-weight: bold;
+    display: block;
+    padding: 0.5rem;
+    color: #333;
+    text-decoration: none;
+}
+.Profile a:hover{
+    background-color: #f0f0f0;
+}
+.Logout a{
+    text-align: center;
+    font-weight: bold;
+    display: block;
+    padding: 0.5rem;
+    color: #333;
+    text-decoration: none;
+}
+.Logout a:hover{
+    background-color: #f0f0f0;
+    color: red;
+    transition: 0.3s;
+
+}
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px); /* Hiển thị dropdown menu ngay phía dưới avatar */
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: none; /* Ẩn dropdown menu mặc định */
+}
+
+.dropdown-menu li {
+    list-style: none;
+}
+
+.nav-links-mobile {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    white-space: nowrap;
+    border-radius: 0.3rem;
+    color: black;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+    text-decoration: none; /* Loại bỏ gạch chân mặc định cho liên kết */
+}
+
+.nav-links-mobile:hover {
+    background-color: black;
+    color: #fff;
+}
+
+.menu-icons {
+    display: none;
+}
+
+@media screen and (max-width: 850px) {
+    .NavbarItems {
+        z-index: 9999999999999999999;
+    }
+    .nav-links::before {
+        display: none;
+    }
+    .nav-menu {
+        display: flex;
+        flex-direction: column;
+        justify-self: flex-start;
+        text-align: center;
+        background: #fff;
+        width: 100%;
+        height: auto;
+        position: absolute;
+        top: 0;
+        left: -100%;
+        opacity: 0;
+        align-items: stretch;
+        padding: 20px 0; /* Giảm padding giữa các mục để tránh tràn */
+        margin: 0;
+        transition: 0.3s ease-in-out;
+    }
+
+    .nav-menu.active {
+        left: 0;
+        opacity: 1;
+        z-index: 100; /* Đảm bảo menu nằm trên các thành phần khác */
+        transition: 0.3s ease-in-out;
+    }
+
+    .nav-links {
+        display: block;
+        width: 100%;
+        font-size: 1.4rem; /* Giảm kích thước font để phù hợp với màn hình nhỏ */
+        padding: 0.8rem 0; /* Giảm padding để giảm chiều cao của từng mục */
+    }
+
+    
+
+    .nav-links-mobile {
+        display: block;
+        text-align: center;
+        padding: 1rem; /* Giảm padding để phù hợp hơn trên màn hình nhỏ */
+        margin: auto;
+        border-radius: 4px;
+        background: #01959a;
+        text-decoration: none;
+        color: #fff;
+        font-size: 1rem; /* Giảm kích thước font */
+        font-weight: 700;
+        letter-spacing: 1px; /* Giảm khoảng cách giữa các chữ */
+    }
+
+    .avatar-container {
+        position: relative; /* Đặt vị trí tương đối cho avatar để dropdown phù hợp */
+    }
+
+    .dropdown-menu {
+        display: none; /* Ẩn dropdown menu khi chưa kích hoạt */
+        position: absolute;
+        top: 50px; /* Đặt vị trí dưới avatar */
+        left: 50%; /* Căn giữa dropdown */
+        transform: translateX(-50%); /* Dịch chuyển dropdown về phía trung tâm */
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); /* Thêm bóng để dễ nhìn */
+        z-index: 101; /* Đảm bảo dropdown hiển thị trên cùng */
+    }
+
+    .avatar-container.active .dropdown-menu {
+        display: block; /* Hiển thị dropdown khi avatar được kích hoạt */
+    }
+
+    .menu-icons {
+        display: block;
+        cursor: pointer;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 999999;
+
+    }
+
+    .menu-icons i {
+        font-size: 2.5rem;
+        color: #222;
+    }
+}

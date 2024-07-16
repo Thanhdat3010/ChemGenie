@@ -1,0 +1,25 @@
+.gioithieu {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+}
+
+.gioithieu.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Hiệu ứng màu mè */
+.gioithieu.show .container {
+    background-color: rgba(255, 255, 255, 0.9); /* Màu nền với độ trong suốt */
+    border-radius: 10px; /* Bo góc */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* Đổ bóng */
+    transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+/* Hiệu ứng hover */
+.gioithieu .container:hover {
+    background-color: rgba(255, 255, 255, 1); /* Màu nền khi hover */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2); /* Đổ bóng khi hover */
+    transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}

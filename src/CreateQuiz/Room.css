@@ -1,0 +1,62 @@
+.room-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 600px;
+  }
+  
+  .room-page h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .create-room,
+  .join-room {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .create-room input,
+  .join-room input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  .create-room select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  .create-room button,
+  .join-room button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .create-room button:hover,
+  .join-room button:hover {
+    background-color: #45a049;
+  }
+  
+  .create-room p {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #333;
+  }
