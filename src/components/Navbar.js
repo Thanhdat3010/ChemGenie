@@ -211,13 +211,6 @@ const Navbar = () => {
 
 
 
-
-
-
-
-
-
-
         {isLoggedIn ? (
           <li className={avatarActive ? "avatar-container active" : "avatar-container"} onClick={toggleDropdown}>
             <img alt="avatar" src={profilePictureUrl ? profilePictureUrl : avatar} className="navbar-avatar" />

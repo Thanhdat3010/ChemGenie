@@ -67,9 +67,42 @@
     cursor: pointer;
 }
 
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 50px; /* Vị trí dưới avatar */
+    left: 0%; /* Căn giữa dropdown */
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.9); /* Nền trong suốt nhẹ */
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bo viền nhẹ */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Bóng đổ nhẹ */
+    z-index: 101;
+    min-width: 150px; /* Đảm bảo chiều rộng tối thiểu cho dropdown */
+    overflow: hidden; /* Ẩn phần tràn */
+}
+
+.dropdown-menu li {
+    margin: 0;
+    font-size: 16px;
+}
+
+.dropdown-menu li a {
+    text-decoration: none;
+    display: block;
+    padding: 10px 15px;
+    color: #333; /* Màu chữ tối */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Hiệu ứng chuyển màu */
+}
+
+.dropdown-menu li a:hover {
+    background-color: #f0f0f0; /* Màu nền khi hover */
+    color: #7b31c9; /* Màu chữ khi hover */
+}
+
 .navbar-avatar {
-    width: 40px;
-    height: 40px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     object-fit: cover; /* Đảm bảo hình ảnh không bị méo */
     cursor: pointer;
