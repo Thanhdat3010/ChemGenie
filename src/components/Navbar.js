@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 import "./Navbar.css";
 import avatar from "../assets/profile-user.png";
+import magic from "../assets/magic-dust.png";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { auth, db } from "./firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -107,36 +108,115 @@ const Navbar = () => {
         <i className={clicked ? "fas fa-times" : "fas fa-bars"}></i>
       </div>
       <ul className={clicked ? "nav-menu active" : "nav-menu"}>
-        <li>
-          <Link className={`nav-links ${isActive('/') ? 'active' : ''}`} to="/">
-            Trang chủ
-          </Link>
-        </li>
-        <li>
-          <Link className={`nav-links ${isActive('/Flashcard') ? 'active' : ''}`} to="/Flashcard">
-            Flashcard
-          </Link>
-        </li>
-        <li>
-          <Link className={`nav-links ${isActive('/ChatbotAI') ? 'active' : ''}`} to="/Chatbot">
-            Chatbot AI
-          </Link>
-        </li>
-        <li>
-          <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
-            Lý thuyết
-          </Link>
-        </li>
-        <li>
-          <Link className={`nav-links ${isActive('/Onthi') ? 'active' : ''}`} to="/Onthi">
-            Ôn thi
-          </Link>
-        </li>
-        <li>
-          <Link className={`nav-links ${isActive('/Tainguyen') ? 'active' : ''}`} to="/Tainguyen">
-            Tài nguyên và thảo luận
-          </Link>
-        </li>
+      <li>
+  <Link className={`nav-links ${isActive('/') ? 'active' : ''}`} to="/">
+    Trang chủ
+  </Link>
+</li>
+
+<li className="dropdown">
+  <Link className={`nav-links ${isActive('/Onthi') ? 'active' : ''}`} to="/Onthi">
+    Ôn thi <i className="bx bx-chevron-down arrow"></i>
+  </Link>
+  <ul className="dropdown-content">
+    <li>
+      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+    Lý thuyết
+  </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+    E-learning
+  </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+    Trắc nghiệm
+  </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+    Tạo đề thi
+  </Link>
+    </li>
+    <li>
+    <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+    Phòng thi ảo
+  </Link>
+    </li>
+  </ul>
+</li>
+
+<li className="dropdown">
+  <Link className={`nav-links ${isActive('/Flashgen') ? 'active' : ''}`} to="/Flashgen">
+    Flashgen <i className="bx bx-chevron-down arrow"></i>
+  </Link>
+  <ul className="dropdown-content">
+    <li>
+      <Link className={`nav-links ${isActive('/Flashcard') ? 'active' : ''}`} to="/Flashcard">
+        Bảng tuần hoàn
+      </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Flashcard') ? 'active' : ''}`} to="/Flashcard">
+        Hợp chất
+      </Link>
+    </li>
+  </ul>
+</li>
+
+<li className="dropdown">
+  <Link className={`nav-links genAI ${isActive('/GenAI') ? 'active' : ''}`} to="/GenAI">
+    Gen AI <img alt="magici" src={magic} className="magic-icon" /> <i className="bx bx-chevron-down arrow"></i>
+  </Link>
+  <ul className="dropdown-content">
+    <li>
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+        Chatbot AI
+      </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+        Gia sư AI
+      </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+        User AI
+      </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+        AI tạo đề
+      </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+        Trợ lý học tập AI
+      </Link>
+    </li>
+    <li>
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+        Flashcard AI
+      </Link>
+    </li>
+  </ul>
+</li>
+
+<li>
+<Link className={`nav-links ${isActive('/Tainguyen') ? 'active' : ''}`} to="/Tainguyen">
+        Cộng đồng
+      </Link>
+</li>
+
+
+
+
+
+
+
+
+
 
         {isLoggedIn ? (
           <li className={avatarActive ? "avatar-container active" : "avatar-container"} onClick={toggleDropdown}>

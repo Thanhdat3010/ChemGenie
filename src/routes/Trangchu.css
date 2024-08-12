@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 .gioithieu {
     opacity: 0;
     transform: translateY(20px);
@@ -22,4 +26,73 @@
     background-color: rgba(255, 255, 255, 1); /* Màu nền khi hover */
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.2); /* Đổ bóng khi hover */
     transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+.full-screen {
+    width: 100vw; /* Chiếm toàn bộ chiều rộng của màn hình */
+    height: auto; /* Chiếm toàn bộ chiều cao của màn hình */
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+
+.full-height {
+    flex: 1; /* Chiếm toàn bộ chiều cao */
+    display: flex;
+    align-items: center;
+}
+
+.home-bg {
+    background-size: cover; /* Đảm bảo ảnh nền phủ toàn bộ màn hình */
+    background-position: center; /* Đặt vị trí ảnh nền */
+}
+
+.tilted-image {
+    max-width: 536px; /* Đảm bảo ảnh không bị giới hạn kích thước */
+    height: 536px;     /* Giữ tỉ lệ ảnh */
+}
+
+.content {
+    color: #372c4f;
+    font-weight: 600;
+    font-family: "Inter";
+}
+
+.Xtitle {
+    font-family: "Poppins";
+    font-weight: 700;
+    font-size: 60px;
+    color: #372c4f;
+}
+
+.sm-title {
+    font-weight: bold;
+    color: #7b31c9;
+}
+
+.btn-down {
+  background: linear-gradient(-90deg, #e383c9, #d77eda, #c375ef, #b671ff);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.shape {
+    background: linear-gradient(-90deg, #e383c9, #d77eda, #c375ef, #b671ff);
+    width: 100vw;
+    height: 100px;
+    margin-top: -145px;
+}
+
+@media screen and (max-width: 850px) {
+    .Xtitle {
+        font-size: 35px;
+    }
 }

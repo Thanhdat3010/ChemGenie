@@ -1,64 +1,35 @@
-.contactBlock .ant-form {
-    max-width: 640px;
-    margin: auto;
-  }
-  
-  .contactBlock .ant-form textarea {
-    min-height: 120px;
-    height: 120px;
-  }
-   
-  .container-fluid {
-    margin: 0 auto;
-    max-width: 1200px;
-    padding: 0 15px;
-  }
-  
-  .ant-layout {
-    background: #fff !important;
-  }
-  
-  .mainLayout .ant-layout-header {
-    background: #f8f8f8;
-    padding: 0;
-    height: auto;
-    line-height: 1.6;
-  }
-  
-  p {
-    font-size: 16px;
-    line-height: 1.6;
-  }
-  
-  .bgGray {
-    background: #fafafa;
-  }
-  
-  
-  .titleHolder {
-    text-align: center;
-    position: relative;
-    padding: 0 0 20px;
-    margin: 0 0 40px;
-  }
-  
-  .titleHolder:after {
-    transform: translateX(-50%);
-    content: '';
-    background: #1890ff;
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    height: 3px;
-    width: 50px;
-    
-  }
-  
-  .titleHolder h2 {
-    font-size: 28px;
-    margin: 0;
-  }
-  .block {
-    padding: 150px 0;
-    border-bottom: 1px solid #d9d9d9;
-  }
+.full-screen1 {
+  width: 100vw; /* Chiếm toàn bộ chiều rộng của màn hình */
+  height: auto; /* Chiếm toàn bộ chiều cao của màn hình */
+  background-color: #fff;
+  padding: 50px;
+}
+
+.feedback-container {
+  background: linear-gradient(-90deg, #e383c9, #d77eda, #c375ef, #b671ff);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: auto;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 24px;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-control {
+  border-radius: 10px;
+}
+
+.sm-button {
+  width: 40%;
+  background-color: #b671ff;
+}

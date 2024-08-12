@@ -1,73 +1,119 @@
-.Gioithieu {
-    margin: 4rem 6rem;
+
+
+.full-screen {
+    width: 100vw; /* Chiếm toàn bộ chiều rộng của màn hình */
+    height: auto; /* Chiếm toàn bộ chiều cao của màn hình */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    overflow: hidden;
 }
 
-.Gioithieu h1 {
-    font-size: 3rem;
-    padding-bottom: 1rem;
-    background: linear-gradient(90deg, #00ffff, #ff00c3);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.Gioithieu p {
-    font-size: 1.5rem;
-    text-align: center; /* Justify text alignment */
-}
-
-.first {
+.full-height {
+    flex: 1; /* Chiếm toàn bộ chiều cao */
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 4.5rem;
 }
 
-.first-text {
-    width: 45%;
-    text-align: start;
-    font-size: 1.3rem;
-    margin-bottom: auto;
+.home-bg {
+    background-size: cover; /* Đảm bảo ảnh nền phủ toàn bộ màn hình */
+    background-position: center; /* Đặt vị trí ảnh nền */
 }
 
-.first-text h2 {
-    padding-bottom: 1rem;
-    color: blueviolet;
-    font-size: 2.5rem;
+.model-image {
+    max-width: 536px; /* Đảm bảo ảnh không bị giới hạn kích thước */
+    max-height: 536px;     /* Giữ tỉ lệ ảnh */
+    border-radius: 25px;
 }
 
-.first-text h3 {
-    padding-bottom: 1rem;
-    font-size: 1.6rem;
+.Xtext {
+    font-family: "Inter";
+    font-size: 30px;
+    font-weight: 600;
 }
 
-.first-text p1 {
-    font-weight: bold;
+.sm-text {
+    color: #7b31c9;
 }
 
-.first-text p3 {
-    font-weight: bold;
+.md-slogan {
+    font-size: 25px;
+    font-weight: 600;
+    font-family: "Inter";
 }
 
-.image {
-    position: relative;
-    width: 50%;
+.i-content {
+    text-align: left;
+    font-size: 16px;
+    font-family: "Inter";
+    font-weight: 600;
+}
+
+.md-content {
+    font-size: 22px;
+    font-weight: 600;
+    font-family: "Inter";
+    color: #7b31c9;
+}
+
+.skill-item {
+    background-color: #fff; /* Nền màu trắng */
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    max-width: 400px;
+    height: 220px;
+    justify-content: center;
+    text-align: left;
+}
+
+.skill-item:hover {
+    transform: translateY(-5px);
+}
+
+.skill-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #452a70;
+    margin-bottom: 10px;
+}
+
+.skill-class {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.skill-content {
+    font-size: 14px;
+    color: #000;
+}
+
+.Xskill {
+    color: #fff;
+    margin-top: 30px;
+}
+
+.sm-skill {
+    color: #fff;
+    text-align: center;
+    font-size: 22px;
+}
+
+.fb-w {
+    width: 100%;
+    height: auto;
     display: flex;
-    justify-content: space-between;
-}
-
-.image img {
-    width: 49%;
-    height: 350px;
-    object-fit: cover;
-    border-radius: 6px;
-    box-shadow: -1px 1px 62px -18px rgba(0, 0, 0, 0.19);
-}
-
-.image img:nth-child(2) {
-    position: absolute;
-    top: -10%;
-    right: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px; /* Khoảng cách giữa các thẻ */
+    background: linear-gradient(-90deg, #e383c9, #d77eda, #c375ef, #b671ff);
+    overflow: hidden;
+    padding: 50px;
 }
 
 @media screen and (max-width: 850px) {
@@ -105,5 +151,11 @@
     }
     .first-text h3 {
         font-size: 1.4rem; /* Adjusted for smaller screens */
+    }
+    .Xtext {
+        font-size: 24px;
+    }
+    .sm-text {
+        font-size: 22px;
     }
 }

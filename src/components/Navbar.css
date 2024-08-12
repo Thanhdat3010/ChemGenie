@@ -45,32 +45,23 @@
     text-decoration: none;
     color: #222;
     font-size: 1.2rem;
-    padding: 0.7rem 1rem;
+    padding: 0.5rem 0.8rem;
     white-space: nowrap;
-    font-weight: bold;
+    font-weight: 500;
+    font-family: "Inter";
     position: relative;
 }
 
-.nav-links::before {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: #6d92d0;
-    transition: 0.3s;
-}
-.nav-links.active::before {
-    width: 100%; /* Hiển thị gạch chân cho nav link hiện tại */
-}
-.nav-links:hover::before {
-    width: 100%;
-}
 
 .nav-links i {
     padding-right: 10px;
 }
+
+.genAI {
+    border: 3px solid #b671ff;
+    border-radius: 10px;
+}
+
 .avatar-container {
     position: relative;
     cursor: pointer;
@@ -115,43 +106,84 @@
     transition: 0.3s;
 
 }
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 10px); /* Hiển thị dropdown menu ngay phía dưới avatar */
-    right: 0;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: none; /* Ẩn dropdown menu mặc định */
-}
-
-.dropdown-menu li {
+/* Mũi tên Boxicons */
+.arrow {
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+  }
+  
+  /* Dropdown menu */
+  .dropdown-content {
     list-style: none;
-}
+    padding: 0;
+    margin: 5px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: none;
+    border-radius: 5px;
+    background-color: #fff;
+    border-bottom: #f1f1f1;
+    text-align: left;
+    z-index: 1000;
+  }
+  
+  /* Hiển thị dropdown menu khi hover */
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+  
+  /* Xoay mũi tên lên khi hover */
+  .dropdown:hover .arrow {
+    transform: rotate(180deg);
+  }
+  
+  /* Link trong dropdown */
+  .dropdown-content li {
+    margin: 0;
+    font-size: 16px;
+  }
+  
+  .dropdown-content li a {
+    text-decoration: none;
+    display: block;
+    padding: 5px 10px;
+    color: #000;
+  }
+  
+  .dropdown-content li a:hover {
+    color: #7b31c9;
+    border: 10px;
+  }
 
 .nav-links-mobile {
     display: inline-block;
     padding: 0.5rem 1rem;
     white-space: nowrap;
-    border-radius: 0.3rem;
+    border-radius: 15px;
+    border: 3px solid #c375ef;
     color: black;
     font-size: 1.2rem;
-    font-weight: 600;
-    border: none;
+    font-weight: 500;
+    font-family: "Inter";
     cursor: pointer;
     transition: 0.3s ease-in-out;
     text-decoration: none; /* Loại bỏ gạch chân mặc định cho liên kết */
 }
 
 .nav-links-mobile:hover {
-    background-color: black;
     color: #fff;
+    background-color: #b671ff;
 }
 
 .menu-icons {
     display: none;
+}
+
+.magic-icon {
+    width: 20px; /* Thay đổi kích thước icon nếu cần */
+  height: 20px;
+  vertical-align: middle; /* Căn chỉnh icon với văn bản */
 }
 
 @media screen and (max-width: 850px) {
