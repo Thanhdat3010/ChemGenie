@@ -19,18 +19,18 @@ import Chapter6 from "./Chapter6/Chapter6";
 import Post from "./Blog/Post";
 import NewPost from "./Blog/NewPost";
 import MyPost from "./Blog/MyPost";
-import CreateQuiz from "./CreateQuiz/CreateQuiz";
-import CustomQuiz from "./CreateQuiz/CustomQuiz";
-import EditQuiz from "./CreateQuiz/EditQuiz";
+import CreateQuiz from "./routes/CreateQuiz";
+import CustomQuiz from "./routes/CustomQuiz";
+import EditQuiz from "./routes/EditQuiz";
 import { BackgroundProvider } from "./components/BackgroundContext";
-import Room from "./CreateQuiz/Room";
-import QuizRoom from "./CreateQuiz/QuizRoom";
-import WaitingRoom from "./CreateQuiz/WaitingRoom";
-import SolverForm from "./CreateQuiz/SolverForm";
-import AnalyzeResults from "./CreateQuiz/AnalyzeResults";
-import RecommendExercises from "./CreateQuiz/RecommendExercises";
+import Room from "./routes/Room";
+import QuizRoom from "./routes/QuizRoom";
+import WaitingRoom from "./routes/WaitingRoom";
+import SolverForm from "./routes/SolverForm";
+import AnalyzeResults from "./routes/AnalyzeResults";
+import RecommendExercises from "./routes/RecommendExercises";
 import StorytellingAI from "./CreateQuiz/StorytellingAI";
-import ExperimentProposal from "./CreateQuiz/ExperimentProposal";
+import ExperimentProposal from "./routes/ExperimentProposal";
 import Chatbot from "./routes/Chatbot";
 function App() {
   useEffect(() => {

@@ -115,7 +115,7 @@ const Navbar = () => {
 </li>
 
 <li className="dropdown">
-  <Link className={`nav-links ${isActive('/Onthi') ? 'active' : ''}`} to="/Onthi">
+  <Link className={`nav-links ${isActive('') ? 'active' : ''}`} to="">
     Ôn thi <i className="bx bx-chevron-down arrow"></i>
   </Link>
   <ul className="dropdown-content">
@@ -130,7 +130,7 @@ const Navbar = () => {
   </Link>
     </li>
     <li>
-      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+      <Link className={`nav-links ${isActive('/Onthi') ? 'active' : ''}`} to="/Onthi">
     Trắc nghiệm
   </Link>
     </li>
@@ -140,7 +140,7 @@ const Navbar = () => {
   </Link>
     </li>
     <li>
-    <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
+    <Link className={`nav-links ${isActive('/Room') ? 'active' : ''}`} to="/Room">
     Phòng thi ảo
   </Link>
     </li>
@@ -148,7 +148,7 @@ const Navbar = () => {
 </li>
 
 <li className="dropdown">
-  <Link className={`nav-links ${isActive('/Flashgen') ? 'active' : ''}`} to="/Flashgen">
+  <Link className={`nav-links ${isActive('') ? 'active' : ''}`} to="">
     Flashgen <i className="bx bx-chevron-down arrow"></i>
   </Link>
   <ul className="dropdown-content">
@@ -166,7 +166,7 @@ const Navbar = () => {
 </li>
 
 <li className="dropdown">
-  <Link className={`nav-links genAI ${isActive('/GenAI') ? 'active' : ''}`} to="/GenAI">
+  <Link className={`nav-links genAI ${isActive('') ? 'active' : ''}`} to="">
     Gen AI <img alt="magici" src={magic} className="magic-icon" /> <i className="bx bx-chevron-down arrow"></i>
   </Link>
   <ul className="dropdown-content">
@@ -176,12 +176,12 @@ const Navbar = () => {
       </Link>
     </li>
     <li>
-      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+      <Link className={`nav-links ${isActive('/SolverForm') ? 'active' : ''}`} to="/SolverForm">
         Gia sư AI
       </Link>
     </li>
     <li>
-      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+      <Link className={`nav-links ${isActive('/AnalyzeResults') ? 'active' : ''}`} to="/AnalyzeResults">
         User AI
       </Link>
     </li>

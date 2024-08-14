@@ -1,0 +1,95 @@
+.waiting-room-page {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  .exit-icon {
+    cursor: pointer;
+    float: right;
+    font-size: 1.5rem;
+    color: #333;
+    transition: color 0.3s ease;
+  }
+  
+  .exit-icon:hover {
+    color: #f44336;
+  }
+  
+  .waiting-room-page h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  
+  .waiting-room-page p {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+  }
+  
+  .members-list {
+    margin-top: 20px;
+  }
+  
+  .members-list h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  
+  .member-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .member-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  
+  .member-item p {
+    font-size: 1.1rem;
+  }
+  
+  .waiting-room-page button {
+    background-color: #7b31c9;
+    color: white;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .waiting-room-page button:hover {
+    background-color: #372c4f;
+  }
+  
+  @media (max-width: 768px) {
+    .waiting-room-page {
+      padding: 10px;
+    }
+  
+    .exit-icon {
+      font-size: 1.2rem;
+    }
+  
+    .waiting-room-page h2 {
+      font-size: 1.3rem;
+    }
+  
+    .member-item img {
+      width: 40px;
+      height: 40px;
+    }
+  
+    .member-item p {
+      font-size: 1rem;
+    }
+  }

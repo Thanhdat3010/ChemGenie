@@ -7,6 +7,20 @@
   text-align: center;
 }
 
+.questions-page h1 {
+  font-family: "Inter";
+  color: #372c4f;
+  font-weight: 800;
+}
+
+.questions-page h2 {
+  font-family: "Inter";
+  color: #372c4f;
+  font-weight: 700;
+  font-size: 28px;
+
+}
+
 .question p {
   white-space: pre-line;
   font-weight: bold;

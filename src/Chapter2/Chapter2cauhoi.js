@@ -296,7 +296,7 @@ const Chapter2cauhoi = ({ onCompletion, onReset }) => {
   if (quizCompleted) {
     return (
       <div className="questions-page">
-        <h1>Chapter 2</h1>
+        <h1>Chương 2</h1>
         <h2>Hoàn thành</h2>
         <div className="score-container">
           <p className="score-label">Điểm số của bạn:</p>
@@ -309,7 +309,7 @@ const Chapter2cauhoi = ({ onCompletion, onReset }) => {
 
   return (
     <div className="questions-page">
-      <h1>Chapter 2</h1>
+      <h1>Chương 2</h1>
       <div className="questions-container">
         <div className="progress-bar" style={{ width: `${progress}%` }}></div>
         {currentQuestion < questions.length && (

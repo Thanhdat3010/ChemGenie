@@ -1,0 +1,134 @@
+/* Block */
+.analyze-results-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Element: Tiêu đề */
+.analyze-results-page__title {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Element: Chọn loại */
+.analyze-results-page__type-select,
+.analyze-results-page__item-select {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+select {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.analyze-results-page__type-select label,
+.analyze-results-page__item-select label {
+  font-size: 16px;
+  margin-right: 10px;
+  color: #7b31c9;
+}
+
+.analyze-results-page__type-select select,
+.analyze-results-page__item-select select {
+  padding: 5px;
+  font-size: 16px;
+}
+
+/* Element: Nút Phân Tích */
+.analyze-results-page__analyze-btn {
+  display: block;
+  width: 70%;
+  padding: 10px;
+  font-size: 16px;
+  background-color: #7b31c9;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease;
+  margin: 0 auto;
+}
+
+/* Modifier: Hiệu Ứng Hover cho Nút */
+.analyze-results-page__analyze-btn:hover {
+  background-color: #372c4f;
+}
+
+/* Modifier: Nút Khi Vô Hiệu Hoá */
+.analyze-results-page__analyze-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Element: Nội Dung Phân Tích */
+.analyze-results-page__analysis-content {
+  margin-top: 20px;
+  text-align: left;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Element: Định Dạng Đoạn Văn */
+.analyze-results-page__analysis-content p {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+/* Element: Văn Bản In Đậm */
+.analyze-results-page__analysis-content strong {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Element: Văn Bản In Nghiêng */
+.analyze-results-page__analysis-content em {
+  font-style: italic;
+  color: #666;
+}
+
+/* Thiết Kế Phản Hồi */
+@media (max-width: 600px) {
+  .analyze-results-page {
+    padding: 10px;
+  }
+  
+  .analyze-results-page__title {
+    font-size: 20px;
+  }
+  
+  .analyze-results-page__analyze-btn {
+    font-size: 14px;
+    padding: 8px;
+  }
+  
+  .analyze-results-page__analysis-content {
+    font-size: 14px;
+  }
+}
+
+/* Block: Tin nhắn lỗi/thành công */
+.message {
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+/* Modifier: Tin nhắn lỗi */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Modifier: Tin nhắn thành công */
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+}

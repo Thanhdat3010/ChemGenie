@@ -1,0 +1,130 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .create-quiz-page {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .title {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .quiz-title-form,
+  .question-form,
+  .question-list {
+    margin-bottom: 30px;
+  }
+  
+  .quiz-title-form label,
+  .question-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #444;
+  }
+  
+  .quiz-title-form input,
+  .question-form input,
+  .question-form select,
+  .question-form textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  
+  .question-form input[type="text"] {
+    margin-bottom: 10px;
+  }
+  
+  .add-question-btn,
+  .save-quiz-btn {
+    display: inline-block;
+    padding: 12px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s;
+    text-align: center;
+    text-decoration: none;
+    margin-top: 10px;
+  }
+  
+  .add-question-btn:hover,
+  .save-quiz-btn:hover {
+    background: #0056b3;
+  }
+  
+  .question-list ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .question-list li {
+    background: #f9f9f9;
+    margin-bottom: 12px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: transform 0.3s;
+  }
+  
+  .question-list li:hover {
+    transform: translateY(-3px);
+  }
+  
+  .question-list p {
+    margin: 8px 0;
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 600px) {
+    .create-quiz-page {
+      padding: 15px;
+    }
+  
+    .title {
+      font-size: 20px;
+    }
+  
+    .quiz-title-form input,
+    .question-form input,
+    .question-form select,
+    .question-form textarea {
+      padding: 10px;
+      font-size: 14px;
+    }
+  
+    .add-question-btn,
+    .save-quiz-btn {
+      padding: 10px 15px;
+      font-size: 14px;
+    }
+  
+    .question-list li {
+      padding: 12px;
+    }
+  
+    .question-list p {
+      margin: 6px 0;
+    }
+  }

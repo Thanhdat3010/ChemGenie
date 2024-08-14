@@ -42,11 +42,12 @@ function Trangchulythuyet() {
   return (
     <div id="feature" className="block featureBlock bgGray">
     <div className="container-fluid">
+        <div className="box-title"><p className="box-tx">Danh sách bài học</p></div>
         <div className="titleHolder">
-            <h2>Chủ đề</h2>
+            <h2 className="topic-title">Tài liệu học trực tuyến cho luyện thi Hóa học</h2>
             <div className='Search-bar'>
-            <Input 
-                placeholder="Tìm kiếm chương..."
+            <Input
+                placeholder="Tìm kiếm chương bài học..."
                 onChange={(e) => setSearchTerm(e.target.value)}
             />
             </div>
