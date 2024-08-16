@@ -1,6 +1,8 @@
 .recommend-exercises-page {
     padding: 20px;
     text-align: center;
+    margin-top: 150px;
+    margin-bottom: 70px;
 }
 
 .recommend-exercises-questions-page {
@@ -68,7 +70,7 @@
     border: none;
     border-radius: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: #007bff;
+    background-color:  #7b31c9;
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
@@ -91,8 +93,8 @@
 .recommend-exercises-score {
     font-size: 36px;
     font-weight: bold;
-    color: #007bff;
-    border: 3px solid #007bff;
+    color:  #7b31c9;
+    border: 3px solid  #7b31c9;
     border-radius: 50%;
     width: 100px;
     height: 100px;
@@ -141,9 +143,9 @@
     cursor: pointer;
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: #007bff;
+    background-color: #7b31c9;
     transition: transform 0.3s, box-shadow 0.3s;
     margin-bottom: 10px;
 }
@@ -171,9 +173,14 @@
 }
 .recommend-exercises-analysis-content{
     margin-top: 20px;
-  text-align: left;
-  font-size: 16px;
-  line-height: 1.5;
+    text-align: left;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 1000px;
+    border: 1px solid #d9d9d9;
+    border-radius: 15px;
+    padding: 15px;
+    background-color: #fff;
 }
 .recommend-exercises-analysis-content p{
     margin-bottom: 10px;

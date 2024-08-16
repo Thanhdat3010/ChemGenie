@@ -3,6 +3,8 @@ import { db, auth } from '../components/firebase';
 import { collection, addDoc, getDoc, updateDoc, arrayUnion, query, where, doc, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import './Room.css';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Room = () => {
   const [roomId, setRoomId] = useState('');
@@ -75,6 +77,9 @@ const Room = () => {
   };
 
   return (
+    <container fluid>
+    <Navbar />
+    <section className="full-screen">
     <div className="container room-page">
     <h2 className="room-title"><span className="top-title">Phòng thi trực tuyến</span> tiết kiệm thời gian và chi phí</h2>
     <p className="text-left content-description">
@@ -120,6 +125,11 @@ const Room = () => {
       </div>
     </div>
   </div>
+    </section>
+    
+  <Footer />
+    </container>
+
   
   );
 };

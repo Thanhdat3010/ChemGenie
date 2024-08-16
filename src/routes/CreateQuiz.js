@@ -4,6 +4,9 @@ import { db, auth } from '../components/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Tesseract from 'tesseract.js';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import magic from "../assets/magic-dust.png";
 const CreateQuiz = () => {
   const initialQuestionState = {
     type: 'multiple-choice',
@@ -233,51 +236,53 @@ const CreateQuiz = () => {
   };
 
   return (
-    <div className="create-quiz-page">
-      <h1 className="create-quiz-title">Tạo Bộ Câu Hỏi</h1>
+    <container fluid>
+      <Navbar/>
+      <section className="full-screen">
+      <div className="create-quiz-page">
+      <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
+      <h2 className="solver-form-title">AI tạo đề thi</h2>
+      <p className="solver-intro">Giải pháp hoàn hảo cho giáo viên và học sinh. Tự động tạo đề thi chất lượng cao, đa dạng, phù hợp mọi cấp học. Tiết kiệm thời gian, nâng cao hiệu quả</p>
       <div className="create-quiz-title-form">
-      <label htmlFor="quizTitle">Tiêu đề bộ câu hỏi:</label>
+      <h2 className="Createquizz-title-feature">Tạo bộ đề thi cho riêng bạn</h2>
       <input
         id="quizTitle"
         name="quizTitle"
         value={quizTitle}
         onChange={(e) => setQuizTitle(e.target.value)}
-        placeholder="Nhập tiêu đề bộ câu hỏi..."
+        placeholder="Nhập tiêu đề bộ đề thi"
       />
-    </div>
-      <div className="create-quiz-config">
-        <label htmlFor="numQuestions">Số lượng câu hỏi:</label>
-        <input
+              <input
           id="numQuestions"
           name="numQuestions"
           type="number"
           value={numQuestions}
           onChange={(e) => setNumQuestions(e.target.value)}
-          placeholder="Nhập số lượng câu hỏi..."
+          placeholder="Nhập số lượng câu hỏi"
         />
-        <label htmlFor="grade">Lớp:</label>
         <select
           id="grade"
           name="grade"
           value={grade}
           onChange={(e) => setGrade(e.target.value)}
         >
-          <option value="">-- Chọn lớp --</option>
+          <option value="">Chọn lớp của bạn</option>
           {[...Array(3)].map((_, i) => (
             <option key={i} value={10 + i}>{10 + i}</option>
           ))}
         </select>
-        <label htmlFor="topic">Chủ đề:</label>
         <input
           id="topic"
           name="topic"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Nhập chủ đề..."
+          placeholder="Nhập chủ đề của đề thi"
         />
-      </div>
+    </div>
       <button className="create-quiz-add-question-btn" onClick={handleAddQuestionsFromAPI}>Tạo câu hỏi từ AI</button>
       <div className="create-quiz-file-upload">
+      <h2 className="Createquizz-title-feature">Biến hình ảnh thành bài tập chỉ trong nháy mắt!</h2>
+      <p className="solver-intro">Nếu bạn có hình ảnh câu hỏi hãy dùng tính năng này tạo đề thi</p>
       <label htmlFor="file">Tải lên tệp (png, jpg, ...):</label>
       <input
         id="file"
@@ -290,7 +295,8 @@ const CreateQuiz = () => {
     <button onClick={handleGenerateQuestions}>Tạo câu hỏi tự động</button>
       </div>
       <div className="create-quiz-question-form">
-      <label htmlFor="questionType">Loại câu hỏi:</label>
+      <h2 className="Createquizz-title-feature">Tự do sáng tạo đề: Bổ sung câu hỏi, tùy chỉnh theo ý muốn.</h2>
+      <p className="solver-intro">Bổ sung câu hỏi vào bộ đề của bạn, hãy tạo câu hỏi tại đây</p>
         <select
           id="questionType"
           name="type"
@@ -301,7 +307,6 @@ const CreateQuiz = () => {
           <option value="true-false">Đúng/Sai</option>
           <option value="fill-in-the-blank">Điền từ</option>
         </select>
-        <label htmlFor="question">Câu hỏi:</label>
         <textarea
           id="question"
           name="question"
@@ -312,7 +317,7 @@ const CreateQuiz = () => {
         />
         {currentQuestion.type === 'multiple-choice' && (
           <>
-            <label>Các lựa chọn:</label>
+            <label className="solver-intro">Tùy chỉnh các lựa chọn của câu hỏi</label>
             {[0, 1, 2, 3].map(index => (
               <input
                 key={index}
@@ -322,14 +327,13 @@ const CreateQuiz = () => {
                 placeholder={`Lựa chọn ${String.fromCharCode(65 + index)}`}
               />
             ))}
-            <label htmlFor="correctAnswer">Đáp án đúng:</label>
             <select
               id="correctAnswer"
               name="correctAnswer"
               value={currentQuestion.correctAnswer}
               onChange={handleInputChange}
             >
-              <option value="">-- Chọn đáp án đúng --</option>
+              <option value="">Chọn đáp án đúng</option>
               {[0, 1, 2, 3].map(index => (
                 <option key={index} value={currentQuestion.options[index]}>
                   {String.fromCharCode(65 + index)}
@@ -340,13 +344,12 @@ const CreateQuiz = () => {
         )}
         {currentQuestion.type === 'true-false' && (
           <div>
-            <label>Đáp án đúng:</label>
             <select
               name="correctAnswer"
               value={currentQuestion.correctAnswer}
               onChange={handleInputChange}
             >
-              <option value="">-- Chọn đáp án --</option>
+              <option value="">Chọn đáp án</option>
               <option value="true">Đúng</option>
               <option value="false">Sai</option>
             </select>
@@ -354,7 +357,6 @@ const CreateQuiz = () => {
         )}
         {currentQuestion.type === 'fill-in-the-blank' && (
           <>
-            <label htmlFor="correctAnswer">Đáp án đúng:</label>
             <input
               id="correctAnswer"
               name="correctAnswer"
@@ -364,7 +366,6 @@ const CreateQuiz = () => {
             />
           </>
         )}
-        <label htmlFor="explain">Giải thích:</label>
         <textarea
           id="explain"
           name="explain"
@@ -376,7 +377,7 @@ const CreateQuiz = () => {
     <button className="create-quiz-add-question-btn" onClick={handleAddQuestion}>Thêm câu hỏi</button>
     </div>
         <div className="create-quiz-question-list">
-      <h2>Danh sách câu hỏi</h2>
+      <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
       <ul>
       {questions.map((question, index) => (
       <li key={index}>
@@ -403,6 +404,10 @@ const CreateQuiz = () => {
 
     <button className="create-quiz-save-quiz-btn" onClick={handleSaveQuiz}>Lưu Bộ Câu Hỏi</button>
     </div>
+      </section>
+      <Footer />
+    </container>
+ 
   );
 };
 

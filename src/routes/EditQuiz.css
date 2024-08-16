@@ -4,15 +4,12 @@ body {
     margin: 0;
     padding: 0;
   }
-  
-  .create-quiz-page {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  .edit-quiz-page {
+    margin-top: 150px;
+    margin-bottom: 70px;
   }
+  
   
   .title {
     text-align: center;

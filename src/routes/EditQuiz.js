@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './EditQuiz.css';
 import { db } from '../components/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { Container } from 'react-bootstrap';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const EditQuiz = ({ quizId }) => {
   const initialQuestionState = {
@@ -123,7 +126,10 @@ const EditQuiz = ({ quizId }) => {
   };
 
   return (
-    <div className="edit-quiz-page">
+    <Container fluid >
+      <Navbar />
+      <section className="full-screen">
+      <div className="edit-quiz-page">
       <h1 className="title">Chỉnh sửa Bộ Câu Hỏi</h1>
       <div className="quiz-title-form">
         <label htmlFor="quizTitle">Tiêu đề bộ câu hỏi:</label>
@@ -236,6 +242,10 @@ const EditQuiz = ({ quizId }) => {
         <button className="save-quiz-btn" onClick={handleSaveQuiz}>Lưu bộ câu hỏi</button>
       </div>
     </div>
+      </section>
+      <Footer />
+    </Container>
+
   );
 };
 

@@ -3,17 +3,17 @@
   margin: 20px auto;
   padding: 20px;
   background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   text-align: center;
   font-family: 'Arial', sans-serif;
+  margin-top: 100px;
+  margin-bottom: 70px;
 }
 
 /* Tiêu đề */
 .solver-form-title {
-  font-size: 40px;
+  font-size: 48px;
   color: #372c4f;
-  font-weight: bold;
+  font-weight: 900;
   font-family: "Inter";
   margin-bottom: 20px;
 }
@@ -88,15 +88,15 @@
 .solver-form-answer {
   margin-top: 20px;
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: #fff;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 7px;
   text-align: left;
 }
 
 .solver-form-answer-title {
   font-size: 22px;
-  color: #333;
+  color: #7b31c9;
   margin-bottom: 10px;
 }
 

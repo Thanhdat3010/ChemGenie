@@ -1,7 +1,10 @@
+
 /* Block */
 .analyze-results-page {
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100vw; /* Chiếm toàn bộ chiều rộng của màn hình */
+  height: 100%; /* Chiếm toàn bộ chiều cao của màn hình */
+  margin-top: 150px;  /* Tạo khoảng cách giữa Thanh điều hướng và nội dung */
+  margin-bottom: 70px;  /* Tạo khoảng cách giữa nội dung và Chân trang */
   padding: 20px;
   font-family: Arial, sans-serif;
 }
@@ -21,10 +24,12 @@
   text-align: center;
 }
 
-select {
+.analyze-results-page__type-select select,
+.analyze-results-page__item-select select {
   border: 1px solid #d9d9d9;
   border-radius: 8px;
   padding: 10px;
+
 }
 
 .analyze-results-page__type-select label,
@@ -73,6 +78,12 @@ select {
   text-align: left;
   font-size: 16px;
   line-height: 1.5;
+  max-width: 1000px;
+  border: 1px solid #d9d9d9;
+  border-radius: 15px;
+  padding: 15px;
+  background-color: #fff;
+  margin: 30px auto;
 }
 
 /* Element: Định Dạng Đoạn Văn */
@@ -91,6 +102,12 @@ select {
 .analyze-results-page__analysis-content em {
   font-style: italic;
   color: #666;
+}
+
+.AI-content {
+  color: #000;
+  font-family: "Inter";
+  font-weight: 600;
 }
 
 /* Thiết Kế Phản Hồi */

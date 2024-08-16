@@ -1,11 +1,48 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { Route, Routes, Link } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../components/firebase'; 
 import BackgroundContext from '../components/BackgroundContext';
 import UserProfile from './UserProfile';
 import { debounce } from 'lodash';
-import "./Profile.css";
+import "./Profile.css"; // Đảm bảo đường dẫn đến file CSS là chính xác
+import logo from "../assets/logo.png";
 import MyPost from '../Blog/MyPost';
+
+const EditProfile = () => (
+  <div>
+    <h2 className="sm-profile">Chỉnh sửa hồ sơ</h2>
+    {/* Nội dung cho chỉnh sửa hồ sơ */}
+  </div>
+);
+
+const Notifications = () => (
+  <div>
+    <h2 className="sm-profile">Lời mời kết bạn</h2>
+    {/* Nội dung cho thông báo */}
+  </div>
+);
+
+const LessonHistory = () => (
+  <div>
+    <h2 className="sm-profile">Lịch sử bài học</h2>
+    {/* Nội dung cho lịch sử bài học */}
+  </div>
+);
+
+const PostList = () => (
+  <div>
+    <h2 className="sm-profile">Danh sách bài viết</h2>
+    {/* Nội dung cho danh sách bài viết */}
+  </div>
+);
+
+const QuestionBank = () => (
+  <div>
+    <h2 className="sm-profile">Bộ câu hỏi</h2>
+    {/* Nội dung cho bộ câu hỏi */}
+  </div>
+);
 
 const Profile = () => {
   const { background, setBackground } = useContext(BackgroundContext);
@@ -123,8 +160,8 @@ const Profile = () => {
   const sendFriendRequest = async (userId) => {
     const currentUser = auth.currentUser;
     if (currentUser) {
-      const currentUserDoc = doc(db, 'profiles', currentUser.uid); //của mình
-      const userDoc = doc(db, 'profiles', userId); // của người nhận
+      const currentUserDoc = doc(db, 'profiles', currentUser.uid);
+      const userDoc = doc(db, 'profiles', userId);
       await updateDoc(currentUserDoc, {
         friendRequestsSent: arrayUnion(userId),
       });
@@ -175,102 +212,112 @@ const Profile = () => {
   }
 
   return (
-    <div className="profilePage">
-      <div className="userProfileContainer">
-        <label htmlFor="fileInput" className="fileInputLabel">
-          <img src={background || profilePictureUrl} alt="Profile" />
-          <input
-            id="fileInput"
-            type="file"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              convertToBase64(file);
-            }}
-            className="fileInput"
-          />
-        </label>
-
-        <h2>Thông tin tài khoản</h2>
-        <div>
-          <label>Tên người dùng:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-              saveUserData({ username: e.target.value, email, bio, profilePictureUrl, friends, friendRequestsReceived: friendRequests, friendRequestsSent: sentRequests });
-            }}
-          />
-        </div>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            readOnly
-          />
-        </div>
-        <div>
-          <label>Giới thiệu:</label>
-          <textarea
-            value={bio}
-            onChange={(e) => {
-              setBio(e.target.value);
-              saveUserData({ username, email, bio: e.target.value, profilePictureUrl, friends, friendRequestsReceived: friendRequests, friendRequestsSent: sentRequests });
-            }}
-          />
-        </div>
-        <MyPost />
-      </div>
-
-      <div className="sidebar">
-        <h2>Tìm kiếm người dùng</h2>
-        <div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm kiếm người dùng"
-          />
-          <div className="searchResults">
-            {searchResults.map(user => (
-              <div key={user.id} className="searchResultItem">
-                <div onClick={() => setSelectedUser(user.id)} className='searchResultItem1'>
-                  <img src={user.profilePictureUrl} alt="Profile" />
-                  <p>{user.username}</p>
-                </div>
-                {!friends.includes(user.id) && !sentRequests.includes(user.id) && (
-                  <button onClick={() => sendFriendRequest(user.id)}>Kết bạn</button>
-                )}
-                {sentRequests.includes(user.id) && (
-                  <button onClick={() => cancelFriendRequest(user.id)}>Hủy lời mời</button>
-                )}
-              </div>
-            ))}
+    <div className="container-fluid">
+      <div className="profile-row">
+        {/* Sidebar */}
+        <div className="sidebar">
+          <div className="text-center py-4">
+            <img src={logo} alt="Logo" width="90" />
+          </div>
+          <div className="ps-4 pe-4">
+            <ul className="list-unstyled">
+              <li className="py-2">
+                <i className="bx bx-user me-2"></i>
+                <Link to="/edit-profile" className="text-decoration-none">Chỉnh sửa hồ sơ</Link>
+              </li>
+              <li className="py-2">
+                <i className="bx bx-bell me-2"></i>
+                <Link to="/notifications" className="text-decoration-none">Thông báo</Link>
+              </li>
+              <li className="py-2">
+                <i className="bx bx-history me-2"></i>
+                <Link to="/lesson-history" className="text-decoration-none">Lịch sử bài học</Link>
+              </li>
+              <li className="py-2">
+                <i className="bx bx-file me-2"></i>
+                <Link to="/posts" className="text-decoration-none">Danh sách bài viết</Link>
+              </li>
+              <li className="py-2">
+                <i className="bx bx-question-mark me-2"></i>
+                <Link to="/question-bank" className="text-decoration-none">Bộ câu hỏi</Link>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <h2>Danh sách bạn bè</h2>
-        <div className="friendsList">
-          {friends.map(friendId => (
-            <div key={friendId} className="friendItem" onClick={() => setSelectedUser(friendId)}>
-              <img src={friendData[friendId]?.profilePictureUrl} alt="Profile"/>
-              <p>{friendData[friendId]?.username}</p>
-            </div>
-          ))}
-        </div>
+        {/* Main content */}
+        <div className="main-content col-md-9">
+          <Routes>
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/lesson-history" element={<LessonHistory />} />
+            <Route path="/posts" element={<PostList />} />
+            <Route path="/question-bank" element={<QuestionBank />} />
+            <Route path="/" element={
+              <div className="profile-content">
+                <h1>Hồ sơ của {username}</h1>
+                <div className="profile-header">
+                  <div className="profile-picture">
+                    <img src={profilePictureUrl || "default-profile.png"} alt="Profile" />
+                  </div>
+                  <div className="profile-details">
+                    <h2>{username}</h2>
+                    <p>{bio}</p>
+                  </div>
+                </div>
 
-        <h2>Lời mời kết bạn</h2>
-        <div className="friendRequests">
-          {friendRequests.map(requestId => (
-            <div key={requestId} className="friendRequestItem" >
-              <div onClick={() => setSelectedUser(requestId)} className='friendRequestItem1'>
-                <img src={requestData[requestId]?.profilePictureUrl} alt="Profile" />
-                <p>{requestData[requestId]?.username}</p>
+                <div className="search-box">
+                  <input 
+                    type="text" 
+                    placeholder="Tìm kiếm bạn bè..." 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                  />
+                  <ul className="search-results list-unstyled">
+                    {searchResults.map((user) => (
+                      <li key={user.id}>
+                        <div className="user-info">
+                          <img src={user.profilePictureUrl || "default-profile.png"} alt="User" />
+                          <span>{user.username}</span>
+                        </div>
+                        <button onClick={() => sendFriendRequest(user.id)}>Gửi yêu cầu kết bạn</button>
+                        <button onClick={() => cancelFriendRequest(user.id)}>Hủy yêu cầu</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="friend-list">
+                  <h2>Bạn bè</h2>
+                  <ul className="list-unstyled">
+                    {friends.map((friendId) => (
+                      <li key={friendId}>
+                        <div className="friend-info">
+                          <img src={friendData[friendId]?.profilePictureUrl || "default-profile.png"} alt="Friend" />
+                          <span>{friendData[friendId]?.username}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="request-list">
+                  <h2>Yêu cầu kết bạn</h2>
+                  <ul className="list-unstyled">
+                    {friendRequests.map((requestId) => (
+                      <li key={requestId}>
+                        <div className="request-info">
+                          <img src={requestData[requestId]?.profilePictureUrl || "default-profile.png"} alt="Request" />
+                          <span>{requestData[requestId]?.username}</span>
+                          <button onClick={() => acceptFriendRequest(requestId)}>Chấp nhận</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <button onClick={() => acceptFriendRequest(requestId)}>Chấp nhận</button>
-            </div>
-          ))}
+            } />
+          </Routes>
         </div>
       </div>
     </div>

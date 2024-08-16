@@ -1,5 +1,13 @@
 
 
+
+.room-page {
+  width: 100vw; /* Chiếm toàn bộ chiều rộng của màn hình */
+  height: 100%; /* Chiếm toàn bộ chiều cao của màn hình */
+  margin-top: 150px;  /* Tạo khoảng cách giữa Thanh điều hướng và nội dung */
+  margin-bottom: 70px;
+}
+
 .content-description {
   max-width: 600px;
   margin-left: 0;

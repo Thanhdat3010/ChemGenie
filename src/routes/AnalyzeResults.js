@@ -3,7 +3,14 @@ import { db, auth } from '../components/firebase';
 import { doc, getDoc, setDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import './AnalyzeResults.css';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
+import icon4 from "../assets/magic-dust.png";
+import icon1 from '../assets/clipboard-list-check.png';
+import icon2 from '../assets/magic-wand.png';
+import icon3 from '../assets/highlighter.png';
+
 
 
 const AnalyzeResults = () => {
@@ -139,25 +146,40 @@ const AnalyzeResults = () => {
   const formatTextWithLineBreaks = (text) => {
     return text.split('\n').map((line, index) => {
       if (!line.trim()) return null;
-
+  
       // Loại bỏ các ký hiệu đặc biệt
       const cleanedLine = line.replace(/^[\*\#\-\s]+/, '').replace(/\*\*/g, '');
-
-      if (
-          cleanedLine.startsWith('1.') || cleanedLine.startsWith('2.') ||
-          cleanedLine.startsWith('3.') || cleanedLine.startsWith('4.') || cleanedLine.startsWith('5.') ||
-          cleanedLine.startsWith('Phân tích kết quả') || cleanedLine.startsWith('Đánh giá kỹ năng:') ||
-          cleanedLine.startsWith('Phân loại năng lực') || cleanedLine.startsWith('Đưa ra nhận xét') ||
-          cleanedLine.startsWith('Nhận xét')
-        ) {
-        return <p key={index}><strong>{cleanedLine}</strong></p>;
+  
+      let iconSrc = '';
+  
+      if (cleanedLine.startsWith('1.') || cleanedLine.startsWith('Phân tích kết quả')) {
+        iconSrc = icon4;
+      } else if (cleanedLine.startsWith('2.') || cleanedLine.startsWith('Đánh giá kỹ năng:')) {
+        iconSrc = icon1;
+      } else if (cleanedLine.startsWith('3.') || cleanedLine.startsWith('Phân loại năng lực')) {
+        iconSrc = icon2;
+      } else if (cleanedLine.startsWith('4.') || cleanedLine.startsWith('Nhận xét')) {
+        iconSrc = icon3;
       }
-      return <p key={index}>{cleanedLine}</p>;
+  
+      if (iconSrc) {
+        return (
+          <p key={index}>
+            <img src={iconSrc} alt="icon" style={{ marginRight: '5px', width: '24px', height: '24px' }} />
+            <strong style={{ color: '#7b31c9',}}>{cleanedLine}</strong>
+          </p>
+        );
+      }
+  
+      return <p key={index} className="AI-content">{cleanedLine}</p>;
     });
   };
 
   return (
-    <div className="analyze-results-page">
+    <container fluid >
+      <Navbar />
+      <section className="full-screen">
+      <div className="analyze-results-page">
   <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
       <h2 className="solver-form-title">AI phân tích năng lực</h2>
       <p className="solver-intro">AI sẽ tự động phân tích năng lực của bạn thông qua bài kiểm tra đã làm, đưa ra hướng phát triển tiếp theo cho bạn.</p>
@@ -203,6 +225,11 @@ const AnalyzeResults = () => {
     </div>
   )}
 </div>
+      </section>
+
+<Footer />
+    </container>
+
   );
 };
 

@@ -186,13 +186,18 @@ const Navbar = () => {
       </Link>
     </li>
     <li>
-      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+      <Link className={`nav-links ${isActive('/CreateQuiz') ? 'active' : ''}`} to="/CreateQuiz">
         AI tạo đề
       </Link>
     </li>
     <li>
-      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+      <Link className={`nav-links ${isActive('/RecommendExercises') ? 'active' : ''}`} to="/RecommendExercises">
         Trợ lý học tập AI
+      </Link>
+    </li>
+    <li>
+    <Link className={`nav-links ${isActive('/ExperimentProposal') ? 'active' : ''}`} to="/ExperimentProposal">
+        AI Lab
       </Link>
     </li>
     <li>

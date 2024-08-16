@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import magic from "../assets/magic-dust.png";
 import './SolverForm.css';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const SolverForm = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -152,7 +154,10 @@ const SolverForm = () => {
   };
 
   return (
-    <div className="solver-form-container">
+    <container fluid>
+      <Navbar />
+      <section className="full-screen">
+      <div className="solver-form-container">
       <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
       <h2 className="solver-form-title">Gia sư hóa học AI</h2>
       <p className="solver-intro">Gia sư AI sẽ giải quyết mọi khó khăn của bạn trong quá trình giải bài tập, nâng cao năng lực.</p>
@@ -204,6 +209,10 @@ const SolverForm = () => {
         </div>
       )}
     </div>
+      </section>
+    <Footer />
+    </container>
+   
   );
 };
 

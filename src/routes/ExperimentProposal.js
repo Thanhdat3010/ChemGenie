@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import './ExperimentProposal.css';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import magic from "../assets/magic-dust.png";
 
 const ExperimentProposal = () => {
     const [phenomenon, setPhenomenon] = useState('');
@@ -40,8 +43,13 @@ const ExperimentProposal = () => {
         });
       };
     return (
-        <div className="experiment-proposal">
-            <h2>AI Đề Xuất Thí Nghiệm</h2>
+        <container fluid>
+            <Navbar />
+            <section className= "full-screen">
+            <div className="experiment-proposal">
+              <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
+      <h2 className="solver-title">AI đề xuất thí nghiệm</h2>
+      <p className="solver-intro">AI trợ lý đắc lực, giúp bạn khám phá những điều mới lạ trong phòng thí nghiệm.</p>
             <textarea
                 value={phenomenon}
                 onChange={(e) => setPhenomenon(e.target.value)}
@@ -52,11 +60,15 @@ const ExperimentProposal = () => {
             </button>
             {proposal && (
                 <div className="proposal">
-                    <h3>Đề xuất thí nghiệm:</h3>
+                    <h3 className="proposal-title-prompt">Đề xuất thí nghiệm:</h3>
                     <p>{formatTextWithLineBreaks(proposal)}</p>
                 </div>
             )}
         </div>
+            </section>
+        <Footer />
+        </container>
+   
     );
 };
 

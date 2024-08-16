@@ -22,7 +22,6 @@
   flex: 1; /* Chia layout theo tỷ lệ */
   padding: 20px;
   background-color: #fff;
-  border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -91,6 +90,21 @@
 
 .fileInput {
   display: none;
+}
+
+.text-decoration-none {
+  text-decoration: none;
+  color: #000;
+  text-align: left;
+  font-family: "Inter";
+  font-weight: 700;
+}
+
+.sm-profile {
+  color: #333;
+  text-align: left;
+  font-family: "Inter";
+  font-weight: 400;
 }
 
 .searchResults,
@@ -191,6 +205,32 @@
 .backButton:hover {
   background-color: #0056b3; /* Màu nền khi hover */
 }
+
+.container-fluid {
+  padding: 0;
+  margin: 0;
+}
+
+.profile-row {
+  margin: 0;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh; /* Chiếm toàn bộ chiều cao của viewport */
+  width: 250px; /* Đặt chiều rộng của sidebar */
+  background-color: #f8f9fa; /* Màu nền của sidebar */
+  border-right: 1px solid #dee2e6; /* Đường viền bên phải của sidebar */
+  overflow-y: auto; /* Cuộn dọc nếu nội dung vượt quá chiều cao của sidebar */
+}
+
+.main-content {
+  margin-left: 250px; /* Khoảng cách giữa sidebar và nội dung chính */
+  padding: 20px; /* Padding cho nội dung chính */
+}
+
 @media (min-width: 768px) {
   .profilePage {
     flex-direction: row; /* Chuyển thành hàng ngang trên màn hình lớn hơn */
