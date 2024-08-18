@@ -116,6 +116,14 @@ const Blog = () => {
 
   return (
     <div className="blog-container">
+    <div className="search-bar">
+        <input
+          type="text"
+          placeholder="Tìm kiếm bài viết..."
+          value={searchTerm}
+          onChange={handleSearch}
+        />
+      </div>
       <div className="blog-carousel">
         <Slider {...settings}>
           {posts
@@ -133,18 +141,11 @@ const Blog = () => {
       </div>
       {isLoggedIn && (
         <div className="Newpost">
+          <p className="Newpost-title">Thảo luận & bài viết</p>
           <button onClick={() => navigate('/new-post')}>Thêm bài viết</button>
           {/* <button onClick={() => navigate('/my-post')}>Bài viết của tôi</button> */}
         </div>
       )}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Tìm kiếm bài viết..."
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-      </div>
       
      
       <div className="card-grid">

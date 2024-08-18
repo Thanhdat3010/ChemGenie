@@ -135,16 +135,17 @@ const NewPost = () => {
 
   return (
     <div className="newpost-container">
-      <h2>Đăng Bài Mới</h2>
+      <h2 className="newpost-title">Đăng Bài Mới</h2>
       <form className="newpost-form" onSubmit={handleSubmit}>
         <input
           type="text"
-          placeholder="Tiêu đề"
+          placeholder="Tiêu đề bài đăng"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           maxLength={50} // Giới hạn tối đa 100 ký tự
         />
+        <p className="newpost-note">Viết giới thiệu cho bài đăng</p>
         <input
           type="text"
           placeholder="Tóm tắt"
@@ -153,6 +154,7 @@ const NewPost = () => {
           required
           maxLength={100} // Giới hạn tối đa 100 ký tự
         />
+        <p className="newpost-note">Tạo ảnh bìa bài đăng</p>
         <input
           type="text"
           placeholder="URL ảnh (tùy chọn)"
@@ -166,6 +168,7 @@ const NewPost = () => {
           onChange={handleImageChange}
           disabled={!!imageUrl}
         />
+        <p className="newpost-note">Ghi chú: Nếu muốn đăng ảnh kèm với nội dung cho bài viết thì dán ảnh vào ô bên dưới</p>
         <ReactQuill
           ref={quillRef} // Đặt tham chiếu vào React Quill
           theme="snow"
@@ -173,7 +176,7 @@ const NewPost = () => {
           onChange={setContent}
           modules={{ ...modules, clipboard: { matchVisual: false } }}
           formats={formats}
-          placeholder="Nội dung"
+          placeholder="Bạn có gì mới không?"
           onPaste={handlePaste}
           required
         />
