@@ -153,3 +153,17 @@
   background-color: #ccc;
   margin-left: 10px;
 }
+
+.blog-mypost-title {
+  font-size: 20px;
+  text-align: left;
+  font-family: "Inter";
+  font-weight: bold;
+}
+
+.blog-container-mypost {
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  padding: 50px;
+}

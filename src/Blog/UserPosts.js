@@ -23,7 +23,7 @@ const UserPosts = ({ userId }) => {
 
   return (
     <div className="user-posts-container">
-      <h1>Bài viết của người dùng</h1>
+      <h1 className="user-post-title">Bài viết của người dùng</h1>
       {loading ? (
         <p>Đang tải...</p>
       ) : (

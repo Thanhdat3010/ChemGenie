@@ -136,7 +136,7 @@ const MyPost = () => {
 
   return (
     <div className="blog-container-mypost">
-      <h1>Bài viết của tôi</h1>
+      <h1 className="blog-mypost-title">Bài viết của tôi</h1>
       {loading ? (
         <p>Đang tải...</p>
       ) : editingPost ? (

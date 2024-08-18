@@ -46,3 +46,8 @@
     color: #666;
     flex-grow: 1;
   }
+
+  .user-post-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }

@@ -167,18 +167,18 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  background-color: #007bff;
+  background-color: #7b31c9;
   color: white;
   transition: background-color 0.3s ease;
   margin-bottom: 20px;
 }
 
 .searchButton:hover {
-  background-color: #0056b3;
+  background-color: #541e8d;
 }
 
 .backButton {
-  background-color: #007bff; /* Màu nền */
+  background-color: #7b31c9; /* Màu nền */
   color: white; /* Màu chữ */
   padding: 10px 20px; /* Khoảng đệm trong nút */
   border: none; /* Bỏ đường viền mặc định */
@@ -190,7 +190,7 @@
 }
 
 .backButton:hover {
-  background-color: #0056b3; /* Màu nền khi hover */
+  background-color: #541e8d; /* Màu nền khi hover */
 }
 
 .dropdownContainer {
@@ -238,6 +238,10 @@
 
 .friendButton:hover {
   background-color: #d8dadf;
+}
+
+.userProfile-title {
+  font-size: 22px;
 }
 
 /* Responsive Design */

@@ -1,50 +1,16 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
-import { Route, Routes, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../components/firebase'; 
 import BackgroundContext from '../components/BackgroundContext';
 import UserProfile from './UserProfile';
 import { debounce } from 'lodash';
-import "./Profile.css"; // Đảm bảo đường dẫn đến file CSS là chính xác
-import logo from "../assets/logo.png";
+import "./Profile.css";
 import MyPost from '../Blog/MyPost';
-
-const EditProfile = () => (
-  <div>
-    <h2 className="sm-profile">Chỉnh sửa hồ sơ</h2>
-    {/* Nội dung cho chỉnh sửa hồ sơ */}
-  </div>
-);
-
-const Notifications = () => (
-  <div>
-    <h2 className="sm-profile">Lời mời kết bạn</h2>
-    {/* Nội dung cho thông báo */}
-  </div>
-);
-
-const LessonHistory = () => (
-  <div>
-    <h2 className="sm-profile">Lịch sử bài học</h2>
-    {/* Nội dung cho lịch sử bài học */}
-  </div>
-);
-
-const PostList = () => (
-  <div>
-    <h2 className="sm-profile">Danh sách bài viết</h2>
-    {/* Nội dung cho danh sách bài viết */}
-  </div>
-);
-
-const QuestionBank = () => (
-  <div>
-    <h2 className="sm-profile">Bộ câu hỏi</h2>
-    {/* Nội dung cho bộ câu hỏi */}
-  </div>
-);
+import { AiOutlineMenu } from 'react-icons/ai'; // For sidebar toggle icon
 
 const Profile = () => {
+  const navigate = useNavigate;
   const { background, setBackground } = useContext(BackgroundContext);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -58,6 +24,10 @@ const Profile = () => {
   const [requestData, setRequestData] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [sentRequests, setSentRequests] = useState([]);
+  const [newFriendRequestsCount, setNewFriendRequestsCount] = useState(0);
+  // Sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('Thông báo');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -78,6 +48,7 @@ const Profile = () => {
           setSentRequests(userData.friendRequestsSent || []);
           await fetchFriendsData(userData.friends || []);
           await fetchRequestsData(userData.friendRequestsReceived || []);
+          setNewFriendRequestsCount(userData.friendRequestsReceived?.length || 0);
         }
       }
     };
@@ -212,113 +183,137 @@ const Profile = () => {
   }
 
   return (
-    <div className="container-fluid">
-      <div className="profile-row">
-        {/* Sidebar */}
-        <div className="sidebar">
-          <div className="text-center py-4">
-            <img src={logo} alt="Logo" width="90" />
-          </div>
-          <div className="ps-4 pe-4">
-            <ul className="list-unstyled">
-              <li className="py-2">
-                <i className="bx bx-user me-2"></i>
-                <Link to="/edit-profile" className="text-decoration-none">Chỉnh sửa hồ sơ</Link>
-              </li>
-              <li className="py-2">
-                <i className="bx bx-bell me-2"></i>
-                <Link to="/notifications" className="text-decoration-none">Thông báo</Link>
-              </li>
-              <li className="py-2">
-                <i className="bx bx-history me-2"></i>
-                <Link to="/lesson-history" className="text-decoration-none">Lịch sử bài học</Link>
-              </li>
-              <li className="py-2">
-                <i className="bx bx-file me-2"></i>
-                <Link to="/posts" className="text-decoration-none">Danh sách bài viết</Link>
-              </li>
-              <li className="py-2">
-                <i className="bx bx-question-mark me-2"></i>
-                <Link to="/question-bank" className="text-decoration-none">Bộ câu hỏi</Link>
-              </li>
-            </ul>
-          </div>
+    <div className="profilePage">
+      {/* Sidebar */}
+      <div className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+        <button className="sidebarToggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          <AiOutlineMenu size={24} />
+        </button>
+        <div className="tabs">
+          <button onClick={() => setActiveTab('Thông báo')} className={activeTab === 'Thông báo' ? 'active' : ''}>Thông báo {newFriendRequestsCount > 0 && `(${newFriendRequestsCount})`}</button>
+          <button onClick={() => setActiveTab('Friendlist')} className={activeTab === 'Friendlist' ? 'active' : ''}>Danh sách bạn bè</button>
+          <button onClick={() => setActiveTab('Lịch sử bài học')} className={activeTab === 'Lịch sử bài học' ? 'active' : ''}>Lịch sử bài học</button>
+          <button onClick={() => setActiveTab('Bộ câu hỏi')} className={activeTab === 'Bộ câu hỏi' ? 'active' : ''}>Bộ câu hỏi</button>
+          <button 
+            onClick={() => navigate('/flashcard-archive')} 
+            className={activeTab === 'Kho Flashcard' ? 'active' : ''}
+          >
+            Kho Flashcard
+          </button>
+        </div>
+        <div className="tabContent">
+          {activeTab === 'Thông báo' && (
+                    <div className="friendRequests">
+                    {friendRequests.map(userId => (
+                      <div key={userId} className="friendRequest">
+                        <div className="friendRequest-content">
+                        <img src={requestData[userId]?.profilePictureUrl || '/default-profile.png'} alt="avatar" className="friend-avatar" />
+                        <p>{requestData[userId]?.username}</p>
+                        </div>
+                        <div className="friendRequest-accept">
+                        <button className="friendRequest-btn-accept" onClick={() => acceptFriendRequest(userId)}>Chấp nhận</button>
+                        <button className="friendRequest-btn-accept" onClick={() => cancelFriendRequest(userId)}>Từ chối</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+          )}
+          {activeTab === 'Friendlist' && (
+        <div className="friends">
+          {friends.map(userId => (
+            <div key={userId} className="friend">
+               <img src={friendData[userId]?.profilePictureUrl || '/default-profile.png'} alt="avatar" className="friend-avatar" />
+              <p>{friendData[userId]?.username}</p>
+            </div>
+          ))}
+        </div>
+          )}
+          {activeTab === 'Lịch sử bài học' && <div>Lịch sử bài học content</div>}
+          {activeTab === 'Bộ câu hỏi' && <div>Bộ câu hỏi content</div>}
+          {activeTab === 'Kho Flashcard' && <div>Kho Flashcard content</div>}
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="profile-content col-12 col-md-9">
+      <div className="profile-search-friend ">
+      <h2 className="profile-addfriend">Kết nối bạn bè</h2>
+      <input
+          type="text"
+          placeholder="Tìm kiếm bạn bè..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+        <div className="searchResults">
+          {searchResults.map(user => (
+            <div key={user.id} className="searchResult mb-3" onClick={() => setSelectedUser(user.id)}>
+            <div className="name-search-friend">
+            <img className="friend-avatar mr-2" src={user.profilePictureUrl || '/default-profile.png'} alt="avatar" />
+              <p className="info-friend m-0">{user.username}</p>
+            </div>
+              <button className="profile-send"
+                    onClick={() =>
+                      sentRequests.includes(user.id)
+                        ? cancelFriendRequest(user.id)
+                        : sendFriendRequest(user.id)
+                    }
+                  >
+                    {sentRequests.includes(user.id) ? 'Hủy kết bạn' : 'Kết bạn'}
+                  </button>
+            </div>
+          ))}
         </div>
 
-        {/* Main content */}
-        <div className="main-content col-md-9">
-          <Routes>
-            <Route path="/edit-profile" element={<EditProfile />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/lesson-history" element={<LessonHistory />} />
-            <Route path="/posts" element={<PostList />} />
-            <Route path="/question-bank" element={<QuestionBank />} />
-            <Route path="/" element={
-              <div className="profile-content">
-                <h1>Hồ sơ của {username}</h1>
-                <div className="profile-header">
-                  <div className="profile-picture">
-                    <img src={profilePictureUrl || "default-profile.png"} alt="Profile" />
-                  </div>
-                  <div className="profile-details">
-                    <h2>{username}</h2>
-                    <p>{bio}</p>
-                  </div>
-                </div>
-
-                <div className="search-box">
-                  <input 
-                    type="text" 
-                    placeholder="Tìm kiếm bạn bè..." 
-                    value={searchTerm} 
-                    onChange={(e) => setSearchTerm(e.target.value)} 
-                  />
-                  <ul className="search-results list-unstyled">
-                    {searchResults.map((user) => (
-                      <li key={user.id}>
-                        <div className="user-info">
-                          <img src={user.profilePictureUrl || "default-profile.png"} alt="User" />
-                          <span>{user.username}</span>
-                        </div>
-                        <button onClick={() => sendFriendRequest(user.id)}>Gửi yêu cầu kết bạn</button>
-                        <button onClick={() => cancelFriendRequest(user.id)}>Hủy yêu cầu</button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="friend-list">
-                  <h2>Bạn bè</h2>
-                  <ul className="list-unstyled">
-                    {friends.map((friendId) => (
-                      <li key={friendId}>
-                        <div className="friend-info">
-                          <img src={friendData[friendId]?.profilePictureUrl || "default-profile.png"} alt="Friend" />
-                          <span>{friendData[friendId]?.username}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="request-list">
-                  <h2>Yêu cầu kết bạn</h2>
-                  <ul className="list-unstyled">
-                    {friendRequests.map((requestId) => (
-                      <li key={requestId}>
-                        <div className="request-info">
-                          <img src={requestData[requestId]?.profilePictureUrl || "default-profile.png"} alt="Request" />
-                          <span>{requestData[requestId]?.username}</span>
-                          <button onClick={() => acceptFriendRequest(requestId)}>Chấp nhận</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            } />
-          </Routes>
+        <div className="profileEdit">
+        <h2 className="profile-addfriend">Hồ sơ cá nhân</h2>
+          <label className="Label-avatar" htmlFor="profilePicture">
+            <img
+              src={profilePictureUrl || '/default-profile.png'}
+              alt="Upload Avatar"
+              className="profilePicture"
+            />
+            <input
+              id="profilePicture"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files[0]) convertToBase64(e.target.files[0]);
+              }}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <input
+            type="text"
+            placeholder="Tên người dùng"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <textarea
+            placeholder="Tiểu sử"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+          />
+          <button className="profile-btn" onClick={() => saveUserData({
+            username,
+            email,
+            bio,
+            profilePictureUrl,
+            friends,
+            friendRequestsReceived: friendRequests,
+            friendRequestsSent: sentRequests
+          })}>
+            Lưu cập nhật
+          </button>
         </div>
+
+        <MyPost />
       </div>
     </div>
   );

@@ -147,7 +147,7 @@ const UserProfile = ({ userId, onBack }) => {
       </div>
 
       <div className="sidebar">
-        <h2>Danh sách bạn bè</h2>
+        <h2 className="userProfile-title">Danh sách bạn bè</h2>
         <div className="friendsList">
           {friends.map(friendId => (
             <div key={friendId} className="friendItem">

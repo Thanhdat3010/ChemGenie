@@ -22,6 +22,7 @@
   flex: 1; /* Chia layout theo tỷ lệ */
   padding: 20px;
   background-color: #fff;
+  border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -90,21 +91,6 @@
 
 .fileInput {
   display: none;
-}
-
-.text-decoration-none {
-  text-decoration: none;
-  color: #000;
-  text-align: left;
-  font-family: "Inter";
-  font-weight: 700;
-}
-
-.sm-profile {
-  color: #333;
-  text-align: left;
-  font-family: "Inter";
-  font-weight: 400;
 }
 
 .searchResults,
@@ -192,7 +178,7 @@
 }
 
 .backButton {
-  background-color: #007bff; /* Màu nền */
+  background-color: #7b31c9; /* Màu nền */
   color: white; /* Màu chữ */
   padding: 10px 20px; /* Khoảng đệm trong nút */
   border: none; /* Bỏ đường viền mặc định */
@@ -203,36 +189,249 @@
 }
 
 .backButton:hover {
-  background-color: #0056b3; /* Màu nền khi hover */
+  background-color: #541e8d; /* Màu nền khi hover */
+}
+@media (min-width: 768px) {
+  .profilePage {
+    flex-direction: row; /* Chuyển thành hàng ngang trên màn hình lớn hơn */
+  }
 }
 
-.container-fluid {
-  padding: 0;
-  margin: 0;
+.Label-avatar {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #d9d9d9;
+  padding: 20px;
+  width: 100%;
 }
 
-.profile-row {
-  margin: 0;
+.profile-btn {
+  background-color: #7b31c9;
+  width: 200px;
+  padding: 10px;
+  margin-bottom: 30px;
+  margin-top: 20px;
+  color: white;
+  border-radius: 10px;
+  border: none;
+}
+
+.profilePage {
+  display: flex;
+  position: relative;
 }
 
 .sidebar {
   position: fixed;
   top: 0;
-  left: 0;
-  height: 100vh; /* Chiếm toàn bộ chiều cao của viewport */
-  width: 250px; /* Đặt chiều rộng của sidebar */
-  background-color: #f8f9fa; /* Màu nền của sidebar */
-  border-right: 1px solid #dee2e6; /* Đường viền bên phải của sidebar */
-  overflow-y: auto; /* Cuộn dọc nếu nội dung vượt quá chiều cao của sidebar */
+  right: 0;
+  width: 250px;
+  height: 100vh;
+  background-color: #fff;
+  transition: transform 0.3s ease;
+  transform: translateX(100%);
 }
 
-.main-content {
-  margin-left: 250px; /* Khoảng cách giữa sidebar và nội dung chính */
-  padding: 20px; /* Padding cho nội dung chính */
+.sidebar.open {
+  transform: translateX(0);
 }
 
-@media (min-width: 768px) {
-  .profilePage {
-    flex-direction: row; /* Chuyển thành hàng ngang trên màn hình lớn hơn */
-  }
+.sidebarToggle {
+  position: absolute;
+  left: -40px;
+  top: 20px;
+  background: #ddd;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs button {
+  padding: 10px;
+  border: none;
+  background: #fff;
+  border-bottom: #d9d9d9 1px solid;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 5px;
+}
+
+.tabs button.active {
+  background: #7b31c9;
+  color: white;
+}
+
+.tabContent {
+  padding: 10px;
+}
+
+.profile-content {
+  flex: 1;
+  padding: 20px;
+  margin-right: 250px; /* Adjust this value to fit your sidebar width */
+}
+
+.profileEdit input, .profileEdit textarea {
+  display: block;
+  margin: 10px 0;
+  padding: 8px;
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #d9d9d9;
+
+}
+
+.profileEdit textarea {
+  height: 150px;
+}
+.profileEdit {
+  background-color: #fff;
+  padding: 50px;
+  border-radius: 20px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  margin-bottom: 20px;
+}
+
+.profile-search-friend input {
+  display: block;
+  margin: 10px 0;
+  padding: 8px;
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #d9d9d9;
+}
+
+.profile-search-friend {
+  margin-top: 20px;
+  background-color: #fff;
+  padding: 20px;
+  /* border-top-left-radius: 20px;
+  border-top-right-radius: 20px; */
+  border-radius: 20px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+}
+
+.profile-addfriend {
+  text-align: left;
+  color: black;
+  font-size: 18px;
+  font-family: "Inter";
+  font-weight: bold;
+}
+
+.profilePicture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+}
+
+.searchResults {
+  background-color: #fff;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  margin-top: -20px;
+  border-bottom: #d9d9d9 1px solid;
+  margin-bottom: 40px;
+} 
+
+.searchResult, .friendRequest, .friend {
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.searchResult p, .friendRequest p, .friend p {
+  margin: 0;
+}
+
+.searchResult {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+  border-top: 1px solid #d9d9d9;
+  align-items: center;
+}
+
+.profile-send {
+  background-color: #7b31c9;
+  font-size: 14px;
+  width: 100px;
+  height: fit-content;
+  padding: 10px;
+  border: none;
+  border-radius: 15px;
+  color: #fff;
+}
+
+.profile-send:hover{
+  background-color: #541e8d;
+}
+
+.info-friend {
+  text-align: left;
+  font-weight: bold;
+  padding-left: 10px;
+}
+
+.sm-friendRequests {
+  margin-top: 40px ;
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.friendRequest {
+  background-color: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 15px;
+  padding: 15px;
+  width: 100%;
+}
+
+.friendRequest-content {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.friendRequest-accept {
+  display: block;
+}
+
+.friendRequest-btn-accept {
+  background-color: #7b31c9;
+  border: none;
+  padding: 8px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  width: 80%;
+  color: #fff;
+}
+
+.friend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.friends {
+  background-color: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 15px;
+}
+
+.name-search-friend {
+  display: flex;
+  align-items: center;
 }
