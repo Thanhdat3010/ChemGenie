@@ -201,7 +201,7 @@ const Navbar = () => {
       </Link>
     </li>
     <li>
-      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Chatbot">
+      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Flashgen">
         Flashcard AI
       </Link>
     </li>

@@ -1,0 +1,95 @@
+.flashgen {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.flashgen h2 {
+    text-align: center;
+    color: #333;
+}
+
+.flashgen input[type="text"],
+.flashgen input[type="file"],
+.flashgen button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.flashgen button {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+.flashgen button:hover {
+    background-color: #45a049;
+}
+
+.flashgen .flashcard {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.flashgen .flashcard h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.flashgen .flashcard p {
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.flashgen .flashcard img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.flashgen .flashcard a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #2196F3;
+    text-decoration: none;
+}
+
+.flashgen .flashcard a:hover {
+    text-decoration: underline;
+}
+
+#flashcardList .flashcard {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+    .flashgen {
+        padding: 15px;
+    }
+
+    .flashgen h2 {
+        font-size: 24px;
+    }
+
+    .flashgen input[type="text"],
+    .flashgen input[type="file"],
+    .flashgen button {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .flashgen .flashcard h3 {
+        font-size: 18px;
+    }
+}
