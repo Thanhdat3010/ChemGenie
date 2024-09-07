@@ -24,12 +24,14 @@ const CreateQuiz = () => {
   const [topic, setTopic] = useState('');
   const [file, setFile] = useState(null);
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
-  
+  const [modalOpen, setModalOpen] = useState(false);
   const handleFileUpload = (event) => {
     setFile(event.target.files[0]);
   };
 
-
+  const closeModal = () => {
+    setModalOpen(false);
+  };
   const extractTextFromImage = async (file) => {
     const text = await Tesseract.recognize(file, 'eng');
     return text.data.text;
@@ -209,7 +211,7 @@ const CreateQuiz = () => {
       const userId = user.uid;
       const docRef = doc(db, 'createdQuizzes', `${quizTitle}-${userId}`);
       await setDoc(docRef, { userId, title: quizTitle, questions: cleanQuestions });
-      alert('Bộ câu hỏi đã được lưu thành công.');
+      setModalOpen(true);
       setQuizTitle('');
       setQuestions([]);
     } catch (error) {
@@ -403,6 +405,14 @@ const CreateQuiz = () => {
     </div>
 
     <button className="create-quiz-save-quiz-btn" onClick={handleSaveQuiz}>Lưu Bộ Câu Hỏi</button>
+    {modalOpen && (
+        <div className="modal" style={{ display: 'flex' }}>
+          <div className="modal-content">
+            <p>Bộ câu hỏi đã được lưu thành công!</p>
+            <button className="close-btn" onClick={closeModal}>Đóng</button>
+          </div>
+        </div>
+      )}
     </div>
       </section>
       <Footer />
