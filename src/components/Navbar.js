@@ -200,11 +200,6 @@ const Navbar = () => {
         AI Lab
       </Link>
     </li>
-    <li>
-      <Link className={`nav-links ${isActive('/QuizMate') ? 'active' : ''}`} to="/QuizMate">
-        AI QuizMate
-      </Link>
-    </li>
   </ul>
 </li>
 

@@ -31,7 +31,6 @@ import AnalyzeResults from "./routes/AnalyzeResults";
 import RecommendExercises from "./routes/RecommendExercises";
 import StorytellingAI from "./CreateQuiz/StorytellingAI";
 import ExperimentProposal from "./routes/ExperimentProposal";
-import QuizMate from "./routes/QuizMate";
 // import Flashgen from "./routes/Flashgen";
 import Chatbot from "./routes/Chatbot";
 function App() {
@@ -72,7 +71,6 @@ function App() {
     <Route path='/SolverForm' element={<SolverForm/>}/>
     <Route path='/AnalyzeResults' element={<AnalyzeResults/>}/>
     <Route path='/RecommendExercises' element={<RecommendExercises/>}/>
-    <Route path='/QuizMate' element={<QuizMate/>}/>
     {/* <Route path='/Flashgen' element={<Flashgen/>}/> */}
     <Route path='/StorytellingAI' element={<StorytellingAI/>}/>
     <Route path='/ExperimentProposal' element={<ExperimentProposal/>}/>
