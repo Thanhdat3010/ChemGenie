@@ -124,21 +124,21 @@ const Navbar = () => {
     Lý thuyết
   </Link>
     </li>
-    <li>
+    {/* <li>
       <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
     E-learning
   </Link>
-    </li>
+    </li> */}
     <li>
       <Link className={`nav-links ${isActive('/Onthi') ? 'active' : ''}`} to="/Onthi">
     Trắc nghiệm
   </Link>
     </li>
-    <li>
+    {/* <li>
       <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
     Tạo đề thi
   </Link>
-    </li>
+    </li> */}
     <li>
     <Link className={`nav-links ${isActive('/Room') ? 'active' : ''}`} to="/Room">
     Phòng thi ảo
@@ -157,11 +157,11 @@ const Navbar = () => {
         Bảng tuần hoàn
       </Link>
     </li>
-    <li>
+    {/* <li>
       <Link className={`nav-links ${isActive('/Flashcard') ? 'active' : ''}`} to="/Flashcard">
         Hợp chất
       </Link>
-    </li>
+    </li> */}
   </ul>
 </li>
 
@@ -200,11 +200,11 @@ const Navbar = () => {
         AI Lab
       </Link>
     </li>
-    <li>
+    {/* <li>
       <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Flashgen">
         Flashcard AI
       </Link>
-    </li>
+    </li> */}
   </ul>
 </li>
 
