@@ -244,7 +244,6 @@ const RecommendExercises = () => {
         </>
       ) : (
         <div className="recommend-exercises-questions-container">
-          <div className="recommend-exercises-progress-bar" style={{ width: `${progress}%` }}></div>
           {currentQuestion < questions.length && (
             <div className="recommend-exercises-question">
             <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />

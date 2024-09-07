@@ -200,11 +200,11 @@ const Navbar = () => {
         AI Lab
       </Link>
     </li>
-    {/* <li>
-      <Link className={`nav-links ${isActive('/Chatbot') ? 'active' : ''}`} to="/Flashgen">
-        Flashcard AI
+    <li>
+      <Link className={`nav-links ${isActive('/QuizMate') ? 'active' : ''}`} to="/QuizMate">
+        AI QuizMate
       </Link>
-    </li> */}
+    </li>
   </ul>
 </li>
 

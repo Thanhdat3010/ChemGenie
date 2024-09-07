@@ -75,14 +75,11 @@ const QuizMate = () => {
         { inlineData: { data: pdfBase64, mimeType: selectedFile.type } },
       ]);
   
-      // Kiểm tra phản hồi từ API
-      const responseText = result.response.text(); // Chắc chắn phản hồi là văn bản
-      console.log('API Response:', responseText); // In ra phản hồi
+      const responseText = await result.response.text(); 
+      console.log('API Response:', responseText);
   
-      // Làm sạch phản hồi nếu cần
-      const cleanText = responseText.replace(/```json|```/g, ''); // Xóa bỏ các ký tự không cần thiết
-  
-      const quizData = JSON.parse(cleanText); // Phân tích JSON từ văn bản sạch
+      const cleanText = responseText.replace(/```json|```/g, ''); 
+      const quizData = JSON.parse(cleanText);
       const formattedQuestions = quizData.map((q, index) => ({
         ...q,
         id: index,
@@ -145,6 +142,7 @@ const QuizMate = () => {
 
   return (
     <div className="quizmate-container">
+    <Navbar/>
       <section className="quizmate-section">
         <h2>QuizMate - Trợ thủ học tập của bạn</h2>
         <p>Biến ghi chú của bạn thành các câu đố tương tác và nhận phản hồi ngay lập tức.</p>
@@ -163,7 +161,6 @@ const QuizMate = () => {
           </form>
         ) : (
           <div className="quizmate-quiz">
-            <div className="quizmate-progress-bar" style={{ width: `${progress}%` }}></div>
             {!quizCompleted ? (
               <div className="quizmate-question-container">
                 <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${quizResult[currentQuestion].question}` }} />
@@ -174,16 +171,20 @@ const QuizMate = () => {
                       onClick={() => handleOptionClick(option)}
                       className={
                         selectedOption !== null &&
+                        answerState[currentQuestion] !== null &&
                         option === quizResult[currentQuestion].correctAnswer
                           ? 'quizmate-correct'
                           : selectedOption !== null &&
+                            answerState[currentQuestion] !== null &&
                             selectedOption === option &&
                             option !== quizResult[currentQuestion].correctAnswer
                           ? 'quizmate-incorrect'
                           : ''
                       }
                     >
-                      <span>{option}</span>
+                      <span dangerouslySetInnerHTML={{ __html: `(${String.fromCharCode(65 + index)}) ${option}` }} />
+                      {selectedOption === option && answerState[currentQuestion] !== null && option === quizResult[currentQuestion].correctAnswer ? <span className="quizmate-correct-mark">&#10003;</span> : ''}
+                      {selectedOption === option && answerState[currentQuestion] !== null && option !== quizResult[currentQuestion].correctAnswer ? <span className="quizmate-incorrect-mark">&#10007;</span> : ''}
                     </li>
                   ))}
                 </ul>
@@ -192,8 +193,8 @@ const QuizMate = () => {
                     <button onClick={toggleExplanation} className="quizmate-explanation-button">Giải thích</button>
                     {showExplanation && (
                       <div className="quizmate-explanation">
-                        <p>Đáp án đúng: {quizResult[currentQuestion].correctAnswer}</p>
-                        <p>Giải thích: {quizResult[currentQuestion].explain}</p>
+                        <p><strong>Đáp án đúng:</strong> <span dangerouslySetInnerHTML={{ __html: quizResult[currentQuestion].correctAnswer }} /></p>
+                        <p><strong>Giải thích:</strong> <span dangerouslySetInnerHTML={{ __html: quizResult[currentQuestion].explain }} /></p>
                       </div>
                     )}
                   </>
@@ -210,16 +211,16 @@ const QuizMate = () => {
               <div className="quizmate-completed">
                 <h3>Hoàn thành</h3>
                 <p>Điểm của bạn: {score} / {quizResult.length}</p>
-                <button onClick={resetQuiz} className="quizmate-reset-button">Làm lại</button>
+                <button onClick={resetQuiz} className="quizmate-reset-button">Làm lại bài kiểm tra</button>
               </div>
             )}
           </div>
         )}
       </section>
-      <Footer />
     </div>
   );
 };
 
 export default QuizMate;
+
 
