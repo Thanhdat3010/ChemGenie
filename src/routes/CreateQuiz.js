@@ -23,6 +23,7 @@ const CreateQuiz = () => {
   const [grade, setGrade] = useState('');
   const [topic, setTopic] = useState('');
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
   const [modalOpen, setModalOpen] = useState(false);
   const handleFileUpload = (event) => {
@@ -85,6 +86,8 @@ const CreateQuiz = () => {
   
     let extractedText = '';
     const fileType = file.type;
+    setLoading(true);
+
     try {
       if (fileType.startsWith('image/')) {
         extractedText = await extractTextFromImage(file);
@@ -93,6 +96,9 @@ const CreateQuiz = () => {
     } catch (error) {
       console.error('Error extracting text from file:', error);
       alert('Đã xảy ra lỗi khi trích xuất văn bản từ tệp.');
+    }finally {
+      // Tắt trạng thái loading sau khi hoàn tất
+      setLoading(false);
     }
   };
 
@@ -112,7 +118,8 @@ const CreateQuiz = () => {
       alert('Vui lòng nhập chủ đề.');
       return;
     }
-  
+    setLoading(true);
+
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hoá lớp ${grade} với chủ đề ${topic} có đáp án và giải thích kèm theo. Kết quả trả ra dạng JSON`;
@@ -139,6 +146,9 @@ const CreateQuiz = () => {
     } catch (error) {
       console.error('Error generating questions from AI:', error);
       alert('Đã xảy ra lỗi khi tạo câu hỏi từ AI.');
+    }finally {
+      // Tắt trạng thái loading sau khi hoàn tất
+      setLoading(false);
     }
   };
 
@@ -282,6 +292,12 @@ const CreateQuiz = () => {
         />
     </div>
       <button className="create-quiz-add-question-btn" onClick={handleAddQuestionsFromAPI}>Tạo câu hỏi từ AI</button>
+      {loading && (
+  <div className="loader">
+    <img src={magic} alt="Loading..." className="loading-icon" />
+    <p>Đang tạo đề thi, vui lòng chờ...</p>
+  </div>
+)}
       <div className="create-quiz-file-upload">
       <h2 className="Createquizz-title-feature">Biến hình ảnh thành bài tập chỉ trong nháy mắt!</h2>
       <p className="solver-intro">Nếu bạn có hình ảnh câu hỏi hãy dùng tính năng này tạo đề thi</p>
@@ -295,6 +311,7 @@ const CreateQuiz = () => {
     </div>
     <div className="create-quiz-add-questions">
     <button onClick={handleGenerateQuestions}>Tạo câu hỏi tự động</button>
+    
       </div>
       <div className="create-quiz-question-form">
       <h2 className="Createquizz-title-feature">Tự do sáng tạo đề: Bổ sung câu hỏi, tùy chỉnh theo ý muốn.</h2>
@@ -413,6 +430,7 @@ const CreateQuiz = () => {
           </div>
         </div>
       )}
+      
     </div>
       </section>
       <Footer />
