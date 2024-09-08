@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../components/firebase'; 
 import BackgroundContext from '../components/BackgroundContext';
@@ -229,7 +230,12 @@ const Profile = () => {
         </div>
           )}
           {activeTab === 'Lịch sử bài học' && <div>Lịch sử bài học content</div>}
-          {activeTab === 'Bộ câu hỏi' && <div>Bộ câu hỏi content</div>}
+          {activeTab === 'Bộ câu hỏi' && 
+          <div>
+          <Link className='Profile-link' to="/CustomQuiz">
+            Bộ câu hỏi của bạn
+          </Link>
+          </div>}
           {activeTab === 'Kho Flashcard' && <div>Kho Flashcard content</div>}
         </div>
       </div>

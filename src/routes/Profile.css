@@ -435,3 +435,20 @@
   display: flex;
   align-items: center;
 }
+.Profile-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #7b31c9; /* Màu nền */
+  color: white; /* Màu chữ */
+  font-weight: bold; /* Chữ đậm */
+  text-decoration: none; /* Bỏ gạch dưới */
+  border-radius: 10px; /* Bo góc rộng hơn */
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px; /* Hiệu ứng bóng */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Hiệu ứng chuyển màu và bóng */
+  cursor: pointer; /* Thay đổi con trỏ */
+}
+
+.Profile-link:hover {
+  background-color: #541e8d; /* Màu nền khi hover */
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 1px 6px; /* Tăng hiệu ứng bóng khi hover */
+}
