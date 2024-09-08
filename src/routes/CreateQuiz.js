@@ -20,6 +20,7 @@ const CreateQuiz = () => {
   const [currentQuestion, setCurrentQuestion] = useState({ ...initialQuestionState });
   const [quizTitle, setQuizTitle] = useState('');
   const [numQuestions, setNumQuestions] = useState(1);
+  const [difficulty, setDifficulty] = useState('medium');
   const [grade, setGrade] = useState('');
   const [topic, setTopic] = useState('');
   const [file, setFile] = useState(null);
@@ -41,7 +42,7 @@ const CreateQuiz = () => {
   const generateQuestionsFromAI = async (text) => {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm có đáp án và giải thích kèm theo từ văn bản sau: ${text} với cấu trúc:
+      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó ${difficulty} có đáp án và giải thích kèm theo từ văn bản sau: ${text} với cấu trúc:
       [
         {
           type: "multiple-choice",
@@ -122,13 +123,24 @@ const CreateQuiz = () => {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hoá lớp ${grade} với chủ đề ${topic} có đáp án và giải thích kèm theo. Kết quả trả ra dạng JSON`;
+      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hoá lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty} có đáp án và giải thích kèm theo. Kết quả trả ra dạng JSON với cấu trúc sau:
+      [
+        {
+          type: "multiple-choice",
+          "question": "Câu hỏi 1",
+          "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+          "answer": "Đáp án đúng",
+          "explanation": "Giải thích cho đáp án đúng"
+        },
+      ]
+      `;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();    
       // Giả sử text trả về là một chuỗi JSON các câu hỏi
       const cleanText = text.replace(/`/g, ''); // Thay thế tất cả các backtick
       const cleanText1 = cleanText.replace(/json/g, ''); // Thay thế tất cả các backtick
+      console.log(cleanText1);
       const generatedQuestions = JSON.parse(cleanText1);
       // Kiểm tra nếu generatedQuestions là một mảng
       const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
@@ -264,7 +276,7 @@ const CreateQuiz = () => {
         onChange={(e) => setQuizTitle(e.target.value)}
         placeholder="Nhập tiêu đề bộ đề thi"
       />
-              <input
+          <input
           id="numQuestions"
           name="numQuestions"
           type="number"
@@ -272,6 +284,11 @@ const CreateQuiz = () => {
           onChange={(e) => setNumQuestions(e.target.value)}
           placeholder="Nhập số lượng câu hỏi"
         />
+         <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+            <option value="easy">Dễ</option>
+            <option value="medium">Trung bình</option>
+            <option value="hard">Khó</option>
+          </select>
         <select
           id="grade"
           name="grade"
