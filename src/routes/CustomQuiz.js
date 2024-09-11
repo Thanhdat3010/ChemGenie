@@ -68,10 +68,20 @@ const CustomQuiz = () => {
 
   const deleteQuiz = async (quizId) => {
     try {
+      // Xóa bộ câu hỏi trong collection 'createdQuizzes'
       await deleteDoc(doc(db, 'createdQuizzes', quizId));
+  
+      // Lấy ID của người dùng hiện tại
+      const user = auth.currentUser;
+      if (user) {
+        // Xóa tiến trình liên quan trong collection 'quizProgress'
+        await deleteDoc(doc(db, 'quizProgress', `${user.uid}_${quizId}`));
+      }
+  
+      // Cập nhật lại danh sách bộ câu hỏi
       setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
     } catch (error) {
-      console.error('Error deleting quiz:', error);
+      console.error('lỗi xóa progress:', error);
     }
   };
 
@@ -85,7 +95,7 @@ const CustomQuiz = () => {
         answerState,
         score,
         progress,
-        quizCompleted  // Đảm bảo lưu trường quizCompleted vào Firestore
+        quizCompleted  // Lưu trạng thái hoàn thành
       });
     }
   };
@@ -176,8 +186,7 @@ const CustomQuiz = () => {
       setProgress(newProgress);
     } else {
       setQuizCompleted(true);
-      await saveProgress();
-      // Lưu trạng thái hoàn thành vào Firestore
+      await saveProgress(); // Lưu trạng thái hoàn thành vào Firestore
     }
   };
 
@@ -188,11 +197,11 @@ const CustomQuiz = () => {
     setAnswerState([]);
     setScore(0);
     setProgress(0);
-    setQuizCompleted(false);
-
+    setQuizCompleted(false); // Đặt lại trạng thái quizCompleted
+  
     const user = auth.currentUser;
     if (user && currentQuizId) {
-      await deleteDoc(doc(db, 'quizProgress', `${user.uid}_${currentQuizId}`));
+      await deleteDoc(doc(db, 'quizProgress', `${user.uid}_${currentQuizId}`)); // Xóa tiến trình cũ
     }
   };
 

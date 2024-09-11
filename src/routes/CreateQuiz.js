@@ -123,7 +123,7 @@ const CreateQuiz = () => {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hoá lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty} có đáp án và giải thích kèm theo. Kết quả trả ra dạng JSON với cấu trúc sau:
+      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hoá lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty} có đáp án và giải thích kèm theo. Câu hỏi được đặt bằng tiếng Việt(quan trọng), nhưng tất cả các chất (trong câu hỏi và đáp án) phải được viết theo danh pháp IUPAC (tiếng Anh). Kết quả trả ra dạng JSON với cấu trúc sau:
       [
         {
           type: "multiple-choice",

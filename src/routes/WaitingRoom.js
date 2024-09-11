@@ -8,7 +8,7 @@ import './WaitingRoom.css';
 const WaitingRoom = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { roomId, quizId } = location.state; //lấy url từ useNavigate chuyển qua
+  const { roomId, quizId, timeLimit } = location.state;
   const [roomDetails, setRoomDetails] = useState(null);
   const [members, setMembers] = useState([]);
   const [isOwner, setIsOwner] = useState(false);
@@ -92,14 +92,14 @@ const WaitingRoom = () => {
         setRoomDetails(data);
         if (data.quizStarted && members.length > 0) {
           members.forEach(member => {
-            navigate(`/quiz-room/${roomId}`, { state: { quizId, roomId } });
+            navigate(`/quiz-room/${roomId}`, { state: { quizId, roomId, timeLimit } });
           });
         }
       }
     });
-
+  
     return () => unsubscribe();
-  }, [roomId, members]);
+  }, [roomId, members, quizId, timeLimit, navigate]);
 
   const handleStartQuiz = async () => {
     if (isOwner) {

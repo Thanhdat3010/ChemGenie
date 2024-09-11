@@ -11,6 +11,7 @@ const Room = () => {
   const [newRoomName, setNewRoomName] = useState('');
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuizId, setSelectedQuizId] = useState(null);
+  const [timeLimit, setTimeLimit] = useState('');  // State để lưu thời gian giới hạn
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,8 +44,9 @@ const Room = () => {
           ownerId: user.uid,
           members: [user.uid],
           quizId: selectedQuizId,
+          timeLimit: Number(timeLimit),  // Lưu thời gian giới hạn
         });
-        navigate(`/waiting-room/${roomRef.id}`, { state: { quizId: selectedQuizId, roomId: roomRef.id } });
+        navigate(`/waiting-room/${roomRef.id}`, { state: { quizId: selectedQuizId, roomId: roomRef.id, timeLimit: Number(timeLimit) } });
       } else {
         console.log('Please select a quiz and enter a room name.');
       }
@@ -64,7 +66,8 @@ const Room = () => {
             members: arrayUnion(user.uid),
           });
           const quizId = roomSnap.data().quizId;
-          navigate(`/waiting-room/${roomId}`, { state: { quizId: quizId, roomId: roomId } });
+          const timeLimit = roomSnap.data().timeLimit; // Lấy timeLimit từ Firestore
+          navigate(`/waiting-room/${roomId}`, { state: { quizId: quizId, roomId: roomId, timeLimit: timeLimit } });
         } else {
           console.log('Room does not exist');
         }
@@ -106,8 +109,15 @@ const Room = () => {
             <option key={quiz.id} value={quiz.id}>{quiz.title}</option>
           ))}
         </select>
+        
       </div>
-
+      <input
+                type="number"
+                className="form-control my-2"
+                placeholder="Thời gian giới hạn (phút)"
+                value={timeLimit}
+                onChange={(e) => setTimeLimit(e.target.value)}
+              />
         <button className="btn room-button mt-3 ml-0" onClick={createRoom}>Tạo phòng</button>
       </div>
   

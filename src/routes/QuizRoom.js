@@ -7,7 +7,7 @@ import { getDoc, doc, setDoc, collection, query, orderBy, getDocs } from 'fireba
 
 const QuizRoom = () => {
   const location = useLocation();
-  const { quizId, roomId } = location.state || {}; // Lấy quizId và roomId từ state khi điều hướng
+  const { quizId, roomId, timeLimit } = location.state || {}; // Lấy quizId và roomId từ state khi điều hướng
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -18,8 +18,7 @@ const QuizRoom = () => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [timeLeft, setTimeLeft] = useState(20); // Thời gian mỗi câu hỏi
-  const [timeUp, setTimeUp] = useState(false); // Trạng thái hết thời gian
+  const [remainingTime, setRemainingTime] = useState(timeLimit * 60); // Đặt thời gian ban đầu theo giây
   const [leaderboard, setLeaderboard] = useState([]);
   const navigate = useNavigate()
   useEffect(() => {
@@ -43,29 +42,19 @@ const QuizRoom = () => {
   }, [quizId]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prevTime => {
-        if (prevTime > 1) {
-          return prevTime - 1;
-        } else {
-          setTimeUp(true);
-          clearInterval(timer);
-          return 0;
-        }
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [currentQuestion]);
-
-  useEffect(() => {
-    if (timeUp) {
-      setTimeUp(false);
-      setNotificationMessage("Thời gian đã hết. Tự động chuyển câu hỏi tiếp theo.");
-      setShowNotification(true);
-      nextQuestion();
+    if (remainingTime > 0) {
+      const timer = setInterval(() => {
+        setRemainingTime(remainingTime - 1);
+      }, 1000);
+      return () => clearInterval(timer);
     }
-  }, [timeUp]);
+  }, [remainingTime]);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   const handleOptionClick = (selectedAnswer) => {
     if (selectedOption === null) {
@@ -132,14 +121,13 @@ const QuizRoom = () => {
   }, []);
 
   const nextQuestion = () => {
-    if (selectedOption === null && !timeUp) {
+    if (selectedOption === null) {
       setNotificationMessage("Bạn cần chọn đáp án trước khi tiếp tục.");
       setShowNotification(true);
       return;
     }
 
     setSelectedOption(null);
-    setTimeLeft(20);
 
     const nextQ = currentQuestion + 1;
     if (nextQ < questions.length) {
@@ -224,8 +212,8 @@ const QuizRoom = () => {
           {currentQuestion < questions.length && (
             <div className="quiz-room-page-question">
             <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
-            <p>Thời gian còn lại: {timeLeft} giây</p>
-              {questions[currentQuestion].type === "multiple-choice" && (
+            <p>Thời gian còn lại: {formatTime(remainingTime)}</p>
+            {questions[currentQuestion].type === "multiple-choice" && (
                 <ul>
                   {questions[currentQuestion].options.map((option, index) => (
                     <li
