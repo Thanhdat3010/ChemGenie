@@ -42,7 +42,11 @@ const CreateQuiz = () => {
   const generateQuestionsFromAI = async (text) => {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó ${difficulty} có đáp án và giải thích kèm theo từ văn bản sau: ${text} với cấu trúc:
+      const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
+      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó ${difficulty} từ văn bản sau: ${text}. 
+      Mỗi câu hỏi cần có đáp án và giải thích kèm theo. 
+      Câu hỏi được đặt bằng tiếng Việt (không sử dụng tiếng Anh), nhưng tất cả các chất hóa học (trong câu hỏi và đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh).
+      Kết quả trả về dạng JSON với cấu trúc sau:
       [
         {
           type: "multiple-choice",
@@ -51,7 +55,7 @@ const CreateQuiz = () => {
           "correctAnswer": "Đáp án đúng",
           "explain": "Giải thích cho đáp án đúng"
         },
-      ]. Kết quả trả về dạng JSON
+      ]. 
       `;
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -123,14 +127,18 @@ const CreateQuiz = () => {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hoá lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty} có đáp án và giải thích kèm theo. Câu hỏi được đặt bằng tiếng Việt(quan trọng), nhưng tất cả các chất (trong câu hỏi và đáp án) phải được viết theo danh pháp IUPAC (tiếng Anh). Kết quả trả ra dạng JSON với cấu trúc sau:
+      const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
+      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty}. 
+      Mỗi câu hỏi cần có đáp án và giải thích kèm theo. 
+      Câu hỏi được đặt bằng tiếng Việt (không sử dụng tiếng Anh), nhưng tất cả các chất hóa học (trong câu hỏi và đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
+      Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
       [
         {
           type: "multiple-choice",
           "question": "Câu hỏi 1",
           "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          "answer": "Đáp án đúng",
-          "explanation": "Giải thích cho đáp án đúng"
+          "correctAnswer": "Đáp án đúng",
+          "explain": "Giải thích cho đáp án đúng"
         },
       ]
       `;
@@ -138,10 +146,9 @@ const CreateQuiz = () => {
       const response = await result.response;
       const text = response.text();    
       // Giả sử text trả về là một chuỗi JSON các câu hỏi
-      const cleanText = text.replace(/`/g, ''); // Thay thế tất cả các backtick
-      const cleanText1 = cleanText.replace(/json/g, ''); // Thay thế tất cả các backtick
-      console.log(cleanText1);
-      const generatedQuestions = JSON.parse(cleanText1);
+      const cleanText = text.replace(/`/g, '').replace(/json/g, ''); // Thay thế tất cả các backtick
+      console.log(cleanText);
+      const generatedQuestions = JSON.parse(cleanText);
       // Kiểm tra nếu generatedQuestions là một mảng
       const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
       questionsArray.forEach(generatedQuestions => {
@@ -149,8 +156,8 @@ const CreateQuiz = () => {
             type: 'multiple-choice',
             question: generatedQuestions.question,
             options: generatedQuestions.options,
-            correctAnswer: generatedQuestions.answer,
-            explain: generatedQuestions.explanation,
+            correctAnswer: generatedQuestions.correctAnswer,
+            explain: generatedQuestions.explain,
         };
   
         setQuestions(prevQuestions => [...prevQuestions, newQuestion]);
