@@ -43,25 +43,38 @@ const CreateQuiz = () => {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
-      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó ${difficulty} từ văn bản sau: ${text}. 
-      Mỗi câu hỏi cần có đáp án và giải thích kèm theo. 
-      Câu hỏi được đặt bằng tiếng Việt (không sử dụng tiếng Anh), nhưng tất cả các chất hóa học (trong câu hỏi và đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh).
-      Kết quả trả về dạng JSON với cấu trúc sau:
-      [
-        {
-          type: "multiple-choice",
-          "question": "Câu hỏi 1",
-          "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          "correctAnswer": "Đáp án đúng",
-          "explain": "Giải thích cho đáp án đúng"
-        },
-      ]. 
-      `;
+      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó: ${difficulty}. Các câu hỏi được tạo dựa trên văn bản sau: ${text}. 
+      Mỗi câu hỏi cần có bốn lựa chọn đáp án, một đáp án đúng và giải thích kèm theo. 
+      Câu hỏi phải được viết bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh).
+      Kết quả trả về dưới dạng JSON với cấu trúc sau:
+      ${JSON.stringify([
+      {
+        type: "multiple-choice",
+        question: "Câu hỏi 1",
+        options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+        correctAnswer: "Đáp án đúng",
+        explain: "Giải thích cho đáp án đúng"
+      }
+    ])}
+    `;
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      const cleanText = response.text().replace(/`/g, '').replace(/json/g, '');
+      const cleanText = response.text().replace(/`/g, '')
+      .replace(/`/g, '')
+      .replace(/json/g, '')
+      .replace(/\*/g, '')
+      .replace(/\\"/g, '"')
+      .replace(/\\\'/g, "'")
+      .replace(/\\n/g, ''); // Thay thế tất cả các backtick và escape characters
       console.log(cleanText);
-      const generatedQuestions = JSON.parse(cleanText);
+      let generatedQuestions;
+    try {
+      generatedQuestions = JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error('Error parsing JSON:', parseError);
+      alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
+      return;
+    }
       const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
       questionsArray.forEach(question => {
         const newQuestion = {
@@ -128,36 +141,53 @@ const CreateQuiz = () => {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
-      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty}. 
-      Mỗi câu hỏi cần có đáp án và giải thích kèm theo. 
-      Câu hỏi được đặt bằng tiếng Việt (không sử dụng tiếng Anh), nhưng tất cả các chất hóa học (trong câu hỏi và đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
+      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa học lớp ${grade} với chủ đề ${topic} và độ khó: ${difficulty}. 
+      Mỗi câu hỏi cần có đáp án đúng và giải thích chi tiết kèm theo.
+      Các câu hỏi phải đa dạng về nội dung và hình thức. 
+      Câu hỏi được đặt bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
-      [
+      ${JSON.stringify([
         {
           type: "multiple-choice",
-          "question": "Câu hỏi 1",
-          "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          "correctAnswer": "Đáp án đúng",
-          "explain": "Giải thích cho đáp án đúng"
-        },
-      ]
+          question: "Câu hỏi 1",
+          options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+          correctAnswer: "Đáp án đúng",
+          explain: "Giải thích cho đáp án đúng"
+        }
+      ])}
       `;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();    
       // Giả sử text trả về là một chuỗi JSON các câu hỏi
-      const cleanText = text.replace(/`/g, '').replace(/json/g, ''); // Thay thế tất cả các backtick
+      const cleanText = text
+      .replace(/`/g, '')
+      .replace(/json/g, '')
+      .replace(/\*/g, '')
+      .replace(/\\"/g, '"')
+      .replace(/\\\'/g, "'")
+      .replace(/\\n/g, ''); // Thay thế tất cả các backtick và escape characters
       console.log(cleanText);
-      const generatedQuestions = JSON.parse(cleanText);
+
+      // Kiểm tra nếu cleanText là JSON hợp lệ
+      let generatedQuestions;
+      try {
+        generatedQuestions = JSON.parse(cleanText);
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
+        return;
+      }
+
       // Kiểm tra nếu generatedQuestions là một mảng
       const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
-      questionsArray.forEach(generatedQuestions => {
+      questionsArray.forEach(question => {
         const newQuestion = {
             type: 'multiple-choice',
-            question: generatedQuestions.question,
-            options: generatedQuestions.options,
-            correctAnswer: generatedQuestions.correctAnswer,
-            explain: generatedQuestions.explain,
+            question: question.question,
+            options: question.options,
+            correctAnswer: question.correctAnswer,
+            explain: question.explain,
         };
   
         setQuestions(prevQuestions => [...prevQuestions, newQuestion]);

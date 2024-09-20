@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './Chatbot.css';
 import logo from "../assets/logo.png"
@@ -10,10 +10,18 @@ const Chatbot = () => {
   const [input, setInput] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const [userName, setUserName] = useState('');
+  const messagesEndRef = useRef(null);
 
   // Avatar của chatbot
   const chatbotAvatar = logo; // Đường dẫn đến avatar của chatbot
-
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]); // Mỗi khi danh sách tin nhắn thay đổi
   useEffect(() => {
     // Hàm async để fetch thông tin người dùng từ Firestore
     const fetchUserData = async () => {
@@ -87,6 +95,7 @@ const Chatbot = () => {
               </div>
             </div>
           ))}
+          <div ref={messagesEndRef} /> {/* Phần tử cuối cùng */}
         </div>
         <div className="chatbot-input">
           <input

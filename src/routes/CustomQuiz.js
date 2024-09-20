@@ -148,8 +148,8 @@ const CustomQuiz = () => {
       if (isCorrect) {
         setScore(prevScore => prevScore + 1);
       }
-      event.target.elements[0].classList.toggle('correct-answer', isCorrect);
-      event.target.elements[0].classList.toggle('incorrect-answer', !isCorrect);
+      event.target.elements[0].classList.toggle('custom-quiz-correct-answer', isCorrect);
+      event.target.elements[0].classList.toggle('custom-quiz-incorrect-answer', !isCorrect);
 
       await saveProgress();
     }
@@ -211,12 +211,12 @@ const CustomQuiz = () => {
 
   if (quizCompleted) {
     return (
-      <div className="custom-quiz-page">
+      <div className="custom-quiz-hoan-thanh">
         <h2>Hoàn thành</h2>
-        <div className="score-container">
-          <p className="score-label">Điểm số của bạn:</p>
-          <p className="score">{score}</p>
-          <button onClick={resetQuiz} className="next-button">Làm lại</button>
+        <div className="custom-quiz-score-container">
+          <p className="custom-quiz-score-label">Điểm số của bạn:</p>
+          <p className="custom-quiz-score">{score}</p>
+          <button onClick={resetQuiz} className="custom-quiz-next-button">Làm lại</button>
         </div>
       </div>
     );
@@ -226,20 +226,20 @@ const CustomQuiz = () => {
     <div className="custom-quiz-page">
       <h2>Bộ câu hỏi của bạn</h2>
       {questions.length === 0 ? (
-        <div className="quiz-list">
+        <div className="custom-quiz-list">
           {quizzes.map((quiz, index) => (
-            <div key={index} className="quiz-item">
+            <div key={index} className="custom-quiz-item">
               <h3>{quiz.title}</h3>
-              <button onClick={() => startQuiz(quiz)} className='start-button'>Bắt đầu</button>
-              <button onClick={() => deleteQuiz(quiz.id)} className="delete-button">Xóa</button>
+              <button onClick={() => startQuiz(quiz)} className='custom-quiz-start-button'>Bắt đầu</button>
+              <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">Xóa</button>
             </div>
           ))}
         </div>
       ) : (
-        <div className="questions-container">
-          <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+        <div className="custom-quiz-questions-container">
+          <div className="custom-quiz-progress-bar" style={{ width: `${progress}%` }}></div>
           {currentQuestion < questions.length && (
-            <div className="question">
+            <div className="custom-quiz-question">
             <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
             {questions[currentQuestion].imageURL && <img src={questions[currentQuestion].imageURL} alt="question image" style={{ maxWidth: '100%', margin: '10px 0' }} />}
             {questions[currentQuestion].type === "multiple-choice" && (
@@ -252,18 +252,18 @@ const CustomQuiz = () => {
                         selectedOption !== null &&
                         answerState[currentQuestion] !== null &&
                         option === questions[currentQuestion].correctAnswer
-                          ? "correct"
+                          ? "custom-quiz-correct"
                           : selectedOption !== null &&
                             answerState[currentQuestion] !== null &&
                             selectedOption === option &&
                             option !== questions[currentQuestion].correctAnswer
-                          ? "incorrect"
+                          ? "custom-quiz-incorrect"
                           : ""
                       }
                     >
                       <span dangerouslySetInnerHTML={{ __html: `(${String.fromCharCode(65 + index)}) ${option}` }} />
-                      {selectedOption === option && answerState[currentQuestion] !== null && option === questions[currentQuestion].correctAnswer ? <span className="correct-mark">&#10003;</span> : ''}
-                      {selectedOption === option && answerState[currentQuestion] !== null && option !== questions[currentQuestion].correctAnswer ? <span className="incorrect-mark">&#10007;</span> : ''}
+                      {selectedOption === option && answerState[currentQuestion] !== null && option === questions[currentQuestion].correctAnswer ? <span className="custom-quiz-correct-mark">&#10003;</span> : ''}
+                      {selectedOption === option && answerState[currentQuestion] !== null && option !== questions[currentQuestion].correctAnswer ? <span className="custom-quiz-incorrect-mark">&#10007;</span> : ''}
                     </li>
                   ))}
                 </ul>
@@ -276,18 +276,18 @@ const CustomQuiz = () => {
                       selectedOption !== null &&
                       answerState[currentQuestion] !== null &&
                       true === (questions[currentQuestion].correctAnswer === "true")
-                        ? "correct"
+                        ? "custom-quiz-correct"
                         : selectedOption !== null &&
                           answerState[currentQuestion] !== null &&
                           selectedOption === true &&
                           true !== (questions[currentQuestion].correctAnswer === "true")
-                        ? "incorrect"
+                        ? "custom-quiz-incorrect"
                         : ""
                     }
                   >
                     (A) True
-                    {selectedOption === true && answerState[currentQuestion] !== null && true === (questions[currentQuestion].correctAnswer === "true") ? <span className="correct-mark">&#10003;</span> : ''}
-                    {selectedOption === true && answerState[currentQuestion] !== null && true !== (questions[currentQuestion].correctAnswer === "true") ? <span className="incorrect-mark">&#10007;</span> : ''}
+                    {selectedOption === true && answerState[currentQuestion] !== null && true === (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-correct-mark">&#10003;</span> : ''}
+                    {selectedOption === true && answerState[currentQuestion] !== null && true !== (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-incorrect-mark">&#10007;</span> : ''}
                   </li>
                   <li
                     onClick={() => handleTrueFalseClick(false)}
@@ -295,37 +295,37 @@ const CustomQuiz = () => {
                       selectedOption !== null &&
                       answerState[currentQuestion] !== null &&
                       false === (questions[currentQuestion].correctAnswer === "true")
-                        ? "correct"
+                        ? "custom-quiz-correct"
                         : selectedOption !== null &&
                           answerState[currentQuestion] !== null &&
                           selectedOption === false &&
                           false !== (questions[currentQuestion].correctAnswer === "true")
-                        ? "incorrect"
+                        ? "custom-quiz-incorrect"
                         : ""
                     }
                   >
                     (B) False
-                    {selectedOption === false && answerState[currentQuestion] !== null && false === (questions[currentQuestion].correctAnswer === "true") ? <span className="correct-mark">&#10003;</span> : ''}
-                    {selectedOption === false && answerState[currentQuestion] !== null && false !== (questions[currentQuestion].correctAnswer === "true") ? <span className="incorrect-mark">&#10007;</span> : ''}
+                    {selectedOption === false && answerState[currentQuestion] !== null && false === (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-correct-mark">&#10003;</span> : ''}
+                    {selectedOption === false && answerState[currentQuestion] !== null && false !== (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-incorrect-mark">&#10007;</span> : ''}
                   </li>
                 </ul>
               )}
               {questions[currentQuestion].type === "fill-in-the-blank" && (
-                <form onSubmit={handleFillInTheBlankSubmit} className="fill-in-the-blank-form">
+                <form onSubmit={handleFillInTheBlankSubmit} className="custom-quiz-fill-in-the-blank-form">
                   <input
                     type="text"
-                    className="fill-in-the-blank-input"
+                    className="custom-quiz-fill-in-the-blank-input"
                     placeholder="Nhập câu trả lời..."
                   />
-                  <button type="submit" id="submit-button" className="submit-button">Submit</button>
+                  <button type="submit" id="submit-button" className="custom-quiz-submit-button">Submit</button>
                   {/* Hiển thị dấu tích hoặc dấu x tùy thuộc vào đáp án */}
                 </form>
               )}
               {selectedOption !== null && (
                 <>
-                  <button onClick={toggleExplanation} className="explanation-button">Giải thích</button>
+                  <button onClick={toggleExplanation} className="custom-quiz-explanation-button">Giải thích</button>
                   {showExplanation && (
-                    <div className="explanation">
+                    <div className="custom-quiz-explanation">
                     <p>Đáp án đúng: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].correctAnswer.toString() }} /></p>
                     <p>Giải thích: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].explain }} /></p>
                     </div>
@@ -335,7 +335,7 @@ const CustomQuiz = () => {
             </div>
           )}
           {currentQuestion < questions.length && (
-            <button onClick={nextQuestion} className="next-button">Câu hỏi tiếp theo</button>
+            <button onClick={nextQuestion} className="custom-quiz-next-button">Câu hỏi tiếp theo</button>
           )}
           {showNotification && (
             <Notification

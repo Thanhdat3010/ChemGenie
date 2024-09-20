@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation để lấy state khi điều hướng
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './QuizRoom.css';
 import Notification from '../components/Notification';
 import { db, auth } from '../components/firebase';
@@ -7,7 +7,7 @@ import { getDoc, doc, setDoc, collection, query, orderBy, getDocs } from 'fireba
 
 const QuizRoom = () => {
   const location = useLocation();
-  const { quizId, roomId, timeLimit } = location.state || {}; // Lấy quizId và roomId từ state khi điều hướng
+  const { quizId, roomId, timeLimit } = location.state || {};
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -18,9 +18,10 @@ const QuizRoom = () => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [remainingTime, setRemainingTime] = useState(timeLimit * 60); // Đặt thời gian ban đầu theo giây
+  const [remainingTime, setRemainingTime] = useState(timeLimit * 60);
   const [leaderboard, setLeaderboard] = useState([]);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -41,14 +42,46 @@ const QuizRoom = () => {
     fetchQuiz();
   }, [quizId]);
 
+  const fetchLeaderboard = useCallback(async () => {
+    const scoresRef = collection(db, 'rooms', roomId, 'scores');
+    const q = query(scoresRef, orderBy('score', 'desc'));
+    const querySnapshot = await getDocs(q);
+    const leaderboardData = [];
+    querySnapshot.forEach((doc) => {
+      leaderboardData.push(doc.data());
+    });
+    setLeaderboard(leaderboardData);
+  }, [roomId]);
+
+  const saveScore = useCallback(async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const userProfileDoc = await getDoc(doc(db, 'profiles', user.uid));
+      const userProfile = userProfileDoc.data();
+
+      const scoreRef = doc(db, 'rooms', roomId, 'scores', user.uid);
+      await setDoc(scoreRef, {
+        uid: user.uid,
+        name: userProfile.username,
+        avatar: userProfile.profilePictureUrl,
+        score: score
+      });
+
+      fetchLeaderboard();
+    }
+  }, [roomId, score, fetchLeaderboard]);
+
   useEffect(() => {
     if (remainingTime > 0) {
       const timer = setInterval(() => {
-        setRemainingTime(remainingTime - 1);
+        setRemainingTime(prevTime => prevTime - 1);
       }, 1000);
       return () => clearInterval(timer);
+    } else {
+      setQuizCompleted(true);
+      saveScore();
     }
-  }, [remainingTime]);
+  }, [remainingTime, saveScore]);
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -143,60 +176,33 @@ const QuizRoom = () => {
   const toggleExplanation = () => {
     setShowExplanation(!showExplanation);
   };
-  const saveScore = async () => {
-    const user = auth.currentUser;
-    if (user) {
-      const userProfileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const userProfile = userProfileDoc.data();
-
-      const scoreRef = doc(db, 'rooms', roomId, 'scores', user.uid);
-      await setDoc(scoreRef, {
-        uid: user.uid,
-        name: userProfile.username,
-        avatar: userProfile.profilePictureUrl,
-        score: score
-      });
-
-      fetchLeaderboard();
-    }
-  };
-
-  const fetchLeaderboard = async () => {
-    const scoresRef = collection(db, 'rooms', roomId, 'scores');
-    const q = query(scoresRef, orderBy('score', 'desc'));
-    const querySnapshot = await getDocs(q);
-    const leaderboardData = [];
-    querySnapshot.forEach((doc) => {
-      leaderboardData.push(doc.data());
-    });
-    setLeaderboard(leaderboardData);
-  };
 
   useEffect(() => {
     if (quizCompleted) {
       fetchLeaderboard();
     }
-  }, [quizCompleted]);
+  }, [quizCompleted, fetchLeaderboard]);
+
   if (quizCompleted) {
     return (
       <div className="quiz-room-page">
         <h2>Hoàn thành</h2>
-  <div className="quiz-room-page-score-container">
-    <p className="quiz-room-page-score-label">Điểm số của bạn:</p>
-    <p className="quiz-room-page-score">{score}</p>
-    <h3>Bảng xếp hạng</h3>
-    <div className="leaderboard">
-      {leaderboard.map((player, index) => (
-        <div key={index} className="leaderboard-item">
-          <div className="leaderboard-ranking">{index + 1}</div>
-          <img src={player.avatar} alt={`${player.name}'s avatar`} className="leaderboard-avatar" />
-          <p className="leaderboard-name">{player.name}</p>
-          <p className="leaderboard-score">Điểm số: {player.score}</p>
+        <div className="quiz-room-page-score-container">
+          <p className="quiz-room-page-score-label">Điểm số của bạn:</p>
+          <p className="quiz-room-page-score">{score}</p>
+          <h3>Bảng xếp hạng</h3>
+          <div className="leaderboard">
+            {leaderboard.map((player, index) => (
+              <div key={index} className="leaderboard-item">
+                <div className="leaderboard-ranking">{index + 1}</div>
+                <img src={player.avatar} alt={`${player.name}'s avatar`} className="leaderboard-avatar" />
+                <p className="leaderboard-name">{player.name}</p>
+                <p className="leaderboard-score">Điểm số: {player.score}</p>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => navigate('/')} className="quiz-room-page-back-button">Quay về trang chủ</button>
         </div>
-      ))}
-    </div>
-    <button onClick={() => navigate('/')} className="quiz-room-page-back-button">Quay về trang chủ</button>
-  </div>
       </div>
     );
   }
@@ -211,9 +217,9 @@ const QuizRoom = () => {
           <div className="quiz-room-page-progress-bar" style={{ width: `${progress}%` }}></div>
           {currentQuestion < questions.length && (
             <div className="quiz-room-page-question">
-            <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
-            <p>Thời gian còn lại: {formatTime(remainingTime)}</p>
-            {questions[currentQuestion].type === "multiple-choice" && (
+              <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
+              <p>Thời gian còn lại: {formatTime(remainingTime)}</p>
+              {questions[currentQuestion].type === "multiple-choice" && (
                 <ul>
                   {questions[currentQuestion].options.map((option, index) => (
                     <li
@@ -289,7 +295,6 @@ const QuizRoom = () => {
                     placeholder="Nhập câu trả lời..."
                   />
                   <button type="submit" id="quiz-room-page-submit-button" className="quiz-room-page-submit-button">Submit</button>
-                  {/* Hiển thị dấu tích hoặc dấu x tùy thuộc vào đáp án */}
                 </form>
               )}
               {selectedOption !== null && (
@@ -297,8 +302,8 @@ const QuizRoom = () => {
                   <button onClick={toggleExplanation} className="quiz-room-page-explanation-button">Giải thích</button>
                   {showExplanation && (
                     <div className="quiz-room-page-explanation">
-                    <p>Đáp án đúng: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].correctAnswer.toString() }} /></p>
-                    <p>Giải thích: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].explain }} /></p>
+                      <p>Đáp án đúng: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].correctAnswer.toString() }} /></p>
+                      <p>Giải thích: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].explain }} /></p>
                     </div>
                   )}
                 </>
