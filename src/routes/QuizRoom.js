@@ -71,6 +71,21 @@ const QuizRoom = () => {
     }
   }, [roomId, score, fetchLeaderboard]);
 
+  const saveProgress = useCallback(async () => {
+    const user = auth.currentUser;
+    if (user && quizId) {
+      const docRef = doc(db, 'quizProgress', `${user.uid}_${quizId}`);
+      await setDoc(docRef, {
+        questions,
+        currentQuestion,
+        answerState,
+        score,
+        progress,
+        quizCompleted
+      });
+    }
+  }, [quizId, questions, currentQuestion, answerState, score, progress, quizCompleted]);
+
   useEffect(() => {
     if (remainingTime > 0) {
       const timer = setInterval(() => {
@@ -101,6 +116,8 @@ const QuizRoom = () => {
       if (isCorrect) {
         setScore(prevScore => prevScore + 1);
       }
+
+      saveProgress();
     }
   };
 
@@ -116,6 +133,8 @@ const QuizRoom = () => {
       if (isCorrect) {
         setScore(prevScore => prevScore + 1);
       }
+
+      saveProgress();
     }
   };
 
@@ -135,6 +154,8 @@ const QuizRoom = () => {
       }
       event.target.elements[0].classList.toggle('quiz-room-page-correct-answer', isCorrect);
       event.target.elements[0].classList.toggle('quiz-room-page-incorrect-answer', !isCorrect);
+
+      saveProgress();
     }
   };
 
@@ -167,8 +188,10 @@ const QuizRoom = () => {
       setCurrentQuestion(nextQ);
       const newProgress = (nextQ / questions.length) * 100;
       setProgress(newProgress);
+      saveProgress();
     } else {
       setQuizCompleted(true);
+      saveProgress();
       saveScore();
     }
   };

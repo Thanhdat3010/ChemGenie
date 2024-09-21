@@ -31,8 +31,10 @@ import AnalyzeResults from "./routes/AnalyzeResults";
 import RecommendExercises from "./routes/RecommendExercises";
 import StorytellingAI from "./CreateQuiz/StorytellingAI";
 import ExperimentProposal from "./routes/ExperimentProposal";
-// import Flashgen from "./routes/Flashgen";
+import FlashcardGenerator from "./routes/FlashcardGenerator";
 import Chatbot from "./routes/Chatbot";
+import FlashcardStorage from './routes/FlashcardStorage';
+
 function App() {
   useEffect(() => {
     // Tìm nạp email và mã thông báo của người dùng từ localStorage
@@ -71,7 +73,7 @@ function App() {
     <Route path='/SolverForm' element={<SolverForm/>}/>
     <Route path='/AnalyzeResults' element={<AnalyzeResults/>}/>
     <Route path='/RecommendExercises' element={<RecommendExercises/>}/>
-    {/* <Route path='/Flashgen' element={<Flashgen/>}/> */}
+    <Route path='/FlashcardGenerator' element={<FlashcardGenerator/>}/>
     <Route path='/StorytellingAI' element={<StorytellingAI/>}/>
     <Route path='/ExperimentProposal' element={<ExperimentProposal/>}/>
     <Route path='/CustomQuiz' element={<CustomQuiz/>}/>
@@ -92,6 +94,7 @@ function App() {
     <Route path="/post/:id" element={<Post />} />
     <Route path="/new-post" element={<NewPost />} />
     <Route path="/my-post" element={<MyPost />} />
+    <Route path="/FlashcardStorage" element={<FlashcardStorage />} />
     </Routes>
   </div>
   </BackgroundProvider>

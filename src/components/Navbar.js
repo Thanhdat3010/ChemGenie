@@ -157,11 +157,11 @@ const Navbar = () => {
         Bảng tuần hoàn
       </Link>
     </li>
-    {/* <li>
-      <Link className={`nav-links ${isActive('/Flashcard') ? 'active' : ''}`} to="/Flashcard">
-        Hợp chất
+    <li>
+      <Link className={`nav-links ${isActive('/FlashcardGenerator') ? 'active' : ''}`} to="/FlashcardGenerator">
+        Flashcard
       </Link>
-    </li> */}
+    </li>
   </ul>
 </li>
 
