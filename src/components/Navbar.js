@@ -162,6 +162,11 @@ const Navbar = () => {
         Flashcard
       </Link>
     </li>
+    <li>
+      <Link className={`nav-links ${isActive('/IUPACPronunciationGame') ? 'active' : ''}`} to="/IUPACPronunciationGame">
+       IUPAC Game
+      </Link>
+    </li>
   </ul>
 </li>
 

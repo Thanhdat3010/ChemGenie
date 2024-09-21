@@ -1,33 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { Button, message, Image } from 'antd';
-import './IUPACPronunciationGame.css';  // Đảm bảo import file CSS
+import './IUPACPronunciationGame.css';
 import Navbar from '../components/Navbar';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import magic from "../assets/magic-dust.png";
+
 function IUPACPronunciationGame() {
   const [currentCompound, setCurrentCompound] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [accuracy, setAccuracy] = useState(null);
+  const [compounds, setCompounds] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const compounds = [
-    { name: 'Methane', iupac: 'methane' },
-    { name: 'Ethanol', iupac: 'ethanol' },
-    { name: 'Propanoic acid', iupac: 'propanoic acid' },
-    { name: 'Benzene', iupac: 'benzene' },
-    { name: 'Acetone', iupac: 'propanone' },
-    { name: 'Glucose', iupac: 'glucose' },
-    { name: 'Aspirin', iupac: '2-acetoxybenzoic acid' },
-    { name: 'Caffeine', iupac: '1,3,7-trimethylpurine-2,6-dione' },
-
-    // Thêm nhiều hợp chất khác
-  ];
+  const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
   useEffect(() => {
-    selectRandomCompound();
+    generateCompounds();
   }, []);
 
-  const selectRandomCompound = () => {
-    const randomIndex = Math.floor(Math.random() * compounds.length);
-    setCurrentCompound(compounds[randomIndex]);
-    setAccuracy(null);
+  const generateCompounds = async () => {
+    setLoading(true);
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `Tạo 10 cặp tên thông thường và tên IUPAC của các hợp chất hóa học. 
+      Hãy đảm bảo rằng các hợp chất có độ khó đa dạng và phù hợp với học sinh trung học phổ thông.
+      Kết quả trả về dưới dạng JSON với cấu trúc sau:
+      ${JSON.stringify([
+        { name: "Methane", iupac: "methane" },
+        { name: "Ethanol", iupac: "ethanol" },
+      ])}`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const cleanText = response.text()
+        .replace(/`/g, '')
+        .replace(/json/g, '')
+        .replace(/\*/g, '')
+        .replace(/\\"/g, '"')
+        .replace(/'/g, "'")
+        .replace(/\\n/g, '')
+        .replace(/\s+/g, ' ');
+
+      const generatedCompounds = JSON.parse(cleanText);
+      setCompounds(generatedCompounds);
+      selectRandomCompound(generatedCompounds);
+    } catch (error) {
+      console.error('Error generating compounds:', error);
+      message.error('Đã xảy ra lỗi khi tạo danh sách hợp chất. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectRandomCompound = (compoundList = compounds) => {
+    if (compoundList.length > 0) {
+      const randomIndex = Math.floor(Math.random() * compoundList.length);
+      setCurrentCompound(compoundList[randomIndex]);
+      setAccuracy(null);
+    } else {
+      message.warning('Không có hợp chất nào. Vui lòng tạo mới danh sách.');
+    }
   };
 
   const playSampleAudio = () => {
@@ -141,41 +173,41 @@ function IUPACPronunciationGame() {
 
   return (
     <>
-    <Navbar />
-    <div className="iupac-game-container">
-      <h2 className="iupac-game-title">Trò chơi phát âm IUPAC</h2>
-      {currentCompound && (
-        <div className="compound-info">
-          <h3 className="compound-name">Hợp chất hiện tại: {currentCompound.name}</h3>
-          <p className="instruction">Hãy phát âm tên IUPAC của hợp chất này</p>
-          {currentCompound.structureImage && (
-            <Image
-              className="molecule-image"
-              src={currentCompound.structureImage}
-              alt={`Cấu trúc phân tử của ${currentCompound.name}`}
-              width={200}
-            />
-          )}
-          <div className="button-group">
-            <Button onClick={startListening} disabled={isListening}>
-              {isListening ? 'Đang lắng nghe...' : 'Bắt đầu phát âm'}
-            </Button>
-            <Button onClick={playSampleAudio}>
-              Phát âm mẫu
-            </Button>
+      <Navbar />
+      <div className="iupac-game-page">
+      <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
+      <h2 className="solver-form-title">Trò chơi phát âm IUPAC</h2>
+      <p className="solver-intro">AI sẽ giúp bạn cải thiện khả năng phát âm danh pháp IUPAC của các hợp chất hóa học.</p>
+        {loading ? (
+          <p>Đang tạo danh sách hợp chất...</p>
+        ) : currentCompound ? (
+          <div className="iupac-game-page__content">
+            <h3 className="iupac-game-page__compound-name">Hợp chất hiện tại: {currentCompound.name}</h3>
+            <p className="iupac-game-page__instruction">Hãy phát âm tên IUPAC của hợp chất này</p>
+            <div className="iupac-game-page__button-group">
+              <button className="iupac-game-page__button" onClick={startListening} disabled={isListening}>
+                {isListening ? 'Đang lắng nghe...' : 'Bắt đầu phát âm'}
+              </button>
+              <button className="iupac-game-page__button" onClick={playSampleAudio}>
+                Phát âm mẫu
+              </button>
+            </div>
+            {accuracy !== null && (
+              <p className="iupac-game-page__accuracy">Độ chính xác: {accuracy}%</p>
+            )}
+            <button className="iupac-game-page__next-button" onClick={() => selectRandomCompound()}>
+              Hợp chất tiếp theo
+            </button>
           </div>
-          {accuracy !== null && (
-            <p className="accuracy-display">Độ chính xác: {accuracy}%</p>
-          )}
-          <Button className="next-compound-button" onClick={selectRandomCompound}>
-            Hợp chất tiếp theo
-          </Button>
-        </div>
-      )}
-    </div>
+        ) : (
+          <p>Không có hợp chất nào. Vui lòng tạo mới danh sách.</p>
+        )}
+        <button className="iupac-game-page__button" onClick={generateCompounds} disabled={loading}>
+          Tạo danh sách hợp chất mới
+        </button>
+      </div>
     </>
   );
 }
-
 
 export default IUPACPronunciationGame;
