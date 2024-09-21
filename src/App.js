@@ -33,8 +33,8 @@ import StorytellingAI from "./CreateQuiz/StorytellingAI";
 import ExperimentProposal from "./routes/ExperimentProposal";
 import FlashcardGenerator from "./routes/FlashcardGenerator";
 import Chatbot from "./routes/Chatbot";
-import FlashcardStorage from './routes/FlashcardStorage';
-
+import FlashcardStorage from "./routes/FlashcardStorage";
+import FlashcardDetail from "./routes/FlashcardDetail";
 function App() {
   useEffect(() => {
     // Tìm nạp email và mã thông báo của người dùng từ localStorage
@@ -94,7 +94,8 @@ function App() {
     <Route path="/post/:id" element={<Post />} />
     <Route path="/new-post" element={<NewPost />} />
     <Route path="/my-post" element={<MyPost />} />
-    <Route path="/FlashcardStorage" element={<FlashcardStorage />} />
+    <Route path="/flashcard-storage" element={<FlashcardStorage />} />
+    <Route path="/flashcard/:id" element={<FlashcardDetail />} />
     </Routes>
   </div>
   </BackgroundProvider>

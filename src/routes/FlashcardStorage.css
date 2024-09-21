@@ -1,103 +1,57 @@
 .flashcard-storage {
-  padding: 2rem;
-  margin-top: 150px;
+  padding: 20px;
+  margin-top: 120px;
 }
 
-.size-controls {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
+.flashcard-storage__title {
+  text-align: center;
+  color: #7b31c9;
+  margin-bottom: 20px;
 }
 
-.size-controls label {
-  margin-right: 2rem;
-}
-
-.size-controls input {
-  padding: 0.5rem;
-  margin-left: 0.5rem;
-  width: 80px;
-}
-
-.flashcard-selection {
-  margin-bottom: 2rem;
-}
-
-.flashcard-selection h3 {
-  margin-bottom: 1rem;
-}
-
-.flashcard-selection label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
-.flashcard-selection input[type="checkbox"] {
-  margin-right: 0.5rem;
-}
-
-.flashcard-grid {
+.flashcard-storage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
 }
 
-.flashcard {
-  border: 1px solid #ccc;
+.flashcard-storage__item {
+  border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
   background-color: #fff;
-  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 200px;
+}
+
+.flashcard-storage__item-title {
+  color: #7b31c9;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.flashcard-storage__item-summary {
+  font-size: 0.9em;
+  color: #333;
+  margin-bottom: 10px;
+  flex-grow: 1;
   overflow: hidden;
 }
 
-.flashcard:hover {
-  transform: scale(1.05);
-}
-
-.flashcard h3 {
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.flashcard p {
-  margin-bottom: 0.5rem;
-}
-
-.flashcard ul {
-  list-style-type: disc;
-  padding-left: 1rem;
-}
-
-.customized-cards {
-  margin-bottom: 2rem;
-}
-
-.customized-card {
-  border: 1px solid #ccc;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
-
-.customized-card input,
-.customized-card textarea {
-  width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ddd;
+.flashcard-storage__item-button {
+  background-color: #7b31c9;
+  color: white;
+  border: none;
+  padding: 8px 12px;
   border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.customized-card input {
-  font-size: 1rem;
-}
-
-.customized-card textarea {
-  height: 100px;
-  font-size: 0.9rem;
-  resize: none;
+.flashcard-storage__item-button:hover {
+  background-color: #6422a6;
 }

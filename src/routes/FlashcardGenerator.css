@@ -110,16 +110,31 @@ body {
   font-weight: 600;
 }
 
-.message {
-  padding: 10px;
+.flashcard-generator-page__save-btn {
+  background-color: #7b31c9;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
   margin-top: 20px;
-  width: 67%;
-  border-radius: 5px;
-  text-align: center;
-  background-color: #f0e6ff;
-  color: #7b31c9;
+  display: block;
+  width: 100%;
+  max-width: 200px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.flashcard-generator-page__save-btn:hover {
+  background-color: #6422a6;
+}
+
+.flashcard-generator-page__save-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(123, 49, 201, 0.3);
 }
 
 @media (max-width: 600px) {
@@ -167,6 +182,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .flashcard-generator-page__storage-btn {
     margin-top: 10px;
     padding: 10px 20px;

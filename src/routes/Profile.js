@@ -195,12 +195,7 @@ const Profile = () => {
           <button onClick={() => setActiveTab('Friendlist')} className={activeTab === 'Friendlist' ? 'active' : ''}>Danh sách bạn bè</button>
           <button onClick={() => setActiveTab('Lịch sử bài học')} className={activeTab === 'Lịch sử bài học' ? 'active' : ''}>Lịch sử bài học</button>
           <button onClick={() => setActiveTab('Bộ câu hỏi')} className={activeTab === 'Bộ câu hỏi' ? 'active' : ''}>Bộ câu hỏi</button>
-          <button 
-            onClick={() => navigate('/flashcard-archive')} 
-            className={activeTab === 'Kho Flashcard' ? 'active' : ''}
-          >
-            Kho Flashcard
-          </button>
+          <button onClick={() => setActiveTab('Flashcard')} className={activeTab === 'Flashcard' ? 'active' : ''}>Flashcard</button>
         </div>
         <div className="tabContent">
           {activeTab === 'Thông báo' && (
@@ -236,7 +231,13 @@ const Profile = () => {
             Bộ câu hỏi của bạn
           </Link>
           </div>}
-          {activeTab === 'Kho Flashcard' && <div>Kho Flashcard content</div>}
+          {activeTab === 'Flashcard' && (
+            <div>
+              <Link to="/flashcard-storage" className="Profile-link">
+                Kho Flashcard
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

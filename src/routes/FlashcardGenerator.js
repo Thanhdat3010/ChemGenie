@@ -58,18 +58,18 @@ function FlashcardGenerator() {
 
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const flashcardStructure = {
-        title: "Tiêu đề ngắn gọn",
-        summary: "Tóm tắt ngắn gọn về nội dung chính (không quá 50 từ)",
+        title: "Tiêu đề chi tiết",
+        summary: "Tóm tắt chi tiết về kiến thức mà người dùng cần học (khoảng 100 từ)",
         keyPoints: [
-          "Điểm chính 1",
-          "Điểm chính 2",
-          "Điểm chính 3",
-          "Điểm chính 4",
-          "Tùy theo bài dài hay ngắn mà số lượng điểm chính có thể thay đổi"
+          "Kiến thức cần học 1: Mô tả chi tiết",
+          "Kiến thức cần học 2: Mô tả chi tiết",
+          "Kiến thức cần học 3: Mô tả chi tiết",
+          "Kiến thức cần học 4: Mô tả chi tiết",
+          "Tùy theo bài dài hay ngắn mà số lượng kiến thức cần học có thể thay đổi"
         ]
       };
       const prompt = `Bạn là một chuyên gia giáo dục có kinh nghiệm trong việc tạo flashcard. 
-      Hãy tạo một flashcard từ văn bản sau đây. Flashcard nên tóm tắt thông tin chính của văn bản. 
+      Hãy tạo một flashcard từ văn bản sau đây. Flashcard nên tóm tắt chi tiết thông tin chính của văn bản để người học có thể dễ dàng học tập. 
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
       ${JSON.stringify(flashcardStructure, null, 2)}
       Văn bản: ${extractedText}`;
@@ -83,6 +83,8 @@ function FlashcardGenerator() {
         .replace(/```json/g, '')
         .replace(/```/g, '')
         .replace(/\n/g, '')
+        .replace(/\*/g, '')
+        .replace(/-/g, ' ')
         .trim();
 
       console.log("Clean text:", cleanText);
@@ -118,20 +120,16 @@ function FlashcardGenerator() {
     }
 
     try {
-      await addDoc(collection(db, 'flashcards'), {
+      await addDoc(collection(db, "flashcards"), {
         ...flashcard,
         userId: user.uid,
         createdAt: new Date()
       });
       alert("Flashcard đã được lưu thành công!");
     } catch (error) {
-      console.error("Lỗi khi lưu flashcard:", error);
+      console.error("Error saving flashcard:", error);
       alert("Có lỗi xảy ra khi lưu flashcard. Vui lòng thử lại.");
     }
-  };
-
-  const goToFlashcardStorage = () => {
-    navigate('/FlashcardStorage');
   };
 
   return (
@@ -168,15 +166,6 @@ function FlashcardGenerator() {
           >
             {isLoading ? 'Đang xử lý...' : 'Tạo Flashcard'}
           </button>
-          
-
-          {isLoading && <p className="message">Đang xử lý hình ảnh và tạo flashcard...</p>}
-          {/* <button 
-            className="flashcard-generator-page__storage-btn" 
-            onClick={goToFlashcardStorage}
-          >
-            Đi đến Kho Flashcard
-          </button> */}
           {flashcards.length > 0 && flashcards[0] && (
             <div className="flashcard-generator-page__flashcard-content">
               <p>
@@ -193,12 +182,12 @@ function FlashcardGenerator() {
                   <li key={index} className="AI-content">{point}</li>
                 ))}
               </ul>
-              {/* <button 
+              <button 
                 className="flashcard-generator-page__save-btn" 
                 onClick={() => saveFlashcard(flashcards[0])}
               >
                 Lưu Flashcard
-              </button> */}
+              </button>
             </div>
           )}
         </div>
