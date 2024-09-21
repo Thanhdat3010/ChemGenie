@@ -59,13 +59,14 @@ const CreateQuiz = () => {
     `;
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      const cleanText = response.text().replace(/`/g, '')
+      const cleanText = response.text()
       .replace(/`/g, '')
       .replace(/json/g, '')
       .replace(/\*/g, '')
       .replace(/\\"/g, '"')
-      .replace(/\\\'/g, "'")
-      .replace(/\\n/g, ''); // Thay thế tất cả các backtick và escape characters
+      .replace(/'/g, "'") // Remove the backslash before the single quote
+      .replace(/\\n/g, '')
+      .replace(/\s+/g, ' ');
       console.log(cleanText);
       let generatedQuestions;
     try {
@@ -165,8 +166,9 @@ const CreateQuiz = () => {
       .replace(/json/g, '')
       .replace(/\*/g, '')
       .replace(/\\"/g, '"')
-      .replace(/\\\'/g, "'")
-      .replace(/\\n/g, ''); // Thay thế tất cả các backtick và escape characters
+      .replace(/'/g, "'") // Remove the backslash before the single quote
+      .replace(/\\n/g, '')
+      .replace(/\s+/g, ' ');
       console.log(cleanText);
 
       // Kiểm tra nếu cleanText là JSON hợp lệ
