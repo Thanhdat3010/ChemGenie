@@ -35,6 +35,7 @@ import FlashcardGenerator from "./routes/FlashcardGenerator";
 import Chatbot from "./routes/Chatbot";
 import FlashcardStorage from "./routes/FlashcardStorage";
 import FlashcardDetail from "./routes/FlashcardDetail";
+import IUPACPronunciationGame from "./routes/IUPACPronunciationGame";
 function App() {
   useEffect(() => {
     // Tìm nạp email và mã thông báo của người dùng từ localStorage
@@ -96,6 +97,8 @@ function App() {
     <Route path="/my-post" element={<MyPost />} />
     <Route path="/flashcard-storage" element={<FlashcardStorage />} />
     <Route path="/flashcard/:id" element={<FlashcardDetail />} />
+    <Route path="IUPACPronunciationGame" element={<IUPACPronunciationGame />} />
+
     </Routes>
   </div>
   </BackgroundProvider>
