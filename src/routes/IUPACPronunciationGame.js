@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {  message } from 'antd';
+import { message } from 'antd';
 import './IUPACPronunciationGame.css';
 import Navbar from '../components/Navbar';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import magic from "../assets/magic-dust.png";
-import { SwapOutlined } from '@ant-design/icons'; // Thêm import này
+import { SwapOutlined } from '@ant-design/icons';
+import Game from "../assets/game-icon.png";
 
 function IUPACPronunciationGame() {
   const [currentCompound, setCurrentCompound] = useState(null);
@@ -12,59 +13,94 @@ function IUPACPronunciationGame() {
   const [accuracy, setAccuracy] = useState(null);
   const [compounds, setCompounds] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pronunciationMode, setPronunciationMode] = useState('iupac'); // Thêm state mới
+  const [pronunciationMode, setPronunciationMode] = useState('iupac');
   const [usedCompounds, setUsedCompounds] = useState([]);
+  const [isVisuallyImpairedMode, setIsVisuallyImpairedMode] = useState(false);
+  const [hasWelcomed, setHasWelcomed] = useState(false);
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
   useEffect(() => {
-    generateCompounds();
-  }, []);
+    if (!hasWelcomed) {
+      speakText("Chào mừng đến với trò chơi phát âm. Nhấn Ctrl + Shift + V để bật chế độ phím tắt.");
+      setHasWelcomed(true);
+    }
+  }, [hasWelcomed]);
 
-  const generateCompounds = async () => {
-    setLoading(true);
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo ra 20 cặp tên thông thường và tên IUPAC của các đơn chất và hợp chất hóa học, kèm theo phiên âm của cả hai tên. 
-      Đảm bảo rằng các hợp chất bao gồm cả vô cơ và hữu cơ, đa dạng và phù hợp với học sinh trung học cơ sở và trung học phổ thông.
-      Các hợp chất trong danh sách không được trùng lặp.
-      Kết quả trả về dưới dạng JSON với cấu trúc sau (đây chỉ là ví dụ, hãy tạo thêm các cặp chất khác):
-      [
-        { 
-          name: "Methane", 
-          namePronunciation: "ˈmiːθeɪn",
-          iupac: "methane", 
-          iupacPronunciation: "ˈmɛθeɪn" 
-        },
-        { 
-          name: "Ethanol", 
-          namePronunciation: "ˈɛθənɒl",
-          iupac: "ethanol", 
-          iupacPronunciation: "ˈɛθənɒl" 
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      // Tổ hợp phím Ctrl + Shift + V để bật/tắt chế độ khiếm thị
+      if (event.ctrlKey && event.shiftKey && event.code === 'KeyV') {
+        event.preventDefault();
+        toggleVisuallyImpairedMode();
+      }
+
+      if (isVisuallyImpairedMode) {
+        if (event.code === 'Space') {
+          event.preventDefault();
+          startGame();
+        } else if (event.code === 'KeyR') {
+          event.preventDefault();
+          startListening();
+        } else if (event.code === 'KeyN') {
+          event.preventDefault();
+          selectRandomCompound();
+        } else if (event.code === 'KeyP') {
+          event.preventDefault();
+          playSampleAudio();
+        } else if (event.code === 'KeyG') {
+          event.preventDefault();
+          generateCompounds();
         }
-      ].
-      `;
+      }
+    };
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const cleanText = response.text()
-        .replace(/`/g, '')
-        .replace(/json/g, '')
-        .replace(/\*/g, '')
-        .replace(/\\"/g, '"')
-        .replace(/'/g, "'")
-        .replace(/\\n/g, '')
-        .replace(/\s+/g, ' ');
-      console.log(cleanText);
-      const generatedCompounds = JSON.parse(cleanText);
-      setCompounds(generatedCompounds);
-      setUsedCompounds([]); // Reset used compounds when generating new list
-      selectRandomCompound(generatedCompounds);
-    } catch (error) {
-      console.error('Error generating compounds:', error);
-      message.error('Đã xảy ra lỗi khi tạo danh sách hợp chất. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isVisuallyImpairedMode, currentCompound]);
+
+  const toggleVisuallyImpairedMode = () => {
+    setIsVisuallyImpairedMode(prev => {
+      const newMode = !prev;
+      if (newMode) {
+        speakText("Chế độ phím tắt đã được bật. Nhấn phím Space để bắt đầu trò chơi, phím R để bắt đầu ghi âm, phím N để chuyển sang hợp chất tiếp theo, và phím P để nghe phát âm mẫu.");
+      } else {
+        speakText("Chế độ phím tắt đã được tắt.");
+      }
+      return newMode;
+    });
+  };
+
+  const speakText = (text, isEnglish = false) => {
+    if (isEnglish) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      speechSynthesis.speak(utterance);
+    } else {
+      window.responsiveVoice.speak(text, "Vietnamese Female");
+    }
+  };
+
+  const startGame = () => {
+    if (currentCompound && isVisuallyImpairedMode) {
+      const speakInstructions = () => {
+        return new Promise(resolve => {
+          window.responsiveVoice.speak(
+            "Nhấn phím R để bắt đầu ghi âm, phím P để nghe phát âm mẫu, hoặc phím N để chuyển sang hợp chất tiếp theo. Sau đây là hợp chất bạn cần phát âm:",
+            "Vietnamese Female",
+            { onend: resolve }
+          );
+        });
+      };
+
+      speakInstructions().then(() => {
+        const name = pronunciationMode === 'iupac' ? currentCompound.iupac : currentCompound.name;
+        speakText(name, true);
+      });
+    } else if (isVisuallyImpairedMode) {
+      speakText("Không có hợp chất nào. Vui lòng tạo mới danh sách bằng cách nhấn phím G.");
     }
   };
 
@@ -73,7 +109,6 @@ function IUPACPronunciationGame() {
       let availableCompounds = compoundList.filter(compound => !usedCompounds.includes(compound));
       
       if (availableCompounds.length === 0) {
-        // Reset when all compounds have been used
         setUsedCompounds([]);
         availableCompounds = compoundList;
       }
@@ -84,6 +119,23 @@ function IUPACPronunciationGame() {
       setCurrentCompound(selectedCompound);
       setUsedCompounds(prev => [...prev, selectedCompound]);
       setAccuracy(null);
+
+      if (selectedCompound && isVisuallyImpairedMode) {
+        const speakInstructions = () => {
+          return new Promise(resolve => {
+            window.responsiveVoice.speak(
+              "Nhấn phím R để bắt đầu ghi âm, phím P để nghe phát âm mẫu.",
+              "Vietnamese Female",
+              { onend: resolve }
+            );
+          });
+        };
+
+        speakInstructions().then(() => {
+          const name = pronunciationMode === 'iupac' ? selectedCompound.iupac : selectedCompound.name;
+          speakText(name, true);
+        });
+      }
     } else {
       message.warning('Không có hợp chất nào. Vui lòng tạo mới danh sách.');
     }
@@ -166,6 +218,16 @@ function IUPACPronunciationGame() {
     } else {
       message.warning(`Độ chính xác: ${accuracyPercentage}%. Hãy lắng nghe mẫu và thử lại.`);
     }
+
+    if (isVisuallyImpairedMode) {
+      if (accuracyPercentage >= 90) {
+        speakText('Tuyệt vời! Phát âm của bạn rất chính xác. Nhấn N để chuyển sang hợp chất tiếp theo hoặc R để thử lại.');
+      } else if (accuracyPercentage >= 70) {
+        speakText(`Khá tốt! Độ chính xác: ${accuracyPercentage}%. Nhấn R để thử lại, P để nghe phát âm mẫu, hoặc N để chuyển sang hợp chất tiếp theo.`);
+      } else {
+        speakText(`Độ chính xác: ${accuracyPercentage}%. Hãy nhấn P để nghe phát âm mẫu và R để thử lại.`);
+      }
+    }
   };
 
   // Hàm tính toán độ tương đồng giữa hai chuỗi
@@ -205,12 +267,63 @@ function IUPACPronunciationGame() {
     return costs[str2.length];
   };
 
+  const generateCompounds = async () => {
+    setLoading(true);
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `Hãy tạo ra 20 cặp tên thông thường và tên IUPAC của các đơn chất và hợp chất hóa học, kèm theo phiên âm của cả hai tên. 
+      Đảm bảo rằng các hợp chất bao gồm cả vô cơ và hữu cơ, đa dạng và phù hợp với học sinh trung học cơ sở và trung học phổ thông.
+      Quan trọng: Các hợp chất trong danh sách không được trùng lặp.
+      Kết quả trả về dưới dạng JSON với cấu trúc sau (đây chỉ là ví dụ, hãy tạo thêm các cặp chất khác):
+      [
+        { 
+          name: "Methane", 
+          namePronunciation: "ˈmiːθeɪn",
+          iupac: "methane", 
+          iupacPronunciation: "ˈmɛθeɪn" 
+        },
+        { 
+          name: "Ethanol", 
+          namePronunciation: "ˈɛθənɒl",
+          iupac: "ethanol", 
+          iupacPronunciation: "ˈɛθənɒl" 
+        }
+      ].
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const cleanText = response.text()
+        .replace(/`/g, '')
+        .replace(/json/g, '')
+        .replace(/\*/g, '')
+        .replace(/\\"/g, '"')
+        .replace(/'/g, "'")
+        .replace(/\\n/g, '')
+        .replace(/\s+/g, ' ');
+      console.log(cleanText);
+      const generatedCompounds = JSON.parse(cleanText);
+      setCompounds(generatedCompounds);
+      setUsedCompounds([]); 
+      selectRandomCompound(generatedCompounds);
+    } catch (error) {
+      console.error('Error generating compounds:', error);
+      message.error('Đã xảy ra lỗi khi tạo danh sách hợp chất. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+
+    if (isVisuallyImpairedMode) {
+      speakText("Đã tạo danh sách hợp chất mới. Nhấn Space để bắt đầu trò chơi.");
+    }
+  };
+
   return (
     <>
       <Navbar />
       <div className="iupac-game-page">
       <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
-      <h2 className="solver-form-title">Trò chơi phát âm IUPAC</h2>
+      <h2 className="solver-form-title">Trò chơi phát âm</h2>
       <p className="solver-intro">AI sẽ giúp bạn cải thiện khả năng phát âm danh pháp IUPAC của các hợp chất hóa học.</p>
         {loading ? (
           <p>Đang tạo danh sách hợp chất...</p>
