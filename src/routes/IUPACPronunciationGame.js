@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, message, Image } from 'antd';
+import {  message } from 'antd';
 import './IUPACPronunciationGame.css';
 import Navbar from '../components/Navbar';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import magic from "../assets/magic-dust.png";
+import { SwapOutlined } from '@ant-design/icons'; // Thêm import này
 
 function IUPACPronunciationGame() {
   const [currentCompound, setCurrentCompound] = useState(null);
@@ -11,6 +12,8 @@ function IUPACPronunciationGame() {
   const [accuracy, setAccuracy] = useState(null);
   const [compounds, setCompounds] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pronunciationMode, setPronunciationMode] = useState('iupac'); // Thêm state mới
+  const [usedCompounds, setUsedCompounds] = useState([]);
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
@@ -22,15 +25,25 @@ function IUPACPronunciationGame() {
     setLoading(true);
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Hãy tạo ra 10 cặp tên thông thường và tên IUPAC của các hợp chất hóa học, kèm theo phiên âm của tên IUPAC. 
+      const prompt = `Hãy tạo ra 20 cặp tên thông thường và tên IUPAC của các đơn chất và hợp chất hóa học, kèm theo phiên âm của cả hai tên. 
       Đảm bảo rằng các hợp chất bao gồm cả vô cơ và hữu cơ, đa dạng và phù hợp với học sinh trung học cơ sở và trung học phổ thông.
       Các hợp chất trong danh sách không được trùng lặp.
       Kết quả trả về dưới dạng JSON với cấu trúc sau (đây chỉ là ví dụ, hãy tạo thêm các cặp chất khác):
       [
-        { name: "Methane", iupac: "methane", pronunciation: "ˈmɛθeɪn" },
-        { name: "Ethanol", iupac: "ethanol", pronunciation: "ˈɛθənɒl" }
+        { 
+          name: "Methane", 
+          namePronunciation: "ˈmiːθeɪn",
+          iupac: "methane", 
+          iupacPronunciation: "ˈmɛθeɪn" 
+        },
+        { 
+          name: "Ethanol", 
+          namePronunciation: "ˈɛθənɒl",
+          iupac: "ethanol", 
+          iupacPronunciation: "ˈɛθənɒl" 
+        }
       ].
-      Hãy chắc chắn rằng các hợp chất được chọn là phổ biến và dễ hiểu đối với học sinh.`;
+      `;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -45,6 +58,7 @@ function IUPACPronunciationGame() {
       console.log(cleanText);
       const generatedCompounds = JSON.parse(cleanText);
       setCompounds(generatedCompounds);
+      setUsedCompounds([]); // Reset used compounds when generating new list
       selectRandomCompound(generatedCompounds);
     } catch (error) {
       console.error('Error generating compounds:', error);
@@ -56,17 +70,33 @@ function IUPACPronunciationGame() {
 
   const selectRandomCompound = (compoundList = compounds) => {
     if (compoundList.length > 0) {
-      const randomIndex = Math.floor(Math.random() * compoundList.length);
-      setCurrentCompound(compoundList[randomIndex]);
+      let availableCompounds = compoundList.filter(compound => !usedCompounds.includes(compound));
+      
+      if (availableCompounds.length === 0) {
+        // Reset when all compounds have been used
+        setUsedCompounds([]);
+        availableCompounds = compoundList;
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableCompounds.length);
+      const selectedCompound = availableCompounds[randomIndex];
+      
+      setCurrentCompound(selectedCompound);
+      setUsedCompounds(prev => [...prev, selectedCompound]);
       setAccuracy(null);
     } else {
       message.warning('Không có hợp chất nào. Vui lòng tạo mới danh sách.');
     }
   };
 
+  const togglePronunciationMode = () => {
+    setPronunciationMode(prevMode => prevMode === 'iupac' ? 'name' : 'iupac');
+  };
+
   const playSampleAudio = () => {
     if (currentCompound) {
-      const utterance = new SpeechSynthesisUtterance(currentCompound.iupac);
+      const textToSpeak = pronunciationMode === 'iupac' ? currentCompound.iupac : currentCompound.name;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = 'en-US';
       speechSynthesis.speak(utterance);
     }
@@ -119,7 +149,9 @@ function IUPACPronunciationGame() {
       return;
     }
 
-    const correctPronunciation = currentCompound.iupac.toLowerCase();
+    const correctPronunciation = pronunciationMode === 'iupac' 
+      ? currentCompound.iupac.toLowerCase() 
+      : currentCompound.name.toLowerCase();
     console.log('Correct pronunciation:', correctPronunciation);
     console.log('Spoken text:', spokenText);
 
@@ -184,9 +216,18 @@ function IUPACPronunciationGame() {
           <p>Đang tạo danh sách hợp chất...</p>
         ) : currentCompound ? (
           <div className="iupac-game-page__content">
-            <h3 className="iupac-game-page__compound-name">Hợp chất hiện tại: {currentCompound.name}</h3>
-            <p className="iupac-game-page__instruction">Hãy phát âm tên IUPAC của hợp chất này</p>
-            <p className="iupac-game-page__pronunciation">Phiên âm: {currentCompound.pronunciation}</p>
+            <h3 className="iupac-game-page__compound-name">
+              Hợp chất hiện tại: {pronunciationMode === 'iupac' ? currentCompound.iupac : currentCompound.name}
+            </h3>
+            <button className="iupac-game-page__toggle-button" onClick={togglePronunciationMode}>
+              <SwapOutlined /> Chuyển đổi chế độ phát âm
+            </button>
+            <p className="iupac-game-page__instruction">
+              Hãy phát âm {pronunciationMode === 'iupac' ? 'tên IUPAC' : 'tên thông thường'} của hợp chất này
+            </p>
+            <p className="iupac-game-page__pronunciation">
+              Phiên âm: {pronunciationMode === 'iupac' ? currentCompound.iupacPronunciation : currentCompound.namePronunciation}
+            </p>
             <div className="iupac-game-page__button-group">
               <button className="iupac-game-page__button" onClick={startListening} disabled={isListening}>
                 {isListening ? 'Đang lắng nghe...' : 'Bắt đầu phát âm'}

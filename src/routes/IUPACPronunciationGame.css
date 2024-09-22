@@ -80,7 +80,7 @@
   font-size: 1.2em;
   font-weight: bold;
   margin: 20px 0;
-  color: #7b31c9;
+  color: #00897b; /* Màu xanh lá cây đậm hơn */
 }
 
 .iupac-game-page__next-button {
@@ -112,6 +112,20 @@
   height: auto;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.iupac-game-page__toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 15px;
+  font-size: 14px;
+  background-color: #e6e0f3; /* Màu nền nhẹ nhàng hơn */
+  color: #5a23b5; /* Màu chữ tím đậm */
+  border: 1px solid #d1c4e9;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px auto;
 }
 .ant-message {
     top: 100px !important; /* Điều chỉnh giá trị này để khớp với padding-top ở trên */
