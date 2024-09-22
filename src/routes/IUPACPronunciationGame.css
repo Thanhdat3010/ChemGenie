@@ -36,6 +36,13 @@
   margin-bottom: 20px;
 }
 
+.iupac-game-page__pronunciation {
+  font-size: 1.1em;
+  color: #7b31c9;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
 .iupac-game-page__button-group {
   display: flex;
   justify-content: center;

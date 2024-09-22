@@ -22,13 +22,15 @@ function IUPACPronunciationGame() {
     setLoading(true);
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Tạo 10 cặp tên thông thường và tên IUPAC của các hợp chất hóa học. 
-      Hãy đảm bảo rằng các hợp chất có độ khó đa dạng và phù hợp với học sinh trung học phổ thông.
-      Kết quả trả về dưới dạng JSON với cấu trúc sau:
-      ${JSON.stringify([
-        { name: "Methane", iupac: "methane" },
-        { name: "Ethanol", iupac: "ethanol" },
-      ])}`;
+      const prompt = `Hãy tạo ra 10 cặp tên thông thường và tên IUPAC của các hợp chất hóa học, kèm theo phiên âm của tên IUPAC. 
+      Đảm bảo rằng các hợp chất bao gồm cả vô cơ và hữu cơ, đa dạng và phù hợp với học sinh trung học cơ sở và trung học phổ thông.
+      Các hợp chất trong danh sách không được trùng lặp.
+      Kết quả trả về dưới dạng JSON với cấu trúc sau (đây chỉ là ví dụ, hãy tạo thêm các cặp chất khác):
+      [
+        { name: "Methane", iupac: "methane", pronunciation: "ˈmɛθeɪn" },
+        { name: "Ethanol", iupac: "ethanol", pronunciation: "ˈɛθənɒl" }
+      ].
+      Hãy chắc chắn rằng các hợp chất được chọn là phổ biến và dễ hiểu đối với học sinh.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -40,7 +42,7 @@ function IUPACPronunciationGame() {
         .replace(/'/g, "'")
         .replace(/\\n/g, '')
         .replace(/\s+/g, ' ');
-
+      console.log(cleanText);
       const generatedCompounds = JSON.parse(cleanText);
       setCompounds(generatedCompounds);
       selectRandomCompound(generatedCompounds);
@@ -184,6 +186,7 @@ function IUPACPronunciationGame() {
           <div className="iupac-game-page__content">
             <h3 className="iupac-game-page__compound-name">Hợp chất hiện tại: {currentCompound.name}</h3>
             <p className="iupac-game-page__instruction">Hãy phát âm tên IUPAC của hợp chất này</p>
+            <p className="iupac-game-page__pronunciation">Phiên âm: {currentCompound.pronunciation}</p>
             <div className="iupac-game-page__button-group">
               <button className="iupac-game-page__button" onClick={startListening} disabled={isListening}>
                 {isListening ? 'Đang lắng nghe...' : 'Bắt đầu phát âm'}
