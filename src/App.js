@@ -98,7 +98,6 @@ function App() {
     <Route path="/flashcard-storage" element={<FlashcardStorage />} />
     <Route path="/flashcard/:id" element={<FlashcardDetail />} />
     <Route path="IUPACPronunciationGame" element={<IUPACPronunciationGame />} />
-
     </Routes>
   </div>
   </BackgroundProvider>

@@ -2,28 +2,33 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './Chatbot.css';
 import logo from "../assets/logo.png"
-import { auth, db } from '../components/firebase'; // Import Firebase authentication and firestore
+import { auth, db } from '../components/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Navbar from '../components/Navbar';
+
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const [userName, setUserName] = useState('');
+  const [isCameraOn, setIsCameraOn] = useState(false);
   const messagesEndRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
-  // Avatar của chatbot
-  const chatbotAvatar = logo; // Đường dẫn đến avatar của chatbot
+  const chatbotAvatar = logo;
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]); // Mỗi khi danh sách tin nhắn thay đổi
+  }, [messages]);
+
   useEffect(() => {
-    // Hàm async để fetch thông tin người dùng từ Firestore
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
@@ -31,19 +36,26 @@ const Chatbot = () => {
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
-          setUserAvatar(userData.profilePictureUrl || ''); // Sử dụng avatar từ Firestore nếu có
-          setUserName(userData.username || ''); // Sử dụng tên từ Firestore nếu có
+          setUserAvatar(userData.profilePictureUrl || '');
+          setUserName(userData.username || '');
         }
       }
     };
 
     fetchUserData();
 
-    // Gửi lời chào từ chatbot khi component được tải
     const sendInitialMessage = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:5000/chat', { message: 'Xin chào' });
-        const botMessage = { sender: 'bot', text: response.data.response, avatar: chatbotAvatar };
+        const formData = new FormData();
+        formData.append('message', 'Xin chào');
+
+        const response = await axios.post('http://127.0.0.1:5000/chat', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        const botMessage = { sender: 'bot', text: response.data.response.replace(/\*/g, ''), avatar: chatbotAvatar };
         setMessages((prevMessages) => [...prevMessages, botMessage]);
       } catch (error) {
         console.error('Error sending initial message:', error);
@@ -51,8 +63,47 @@ const Chatbot = () => {
     };
 
     sendInitialMessage();
+  }, []);
 
-  }, []); // Dependency array để chỉ gửi lời chào một lần khi component được tải
+  const toggleCamera = async () => {
+    if (!isCameraOn) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoRef.current.srcObject = stream;
+        setIsCameraOn(true);
+      } catch (err) {
+        console.error("Error accessing the camera:", err);
+      }
+    } else {
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsCameraOn(false);
+    }
+  };
+
+  const captureImage = () => {
+    if (!isCameraOn || !videoRef.current || !canvasRef.current) {
+      console.error("Camera is not on or refs are not available");
+      return null;
+    }
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    return new Promise(resolve => {
+      canvas.toBlob(blob => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          console.error("Failed to create blob from canvas");
+          resolve(null);
+        }
+      }, 'image/jpeg');
+    });
+  };
 
   const sendMessage = async () => {
     if (input.trim() === '') return;
@@ -63,22 +114,64 @@ const Chatbot = () => {
     setInput('');
 
     try {
-      // Gửi tin nhắn đến server hoặc AI backend
-      const response = await axios.post('http://127.0.0.1:5000/chat', { message: input });
+      const formData = new FormData();
+      formData.append('message', input);
 
-      // Xây dựng tin nhắn từ phản hồi của chatbot
-      const botMessage = { sender: 'bot', text: response.data.response, avatar: chatbotAvatar };
+      if (isCameraOn) {
+        const imageBlob = await captureImage();
+        if (imageBlob) {
+          formData.append('image', imageBlob, 'user_image.jpg');
+          console.log("Image blob appended to form data");
+        } else {
+          console.error("Failed to capture image");
+        }
+      }
 
-      // Cập nhật danh sách tin nhắn
+      console.log("Sending request to server...");
+      const response = await axios.post('http://127.0.0.1:5000/chat', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log("Received response from server:", response.data);
+
+      const botMessage = { 
+        sender: 'bot', 
+        text: response.data.response.replace(/\*/g, ''), 
+        avatar: chatbotAvatar,
+        emotion: translateEmotion(response.data.detected_emotion) 
+      };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
+
+      console.log("Detected emotion:", response.data.detected_emotion);
     } catch (error) {
       console.error('Error sending message:', error);
+      if (error.response) {
+        console.error("Server responded with error:", error.response.data);
+        console.error("Status code:", error.response.status);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error setting up request:", error.message);
+      }
     }
+  };
+
+  const translateEmotion = (emotion) => {
+    const emotionTranslations = {
+      "happy": "vui vẻ",
+      "sad": "buồn",
+      "angry": "tức giận",
+      "surprise": "ngạc nhiên",
+      "neutral": "bình thường",
+      "fear": "sợ hãi",
+    };
+    return emotionTranslations[emotion.toLowerCase()] || emotion;
   };
 
   return (
     <div className="chatbot-wrapper">
-    <Navbar/>
+      <Navbar/>
       <div className="chatbot-container">
         <div className="chatbot-messages">
           {messages.map((msg, index) => (
@@ -92,10 +185,11 @@ const Chatbot = () => {
               <div className="message-content">
                 <div className="name">{msg.sender === 'bot' ? 'Chatbot AI' : msg.name}</div>
                 <div className="text">{msg.text}</div>
+                {msg.emotion && <div className="emotion">Cảm xúc của bạn: {msg.emotion}</div>}
               </div>
             </div>
           ))}
-          <div ref={messagesEndRef} /> {/* Phần tử cuối cùng */}
+          <div ref={messagesEndRef} />
         </div>
         <div className="chatbot-input">
           <input
@@ -110,6 +204,11 @@ const Chatbot = () => {
           />
           <button onClick={sendMessage}>Gửi</button>
         </div>
+      </div>
+      <div className="camera-container">
+        <video ref={videoRef} autoPlay style={{ display: isCameraOn ? 'block' : 'none' }} />
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
+        <button onClick={toggleCamera}>{isCameraOn ? 'Tắt Camera' : 'Bật Camera'}</button>
       </div>
     </div>
   );

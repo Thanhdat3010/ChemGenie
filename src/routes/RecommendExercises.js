@@ -58,7 +58,7 @@ const RecommendExercises = () => {
       - Tìm các bài tập liên quan đến các chủ đề và kỹ năng mà học sinh cần cải thiện.
       - Đảm bảo rằng các bài tập có độ khó phù hợp với mức năng lực hiện tại của học sinh và có tính thử thách để giúp họ tiến bộ.
       3. Đề xuất bài tập:
-      - Tạo danh sách các bài tập cụ thể cho học sinh, bao gồm mô tả ngắn gọn về mỗi bài tập và hướng dẫn làm bài.
+      - Tạo danh sách các bài tập(khoảng 10 câu hoặc nhiều hơn) cụ thể cho học sinh, bao gồm mô tả ngắn gọn về mỗi bài tập và hướng dẫn làm bài.
       .Vui lòng trả về dưới dạng JSON với cấu trúc sau và không thêm những cái khác ngoài cấu trúc:
       
       [

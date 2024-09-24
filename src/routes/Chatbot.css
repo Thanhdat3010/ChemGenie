@@ -110,3 +110,50 @@
 .chatbot-input button:active {
   transform: scale(0.98);
 }
+
+.camera-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.camera-container video {
+  width: 150px;
+  height: 100px;
+  border-radius: 8px;
+  margin-bottom: 1px;
+}
+
+.camera-container button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  margin-right: 10px;
+}
+
+.camera-container button:last-child {
+  margin-right: 0;
+}
+
+.camera-container button:hover {
+  background-color: #0056b3;
+}
+
+.camera-container button:active {
+  transform: scale(0.98);
+}
+
+.emotion {
+  font-style: italic;
+  color: #666;
+  margin-top: 5px;
+}
