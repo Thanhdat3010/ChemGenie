@@ -5,7 +5,6 @@ import Navbar from '../components/Navbar';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import magic from "../assets/magic-dust.png";
 import { SwapOutlined } from '@ant-design/icons';
-import Game from "../assets/game-icon.png";
 
 function IUPACPronunciationGame() {
   const [currentCompound, setCurrentCompound] = useState(null);

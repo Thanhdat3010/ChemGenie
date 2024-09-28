@@ -7,6 +7,9 @@ import Tesseract from 'tesseract.js';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
+import { Tabs, Tab } from 'react-bootstrap';
+import mammoth from 'mammoth';
+
 const CreateQuiz = () => {
   const initialQuestionState = {
     type: 'multiple-choice',
@@ -27,6 +30,11 @@ const CreateQuiz = () => {
   const [loading, setLoading] = useState(false);
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
   const [modalOpen, setModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('student');
+  const [teacherFile, setTeacherFile] = useState(null);
+  const [teacherNumQuestions, setTeacherNumQuestions] = useState(1);
+  const [teacherDifficulty, setTeacherDifficulty] = useState('medium');
+
   const handleFileUpload = (event) => {
     setFile(event.target.files[0]);
   };
@@ -141,11 +149,23 @@ const CreateQuiz = () => {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      // Thêm một bước kiểm tra chủ đề trước khi tạo câu hỏi
+      const checkTopicPrompt = `Chủ đề "${topic}" có phải là một chủ đề trong môn hóa học không? Trả lời "yes" hoặc "no".`;
+      const checkTopicResult = await model.generateContent(checkTopicPrompt);
+      const isChemistryTopic = checkTopicResult.response.text().toLowerCase().includes('yes');
+
+      let finalTopic = topic;
+      if (!isChemistryTopic) {
+        finalTopic = "hóa học ngẫu nhiên";
+      }
+
       const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
-      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa học lớp ${grade} với chủ đề ${topic} và độ khó: ${difficulty}. 
+      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa học lớp ${grade} với chủ đề ${finalTopic} và độ khó: ${difficulty}. 
       Mỗi câu hỏi cần có đáp án đúng và giải thích chi tiết kèm theo.
       Các câu hỏi phải đa dạng về nội dung và hình thức. 
       Câu hỏi được đặt bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
+      Đảm bảo rằng các câu hỏi chỉ liên quan đến môn hóa học.
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
       ${JSON.stringify([
         {
@@ -177,7 +197,7 @@ const CreateQuiz = () => {
         generatedQuestions = JSON.parse(cleanText);
       } catch (parseError) {
         console.error('Error parsing JSON:', parseError);
-        alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
+        alert('Đã xảy ra lỗi vui lòng thử lại.');
         return;
       }
 
@@ -196,7 +216,7 @@ const CreateQuiz = () => {
       });
     } catch (error) {
       console.error('Error generating questions from AI:', error);
-      alert('Đã xảy ra lỗi khi tạo câu hỏi từ AI.');
+      alert('Đã xảy ra lỗi khi tạo câu hỏi từ AI vui lòng thử lại.');
     }finally {
       // Tắt trạng thái loading sau khi hoàn tất
       setLoading(false);
@@ -298,15 +318,88 @@ const CreateQuiz = () => {
     }));
   };
 
+  const handleTeacherFileUpload = (event) => {
+    setTeacherFile(event.target.files[0]);
+  };
+
+  const extractTextFromWord = async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  };
+
+  const generateQuestionsFromWord = async () => {
+    if (!teacherFile || !teacherFile.name.endsWith('.docx')) {
+      alert('Vui lòng tải lên tệp Word (.docx).');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const extractedText = await extractTextFromWord(teacherFile);
+      const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo ${teacherNumQuestions} câu hỏi trắc nghiệm với độ khó ${teacherDifficulty}. Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết. Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
+        {
+          type: "multiple-choice",
+          question: "Câu hỏi 1",
+          options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+          correctAnswer: "Đáp án đúng",
+          explain: "Giải thích cho đáp án đúng"
+        }
+      ])}`;
+      
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const cleanText = response.text()
+        .replace(/`/g, '')
+        .replace(/json/g, '')
+        .replace(/\*/g, '')
+        .replace(/\\"/g, '"')
+        .replace(/'/g, "'")
+        .replace(/\\n/g, '')
+        .replace(/\s+/g, ' ');
+      console.log(cleanText);
+      let generatedQuestions;
+      try {
+        generatedQuestions = JSON.parse(cleanText);
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
+        return;
+      }
+
+      const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
+      questionsArray.forEach(question => {
+        const newQuestion = {
+          type: 'multiple-choice',
+          question: question.question,
+          options: question.options,
+          correctAnswer: question.correctAnswer,
+          explain: question.explain,
+        };
+        setQuestions(prevQuestions => [...prevQuestions, newQuestion]);
+      });
+    } catch (error) {
+      console.error('Error generating questions from Word:', error);
+      alert('Đã xảy ra lỗi khi tạo câu hỏi từ tệp Word.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <container fluid>
-      <Navbar/>
+      <Navbar />
       <section className="full-screen">
-      <div className="create-quiz-page">
-      <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
-      <h2 className="solver-form-title">AI tạo đề thi</h2>
-      <p className="solver-intro">Giải pháp hoàn hảo cho giáo viên và học sinh. Tự động tạo đề thi chất lượng cao, đa dạng, phù hợp mọi cấp học. Tiết kiệm thời gian, nâng cao hiệu quả</p>
-      <div className="create-quiz-title-form">
+        <div className="create-quiz-page">
+          <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
+          <h2 className="solver-form-title">AI tạo đề thi</h2>
+          <p className="solver-intro">Giải pháp hoàn hảo cho giáo viên và học sinh. Tự động tạo đề thi chất lượng cao, đa dạng, phù hợp mọi cấp học. Tiết kiệm thời gian, nâng cao hiệu quả</p>
+          
+          <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
+            <Tab eventKey="student" title={<span style={{ color: activeTab === 'student' ? '#7b31c9' : 'black', fontWeight: activeTab === 'student' ? 'bold' : 'normal' }}>Học sinh</span>}>
+            <div className="create-quiz-title-form">
       <h2 className="Createquizz-title-feature">Tạo bộ đề thi cho riêng bạn</h2>
       <input
         id="quizTitle"
@@ -322,6 +415,8 @@ const CreateQuiz = () => {
           value={numQuestions}
           onChange={(e) => setNumQuestions(e.target.value)}
           placeholder="Nhập số lượng câu hỏi"
+          min="1"
+
         />
          <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
             <option value="easy">Dễ</option>
@@ -367,7 +462,12 @@ const CreateQuiz = () => {
     </div>
     <div className="create-quiz-add-questions">
     <button onClick={handleGenerateQuestions}>Tạo câu hỏi tự động</button>
-    
+    {loading && (
+            <div className="loader">
+              <img src={magic} alt="Loading..." className="loading-icon" />
+              <p>Đang tạo đề thi, vui lòng chờ...</p>
+            </div>
+          )}
       </div>
       <div className="create-quiz-question-form">
       <h2 className="Createquizz-title-feature">Tự do sáng tạo đề: Bổ sung câu hỏi, tùy chỉnh theo ý muốn.</h2>
@@ -450,8 +550,53 @@ const CreateQuiz = () => {
           placeholder="Nhập giải thích cho câu hỏi..."
         />
     <button className="create-quiz-add-question-btn" onClick={handleAddQuestion}>Thêm câu hỏi</button>
-    </div>
-        <div className="create-quiz-question-list">
+    </div>        
+            </Tab>
+            <Tab eventKey="teacher" title={<span style={{ color: activeTab === 'teacher' ? '#7b31c9' : 'black', fontWeight: activeTab === 'teacher' ? 'bold' : 'normal' }}>Giáo viên</span>}>
+              <div className="create-quiz-title-form">
+                <h2 className="Createquizz-title-feature">Tạo bài tập từ bài giảng</h2>
+                <input
+                  type="text"
+                  id="quizTitle"
+                  name="quizTitle"
+                  value={quizTitle}
+                  onChange={(e) => setQuizTitle(e.target.value)}
+                  placeholder="Nhập tiêu đề bài tập..."
+                />
+                <p className="solver-intro">Tải lên tệp bài giảng (Word) để tạo câu hỏi tự động</p>
+                <input
+                  type="file"
+                  accept=".docx"
+                  onChange={handleTeacherFileUpload}
+                />
+                <input
+                  id="numQuestions"
+                  name="numQuestions"
+                  type="number"
+                  value={teacherNumQuestions}
+                  onChange={(e) => setTeacherNumQuestions(e.target.value)}
+                  placeholder="Số lượng câu hỏi"
+                  min="1"
+                />
+                <select
+                  value={teacherDifficulty}
+                  onChange={(e) => setTeacherDifficulty(e.target.value)}
+                >
+                  <option value="easy">Dễ</option>
+                  <option value="medium">Trung bình</option>
+                  <option value="hard">Khó</option>
+                </select>
+                <button className="create-quiz-add-question-btn" onClick={generateQuestionsFromWord}>Tạo câu hỏi từ bài giảng</button>
+                {loading && (
+            <div className="loader">
+              <img src={magic} alt="Loading..." className="loading-icon" />
+              <p>Đang tạo đề thi, vui lòng chờ...</p>
+            </div>
+          )}
+              </div>
+            </Tab>
+          </Tabs>
+          <div className="create-quiz-question-list">
       <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
       <ul>
       {questions.map((question, index) => (
@@ -476,22 +621,19 @@ const CreateQuiz = () => {
     ))}
       </ul>
     </div>
-
     <button className="create-quiz-save-quiz-btn" onClick={handleSaveQuiz}>Lưu Bộ Câu Hỏi</button>
-    {modalOpen && (
-        <div className="modal" style={{ display: 'flex' }}>
-          <div className="modal-content">
-            <p>Bộ câu hỏi đã được lưu thành công!</p>
-            <button className="close-btn" onClick={closeModal}>Đóng</button>
-          </div>
+          {modalOpen && (
+            <div className="modal" style={{ display: 'flex' }}>
+              <div className="modal-content">
+                <p>Bộ câu hỏi đã được lưu thành công!</p>
+                <button className="close-btn" onClick={closeModal}>Đóng</button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      
-    </div>
       </section>
       <Footer />
     </container>
- 
   );
 };
 

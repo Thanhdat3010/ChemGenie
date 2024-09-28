@@ -10,12 +10,12 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import { useEffect, useState } from 'react'
 import Chapter1 from "./Chaper/Chapter1";
 import Profile from "./routes/Profile";
-import FLashcard from "./routes/Flashcard";
 import Chapter2 from "./Chapter2/Chapter2";
 import Chapter3 from "./Chapter3/Chapter3";
 import Chapter4 from "./Chapter4/Chapter4";
 import Chapter5 from "./Chapter5/Chapter5";
 import Chapter6 from "./Chapter6/Chapter6";
+import Flashcard from "./routes/Flashcard";
 import Post from "./Blog/Post";
 import NewPost from "./Blog/NewPost";
 import MyPost from "./Blog/MyPost";
@@ -69,8 +69,8 @@ function App() {
     <Route path='/login' element={<Login setLoggedIn={setLoggedIn} setEmail={setEmail} />}/>
     <Route path='/' element={<Trangchu />}/>
     <Route path='/Profile' element={<Profile />}/>
-    <Route path='/Flashcard' element={<FLashcard />}/>
     <Route path='/CreateQuiz' element={<CreateQuiz/>}/>
+    <Route path='/Flashcard' element={<Flashcard/>}/>
     <Route path='/SolverForm' element={<SolverForm/>}/>
     <Route path='/AnalyzeResults' element={<AnalyzeResults/>}/>
     <Route path='/RecommendExercises' element={<RecommendExercises/>}/>
