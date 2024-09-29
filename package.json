@@ -24,6 +24,7 @@
     "dotenv": "^16.4.5",
     "file-saver": "^2.0.5",
     "firebase": "^10.12.0",
+    "html-to-text": "^9.0.5",
     "katex": "^0.16.10",
     "lodash": "^4.17.21",
     "mammoth": "^1.8.0",

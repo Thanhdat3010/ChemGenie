@@ -349,7 +349,7 @@ const CreateQuiz = () => {
       const extractedText = await extractTextFromWord(teacherFile);
       const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo ${teacherNumQuestions} câu hỏi trắc nghiệm với độ khó ${teacherDifficulty}. 
       Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng. 
-      Quan trọng: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file(danh pháp hóa học quốc tế).
+      Lưu ý: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file(danh pháp hóa học quốc tế).
       Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
         {
@@ -359,8 +359,7 @@ const CreateQuiz = () => {
           correctAnswer: "Đáp án đúng",
           explain: "Giải thích cho đáp án đúng"
         }
-      ])}`;
-      
+      ])}.`;
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -449,17 +448,32 @@ const CreateQuiz = () => {
             ],
           }),
           new Paragraph({
-            text: "Họ và tên thí sinh:.......................................................",
+            children: [
+              new TextRun({ text: " " }), // Adding a blank line for spacing
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Họ và tên thí sinh:.......................................................",bold: true }),
+            ],
             alignment: AlignmentType.LEFT,
           }),
           new Paragraph({
-            text: "Số báo danh: ............................................................",
+            children: [
+              new TextRun({ text: "Số báo danh: ............................................................", bold: true }),
+            ],
             alignment: AlignmentType.LEFT,
           }),
           new Paragraph({
-            text: `PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn. Thí sinh trả lời từ câu 1 đến câu ${questions.length}. Mỗi câu hỏi thí sinh chỉ chọn một phương án.`,
+            children: [
+              new TextRun({ text: " " }), // Adding a blank line for spacing
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: `PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn. Thí sinh trả lời từ câu 1 đến câu ${questions.length}. Mỗi câu hỏi thí sinh chỉ chọn một phương án.`, bold: true }),
+            ],
             alignment: AlignmentType.LEFT,
-            bold: true,
           }),
           ...questions.flatMap((question, index) => [
             new Paragraph({
@@ -496,6 +510,22 @@ const CreateQuiz = () => {
               ],
             }),
           ]),
+          new Paragraph({
+            children: [
+              new TextRun({ text: " " }), // Adding a blank line for spacing
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: " " }), // Adding a blank line for spacing
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "HẾT", bold: true }),
+            ],
+            alignment: AlignmentType.CENTER,
+          }),
         ],
       }],
     });
