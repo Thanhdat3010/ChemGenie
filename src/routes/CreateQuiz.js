@@ -8,10 +8,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
 import { Tabs, Tab } from 'react-bootstrap';
-import mammoth from 'mammoth';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, TabStopPosition, TabStopType } from 'docx';
-import { saveAs } from 'file-saver';
-
+import TeacherQuizCreator from './TeacherQuizCreator';
 const CreateQuiz = () => {
   const initialQuestionState = {
     type: 'multiple-choice',
@@ -33,14 +30,6 @@ const CreateQuiz = () => {
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('student');
-  const [teacherFile, setTeacherFile] = useState(null);
-  const [teacherNumQuestions, setTeacherNumQuestions] = useState(1);
-  const [teacherDifficulty, setTeacherDifficulty] = useState('medium');
-  const [mainTitle, setMainTitle] = useState('Trường THPT Nguyễn Chí Thanh');
-  const [subTitle, setSubTitle] = useState('ĐỀ KIỂM TRA 15 PHÚT');
-  const [subject, setSubject] = useState('HÓA HỌC');
-  const [examTime, setExamTime] = useState('15 phút');
-  
 
   const handleFileUpload = (event) => {
     setFile(event.target.files[0]);
@@ -171,8 +160,9 @@ const CreateQuiz = () => {
       const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghim cho giáo dục. 
       Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa học lớp ${grade} với chủ đề ${finalTopic} và độ khó: ${difficulty}. 
       Mỗi câu hỏi cần có đáp án đúng và giải thích chi tiết kèm theo.
-      Câu hỏi phải đa dạng về nội dung và hình thức. 
-      Câu hỏi được đặt bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
+      Câu hỏi phải đa dạng về nội dung và hình thức.
+      Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4). 
+      Lưu ý:Câu hỏi được đặt bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
       Đảm bảo rằng các câu hỏi chỉ liên quan đến môn hóa học.
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
       ${JSON.stringify([
@@ -326,223 +316,6 @@ const CreateQuiz = () => {
       options: newOptions,
     }));
   };
-
-  const handleTeacherFileUpload = (event) => {
-    setTeacherFile(event.target.files[0]);
-  };
-
-  const extractTextFromWord = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer });
-    return result.value;
-  };
-
-  const generateQuestionsFromWord = async () => {
-    if (!teacherFile || !teacherFile.name.endsWith('.docx')) {
-      alert('Vui lòng tải lên tệp Word (.docx).');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const extractedText = await extractTextFromWord(teacherFile);
-      const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo ${teacherNumQuestions} câu hỏi trắc nghiệm với độ khó ${teacherDifficulty}. 
-      Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng. 
-      Lưu ý: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file(danh pháp hóa học quốc tế).
-      Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
-      Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
-        {
-          type: "multiple-choice",
-          question: "Câu hỏi 1",
-          options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          correctAnswer: "Đáp án đúng",
-          explain: "Giải thích cho đáp án đúng"
-        }
-      ])}.`;
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const cleanText = response.text()
-        .replace(/`/g, '')
-        .replace(/json/g, '')
-        .replace(/\*/g, '')
-        .replace(/\\"/g, '"')
-        .replace(/'/g, "'")
-        .replace(/\\n/g, '')
-        .replace(/\s+/g, ' ')
-        .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
-
-      console.log(cleanText);
-      let generatedQuestions;
-      try {
-        generatedQuestions = JSON.parse(cleanText);
-      } catch (parseError) {
-        console.error('Error parsing JSON:', parseError);
-        alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
-        return;
-      }
-
-      const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
-      const newQuestions = questionsArray.map(question => ({
-        type: 'multiple-choice',
-        question: question.question,
-        options: question.options,
-        correctAnswer: question.correctAnswer,
-        explain: question.explain,
-      }));
-
-      setQuestions(prevQuestions => [...prevQuestions, ...newQuestions]);
-
-
-    } catch (error) {
-      console.error('Error generating questions from Word:', error);
-      alert('Đã xảy ra lỗi khi tạo câu hỏi từ tệp Word.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateWordDocument = async (questions, headerInfo) => {
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({ text: headerInfo.mainTitle, bold: true }),
-              new TextRun({ text: '\t' }),
-              new TextRun({ text: headerInfo.subTitle, bold: true }),
-            ],
-            tabStops: [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: `Môn : ${headerInfo.subject}`, bold: true }),
-              new TextRun({ text: '\t' }),
-              new TextRun({ text: `Thời gian làm bài: ${headerInfo.examTime} (không kể thời gian giao đề)`, italics: true }),
-            ],
-            tabStops: [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "( Đề thi gồm ....trang, có ... câu)" }),
-              new TextRun({ text: '\t' }),
-              new TextRun({ text: "Ngày thi :.../.../...."}),
-            ],
-            tabStops: [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Họ và tên thí sinh:.......................................................",bold: true }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Số báo danh: ............................................................", bold: true }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: `PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn. Thí sinh trả lời từ câu 1 đến câu ${questions.length}. Mỗi câu hỏi thí sinh chỉ chọn một phương án.`, bold: true }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-          ...questions.flatMap((question, index) => [
-            new Paragraph({
-              children: [
-                new TextRun({ text: `Câu ${index + 1}:`, bold: true }),
-                new TextRun({ text: ` ${question.question}` }),
-              ],
-              alignment: AlignmentType.LEFT,
-            }),
-            new Paragraph({
-              children: [
-                new TextRun(`A. ${question.options[0]}`),
-                new TextRun({ text: '\t' }),
-                new TextRun(`B. ${question.options[1]}`),
-              ],
-              tabStops: [
-                {
-                  type: TabStopType.LEFT,
-                  position: TabStopPosition.MAX / 2,
-                },
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun(`C. ${question.options[2]}`),
-                new TextRun({ text: '\t' }),
-                new TextRun(`D. ${question.options[3]}`),
-              ],
-              tabStops: [
-                {
-                  type: TabStopType.LEFT,
-                  position: TabStopPosition.MAX / 2,
-                },
-              ],
-            }),
-          ]),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "HẾT", bold: true }),
-            ],
-            alignment: AlignmentType.CENTER,
-          }),
-        ],
-      }],
-    });
-  
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${quizTitle}.docx`);
-  };
-
-  const handleGenerateWord = () => {
-    generateWordDocument(questions, {
-      mainTitle,
-      subTitle,
-      subject,
-      examTime,
-    });
-  };
-
   return (
     <container fluid>
       <Navbar />
@@ -702,75 +475,13 @@ const CreateQuiz = () => {
     </div>        
             </Tab>
             <Tab eventKey="teacher" title={<span style={{ color: activeTab === 'teacher' ? '#7b31c9' : 'black', fontWeight: activeTab === 'teacher' ? 'bold' : 'normal' }}>Giáo viên</span>}>
-              <div className="create-quiz-title-form">
-                <h2 className="Createquizz-title-feature">Tạo bài tập từ bài giảng</h2>
-                <input
-                  type="text"
-                  id="quizTitle"
-                  name="quizTitle"
-                  value={quizTitle}
-                  onChange={(e) => setQuizTitle(e.target.value)}
-                  placeholder="Nhập tiêu đề bài tập..."
-                />
-                <p className="solver-intro">Tải lên tệp bài giảng (Word) để tạo câu hỏi tự động</p>
-                <input
-                  type="file"
-                  accept=".docx"
-                  onChange={handleTeacherFileUpload}
-                />
-                <input
-                  id="numQuestions"
-                  name="numQuestions"
-                  type="number"
-                  value={teacherNumQuestions}
-                  onChange={(e) => setTeacherNumQuestions(e.target.value)}
-                  placeholder="Số lượng câu hỏi"
-                  min="1"
-                />
-                <select
-                  value={teacherDifficulty}
-                  onChange={(e) => setTeacherDifficulty(e.target.value)}
-                >
-                  <option value="easy">Dễ</option>
-                  <option value="medium">Trung bình</option>
-                  <option value="hard">Khó</option>
-                </select>
-                <button className="create-quiz-add-question-btn" onClick={generateQuestionsFromWord}>Tạo câu hỏi từ bài giảng</button>
-                {loading && (
-            <div className="loader">
-              <img src={magic} alt="Loading..." className="loading-icon" />
-              <p>Đang tạo đề thi, vui lòng chờ...</p>
-            </div>
-          )}
-                <div className="header-customization">
-                <input
-                  type="text"
-                  value={mainTitle}
-                  onChange={(e) => setMainTitle(e.target.value)}
-                  placeholder="Tiêu đề chính"
-                />
-                <input
-                  type="text"
-                  value={subTitle}
-                  onChange={(e) => setSubTitle(e.target.value)}
-                  placeholder="Tiêu đề phụ"
-                />
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  placeholder="Môn học"
-                />
-                <input
-                  type="text"
-                  value={examTime}
-                  onChange={(e) => setExamTime(e.target.value)}
-                  placeholder="Thời gian làm bài"
-                />
-              </div>
-                <button className="create-quiz-download-btn" onClick={handleGenerateWord}>Tạo file Word</button>
-              </div>
-            </Tab>
+            <TeacherQuizCreator 
+              quizTitle={quizTitle}
+              setQuizTitle={setQuizTitle}
+              questions={questions}
+              setQuestions={setQuestions}
+            />
+          </Tab>
           </Tabs>
           <div className="create-quiz-question-list">
       <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>

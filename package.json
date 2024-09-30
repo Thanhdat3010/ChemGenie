@@ -28,6 +28,7 @@
     "katex": "^0.16.10",
     "lodash": "^4.17.21",
     "mammoth": "^1.8.0",
+    "node-html-parser": "^6.1.13",
     "pdf-lib": "^1.17.1",
     "phaser": "^3.80.1",
     "react": "^18.3.1",
