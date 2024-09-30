@@ -10,7 +10,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
   const [teacherFile, setTeacherFile] = useState(null);
   const [teacherNumMultipleChoice, setTeacherNumMultipleChoice] = useState();
   const [teacherNumTrueFalse, setTeacherNumTrueFalse] = useState();
-  const [teacherDifficulty, setTeacherDifficulty] = useState('medium');
+  const [differentiationLevel, setDifferentiationLevel] = useState('medium');
   const [mainTitle, setMainTitle] = useState('Trường THPT Nguyễn Chí Thanh');
   const [subTitle, setSubTitle] = useState('ĐỀ KIỂM TRA 15 PHÚT');
   const [subject, setSubject] = useState('HÓA HỌC');
@@ -69,18 +69,33 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
 
     try {
       const extractedText = await extractTextFromWord(teacherFile);
+      let difficultyDistribution;
+      switch (differentiationLevel) {
+        case 'low':
+          difficultyDistribution = "40% câu hỏi ở mức độ dễ, 40% câu hỏi ở mức độ trung bình, 20% câu hỏi ở mức độ khó";
+          break;
+        case 'medium':
+          difficultyDistribution = "20% câu hỏi ở mức độ dễ, 50% câu hỏi ở mức độ trung bình, 30% câu hỏi ở mức độ khó";
+          break;
+        case 'high':
+          difficultyDistribution = "10% câu hỏi ở mức độ dễ, 40% câu hỏi ở mức độ trung bình, 50% câu hỏi ở mức độ khó";
+          break;
+      }
+
       const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo 
         ${questionTypes.multipleChoice ? teacherNumMultipleChoice + ' câu hỏi trắc nghiệm' : ''} 
         ${questionTypes.multipleChoice && (questionTypes.trueFalse || questionTypes.shortAnswer) ? 'và' : ''} 
         ${questionTypes.trueFalse ? teacherNumTrueFalse + ' câu hỏi đúng/sai' : ''}
         ${(questionTypes.multipleChoice || questionTypes.trueFalse) && questionTypes.shortAnswer ? 'và' : ''}
         ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
-        với độ khó ${teacherDifficulty}. 
-        Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng. 
-        Lưu ý: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học quốc tế).
+        với độ khó đa dạng để tạo độ phân hóa. Cụ thể:
+        ${difficultyDistribution}
+        Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng.
+        Các câu hỏi không được lặp lại.
+        Lưu ý quan trọng: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học tiếng anh). Không được tự ý đổi về danh pháp hóa học tiếng Việt(ví dụ: ester thì không tự ý đổi thành este, acid thì không tự ý đổi thành axit).
         Đối với câu hỏi trắc nghiệm: Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
         Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu và xác định đúng/sai cho từng phát biểu.
-        Đối với câu hỏi trả lời ngắn: Mỗi câu hỏi cần có câu hỏi và đáp án ngắn gọn.
+        Đối với câu hỏi trả lời ngắn: Tôi muốn phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(thường câu khó nằm ở phần này).
         Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4).
         Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
           {
@@ -88,18 +103,21 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
             question: "Câu hỏi trắc nghiệm 1",
             options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
             correctAnswer: "Đáp án đúng",
-            explain: "Giải thích cho đáp án đúng"
+            explain: "Giải thích cho đáp án đúng",
+            difficulty: "easy|medium|hard"
           },
           {
             type: "true-false",
             question: "Câu hỏi đúng/sai 1",
             options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
-            correctAnswer: ["true", "false", "true", "false"]
+            correctAnswer: ["true", "false", "true", "false"],
+            difficulty: "easy|medium|hard"
           },
           {
             type: "short-answer",
             question: "Câu hỏi trả lời ngắn 1",
-            answer: "Đáp án ngắn gọn"
+            answer: "Đáp án ngắn gọn",
+            difficulty: "easy|medium|hard"
           }
         ])}.`;
 
@@ -419,12 +437,12 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         />
       )}
       <select
-        value={teacherDifficulty}
-        onChange={(e) => setTeacherDifficulty(e.target.value)}
+        value={differentiationLevel}
+        onChange={(e) => setDifferentiationLevel(e.target.value)}
       >
-        <option value="easy">Dễ</option>
-        <option value="medium">Trung bình</option>
-        <option value="hard">Khó</option>
+        <option value="low">Độ phân hóa thấp</option>
+        <option value="medium">Độ phân hóa trung bình</option>
+        <option value="high">Độ phân hóa cao</option>
       </select>
       <div className="question-type-selection">
         <label>
