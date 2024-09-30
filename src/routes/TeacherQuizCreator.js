@@ -17,9 +17,11 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
   const [examTime, setExamTime] = useState('15 phút');
   const [loading, setLoading] = useState(false);
   const [allQuestions, setAllQuestions] = useState([]);
+  const [teacherNumShortAnswer, setTeacherNumShortAnswer] = useState();
   const [questionTypes, setQuestionTypes] = useState({
     multipleChoice: true,
-    trueFalse: true
+    trueFalse: true,
+    shortAnswer: true
   });
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
@@ -38,7 +40,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     setQuestionTypes(prev => {
       const newTypes = { ...prev, [type]: !prev[type] };
       // Ensure at least one type is selected
-      if (!newTypes.multipleChoice && !newTypes.trueFalse) {
+      if (!newTypes.multipleChoice && !newTypes.trueFalse && !newTypes.shortAnswer) {
         return prev; // Revert the change if it would result in no types selected
       }
       return newTypes;
@@ -51,13 +53,14 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
       return;
     }
 
-    if (!questionTypes.multipleChoice && !questionTypes.trueFalse) {
+    if (!questionTypes.multipleChoice && !questionTypes.trueFalse && !questionTypes.shortAnswer) {
       alert('Vui lòng chọn ít nhất một loại câu hỏi.');
       return;
     }
 
     if ((questionTypes.multipleChoice && !teacherNumMultipleChoice) || 
-        (questionTypes.trueFalse && !teacherNumTrueFalse)) {
+        (questionTypes.trueFalse && !teacherNumTrueFalse) ||
+        (questionTypes.shortAnswer && !teacherNumShortAnswer)) {
       alert('Vui lòng nhập số lượng cho loại câu hỏi đã chọn.');
       return;
     }
@@ -66,27 +69,39 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
 
     try {
       const extractedText = await extractTextFromWord(teacherFile);
-      const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo ${questionTypes.multipleChoice ? teacherNumMultipleChoice + ' câu hỏi trắc nghiệm' : ''} ${questionTypes.multipleChoice && questionTypes.trueFalse ? 'và' : ''} ${questionTypes.trueFalse ? teacherNumTrueFalse + ' câu hỏi đúng/sai' : ''} với độ khó ${teacherDifficulty}. 
-      Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng. 
-      Lưu ý: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học quốc tế).
-      Đối với câu hỏi trắc nghiệm: Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
-      Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu và xác định đúng/sai cho từng phát biểu.
-      Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4).
-      Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
-        {
-          type: "multiple-choice",
-          question: "Câu hỏi trắc nghiệm 1",
-          options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          correctAnswer: "Đáp án đúng",
-          explain: "Giải thích cho đáp án đúng"
-        },
-        {
-          type: "true-false",
-          question: "Câu hỏi đúng/sai 1",
-          options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
-          correctAnswer: ["true", "false", "true", "false"]
-        }
-      ])}.`;
+      const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo 
+        ${questionTypes.multipleChoice ? teacherNumMultipleChoice + ' câu hỏi trắc nghiệm' : ''} 
+        ${questionTypes.multipleChoice && (questionTypes.trueFalse || questionTypes.shortAnswer) ? 'và' : ''} 
+        ${questionTypes.trueFalse ? teacherNumTrueFalse + ' câu hỏi đúng/sai' : ''}
+        ${(questionTypes.multipleChoice || questionTypes.trueFalse) && questionTypes.shortAnswer ? 'và' : ''}
+        ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
+        với độ khó ${teacherDifficulty}. 
+        Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng. 
+        Lưu ý: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học quốc tế).
+        Đối với câu hỏi trắc nghiệm: Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
+        Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu và xác định đúng/sai cho từng phát biểu.
+        Đối với câu hỏi trả lời ngắn: Mỗi câu hỏi cần có câu hỏi và đáp án ngắn gọn.
+        Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4).
+        Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
+          {
+            type: "multiple-choice",
+            question: "Câu hỏi trắc nghiệm 1",
+            options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+            correctAnswer: "Đáp án đúng",
+            explain: "Giải thích cho đáp án đúng"
+          },
+          {
+            type: "true-false",
+            question: "Câu hỏi đúng/sai 1",
+            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
+            correctAnswer: ["true", "false", "true", "false"]
+          },
+          {
+            type: "short-answer",
+            question: "Câu hỏi trả lời ngắn 1",
+            answer: "Đáp án ngắn gọn"
+          }
+        ])}.`;
 
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const result = await model.generateContent(prompt);
@@ -116,7 +131,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
       // Filter questions based on selected types
       const filteredQuestions = questionsArray.filter(q => 
         (questionTypes.multipleChoice && q.type === 'multiple-choice') ||
-        (questionTypes.trueFalse && q.type === 'true-false')
+        (questionTypes.trueFalse && q.type === 'true-false') ||
+        (questionTypes.shortAnswer && q.type === 'short-answer')
       );
       
       // Update questions state
@@ -137,6 +153,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
   const generateWordDocument = async (questions, headerInfo) => {
     const multipleChoiceQuestions = questions.filter(q => q.type === 'multiple-choice');
     const trueFalseQuestions = questions.filter(q => q.type === 'true-false');
+    const shortAnswerQuestions = questions.filter(q => q.type === 'short-answer');
 
     const doc = new Document({
       sections: [{
@@ -299,6 +316,34 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
               }),
             ]),
           ] : []),
+          ...(shortAnswerQuestions.length > 0 ? [
+            new Paragraph({
+              children: [
+                new TextRun({ text: " " }), // Adding a blank line for spacing
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: `PHẦN III: Câu trắc nghiệm yêu cầu trả lời ngắn. Thí sinh trả lời từ câu ${multipleChoiceQuestions.length + trueFalseQuestions.length + 1} đến câu ${questions.length}.`, bold: true }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+            ...shortAnswerQuestions.flatMap((question, index) => [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Câu ${multipleChoiceQuestions.length + trueFalseQuestions.length + index + 1}: `, bold: true }),
+                  new TextRun({ text: `${question.question}` }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Đáp án: `, bold: true }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+            ]),
+          ] : []),
           new Paragraph({
             children: [
               new TextRun({ text: " " }), // Adding a blank line for spacing
@@ -362,6 +407,17 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
           min="1"
         />
       )}
+      {questionTypes.shortAnswer && (
+        <input
+          id="numShortAnswer"
+          name="numShortAnswer"
+          type="number"
+          value={teacherNumShortAnswer}
+          onChange={(e) => setTeacherNumShortAnswer(e.target.value)}
+          placeholder="Số lượng câu hỏi trả lời ngắn"
+          min="1"
+        />
+      )}
       <select
         value={teacherDifficulty}
         onChange={(e) => setTeacherDifficulty(e.target.value)}
@@ -386,6 +442,14 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
             onChange={() => handleQuestionTypeChange('trueFalse')}
           />
           đúng/sai
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={questionTypes.shortAnswer}
+            onChange={() => handleQuestionTypeChange('shortAnswer')}
+          />
+          trả lời ngắn
         </label>
       </div>
       <button className="create-quiz-add-question-btn" onClick={generateQuestionsFromWord}>Tạo câu hỏi từ bài giảng</button>
