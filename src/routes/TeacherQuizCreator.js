@@ -93,8 +93,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng.
         Các câu hỏi không được lặp lại.
         Lưu ý quan trọng: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học tiếng anh). Không được tự ý đổi về danh pháp hóa học tiếng Việt(ví dụ: ester thì không tự ý đổi thành este, acid thì không tự ý đổi thành axit).
+        Lưu ý: Câu hỏi được đặt bằng tiếng Việt.
         Đối với câu hỏi trắc nghiệm: Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
-        Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu và xác định đúng/sai cho từng phát biểu.
+        Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu đúng/sai liên kết với nhau, đề bài cần có câu dẫn hỗ trợ làm, ví dụ như "Chất béo là một trong các nguồn cung cấp năng lượng chính cho người và nhiều loài động vật, có chức năng quan trọng như dự trữ năng lượng, chống thấm, cách nhiệt," chứ không phải nói hãy chọn đúng/sai, và phát biểu cuối cùng phải khó nhất.
         Đối với câu hỏi trả lời ngắn: Tôi muốn phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(thường câu khó nằm ở phần này).
         Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4).
         Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
@@ -121,7 +122,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
           }
         ])}.`;
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const cleanText = response.text()

@@ -49,6 +49,7 @@ const CreateQuiz = () => {
       const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
       Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó: ${difficulty}. Các câu hỏi được tạo dựa trên văn bản sau: ${text}. 
       Mỗi câu hỏi cần có bốn lựa chọn đáp án, một đáp án đúng và giải thích kèm theo. 
+      Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4). 
       Câu hỏi phải được viết bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh).
       Kết quả trả về dưới dạng JSON với cấu trúc sau:
       ${JSON.stringify([

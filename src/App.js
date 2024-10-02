@@ -29,7 +29,6 @@ import WaitingRoom from "./routes/WaitingRoom";
 import SolverForm from "./routes/SolverForm";
 import AnalyzeResults from "./routes/AnalyzeResults";
 import RecommendExercises from "./routes/RecommendExercises";
-import StorytellingAI from "./CreateQuiz/StorytellingAI";
 import ExperimentProposal from "./routes/ExperimentProposal";
 import FlashcardGenerator from "./routes/FlashcardGenerator";
 import Chatbot from "./routes/Chatbot";
@@ -76,7 +75,6 @@ function App() {
     <Route path='/AnalyzeResults' element={<AnalyzeResults/>}/>
     <Route path='/RecommendExercises' element={<RecommendExercises/>}/>
     <Route path='/FlashcardGenerator' element={<FlashcardGenerator/>}/>
-    <Route path='/StorytellingAI' element={<StorytellingAI/>}/>
     <Route path='/TeacherQuizCreator' element={<TeacherQuizCreator/>}/>
     <Route path='/ExperimentProposal' element={<ExperimentProposal/>}/>
     <Route path='/CustomQuiz' element={<CustomQuiz/>}/>
