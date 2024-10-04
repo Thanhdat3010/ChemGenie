@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import mammoth from 'mammoth';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, TabStopPosition, TabStopType } from 'docx';
+import { Document, Packer, Paragraph, TextRun,  AlignmentType, TabStopPosition, TabStopType } from 'docx';
 import { saveAs } from 'file-saver';
 import magic from "../assets/magic-dust.png";
 import './CreateQuiz.css';
@@ -73,13 +73,15 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
       switch (differentiationLevel) {
         case 'low':
           difficultyDistribution = "40% câu hỏi ở mức độ dễ, 40% câu hỏi ở mức độ trung bình, 20% câu hỏi ở mức độ khó";
-          break;
+          break; // Ensure to add break statements
         case 'medium':
           difficultyDistribution = "20% câu hỏi ở mức độ dễ, 50% câu hỏi ở mức độ trung bình, 30% câu hỏi ở mức độ khó";
           break;
         case 'high':
           difficultyDistribution = "10% câu hỏi ở mức độ dễ, 40% câu hỏi ở mức độ trung bình, 50% câu hỏi ở mức độ khó";
           break;
+        default:
+          difficultyDistribution = "Mức độ không hợp lệ"; // Default case handling
       }
 
       const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo 

@@ -2,94 +2,99 @@
     max-width: 600px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #ffff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
-  
-  .exit-icon {
+    background-color: #f9f9f9; /* Changed to a softer background color */
+    border: 1px solid #ddd; /* Lightened border color */
+    border-radius: 10px; /* Increased border radius for a smoother look */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Added shadow for depth */
+}
+
+.exit-icon {
     cursor: pointer;
     float: right;
     font-size: 1.5rem;
-    color: #333;
-    transition: color 0.3s ease;
-  }
-  
-  .exit-icon:hover {
+    color: #555; /* Darkened icon color for better visibility */
+    transition: color 0.3s ease, transform 0.3s ease; /* Added transform transition */
+}
+
+.exit-icon:hover {
     color: #f44336;
-  }
-  
-  .waiting-room-page h2 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-  }
-  
-  .waiting-room-page p {
-    font-size: 1.1rem;
-    margin-bottom: 5px;
-  }
-  
-  .members-list {
+    transform: scale(1.1); /* Slightly enlarges icon on hover */
+}
+
+.waiting-room-page h2 {
+    font-size: 1.8rem; /* Increased font size for better emphasis */
+    margin-bottom: 15px; /* Increased margin for spacing */
+    color: #333; /* Darkened text color */
+}
+
+.waiting-room-page p {
+    font-size: 1.2rem; /* Increased font size for better readability */
+    margin-bottom: 8px; /* Increased margin for spacing */
+    color: #666; /* Changed text color for better contrast */
+}
+
+.members-list {
     margin-top: 20px;
-  }
-  
-  .members-list h3 {
+}
+
+.members-list h3 {
     font-size: 1.2rem;
     margin-bottom: 10px;
-  }
-  
-  .member-item {
+}
+
+.member-item {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-  }
-  
-  .member-item img {
+}
+
+.member-item img {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     margin-right: 10px;
-  }
-  
-  .member-item p {
+}
+
+.member-item p {
     font-size: 1.1rem;
-  }
-  
-  .waiting-room-page button {
-    background-color: #7b31c9;
+}
+
+.waiting-room-page button {
+    background-color: #6a1b9a; /* Changed to a more vibrant button color */
     color: white;
-    padding: 10px 20px;
-    font-size: 1.1rem;
+    padding: 12px 24px; /* Increased padding for a larger button */
+    font-size: 1.2rem; /* Increased font size for better readability */
     border: none;
     cursor: pointer;
     border-radius: 5px;
     margin-top: 20px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .waiting-room-page button:hover {
-    background-color: #372c4f;
-  }
-  
-  @media (max-width: 768px) {
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Added transform transition */
+}
+
+.waiting-room-page button:hover {
+    background-color: #4a148c; /* Darkened button color on hover */
+    transform: scale(1.05); /* Slightly enlarges button on hover */
+}
+
+@media (max-width: 768px) {
     .waiting-room-page {
-      padding: 10px;
+        padding: 10px;
     }
-  
+
     .exit-icon {
-      font-size: 1.2rem;
+        font-size: 1.2rem;
     }
-  
+
     .waiting-room-page h2 {
-      font-size: 1.3rem;
+        font-size: 1.3rem;
     }
-  
+
     .member-item img {
-      width: 40px;
-      height: 40px;
+        width: 40px;
+        height: 40px;
     }
-  
+
     .member-item p {
-      font-size: 1rem;
+        font-size: 1rem;
     }
-  }
+}
