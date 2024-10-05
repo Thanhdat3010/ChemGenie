@@ -112,8 +112,6 @@ const CustomQuiz = () => {
       if (isCorrect) {
         setScore(prevScore => prevScore + 1);
       }
-
-      await saveProgress();
     }
   };
 
@@ -129,8 +127,6 @@ const CustomQuiz = () => {
       if (isCorrect) {
         setScore(prevScore => prevScore + 1);
       }
-
-      await saveProgress();
     }
   };
 
@@ -150,8 +146,6 @@ const CustomQuiz = () => {
       }
       event.target.elements[0].classList.toggle('custom-quiz-correct-answer', isCorrect);
       event.target.elements[0].classList.toggle('custom-quiz-incorrect-answer', !isCorrect);
-
-      await saveProgress();
     }
   };
 
@@ -241,7 +235,6 @@ const CustomQuiz = () => {
           {currentQuestion < questions.length && (
             <div className="custom-quiz-question">
             <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
-            {questions[currentQuestion].imageURL && <img src={questions[currentQuestion].imageURL} alt="question image" style={{ maxWidth: '100%', margin: '10px 0' }} />}
             {questions[currentQuestion].type === "multiple-choice" && (
                 <ul>
                   {questions[currentQuestion].options.map((option, index) => (

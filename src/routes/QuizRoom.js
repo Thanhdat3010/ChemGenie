@@ -174,7 +174,7 @@ const QuizRoom = () => {
     };
   }, []);
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
     if (selectedOption === null) {
       setNotificationMessage("Bạn cần chọn đáp án trước khi tiếp tục.");
       setShowNotification(true);
@@ -188,11 +188,9 @@ const QuizRoom = () => {
       setCurrentQuestion(nextQ);
       const newProgress = (nextQ / questions.length) * 100;
       setProgress(newProgress);
-      saveProgress();
     } else {
       setQuizCompleted(true);
-      saveProgress();
-      saveScore();
+      await Promise.all([saveProgress(), saveScore()]); // Lưu cả tiến trình và điểm số khi hoàn thành
     }
   };
 
