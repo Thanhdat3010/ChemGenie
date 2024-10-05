@@ -36,10 +36,10 @@ const Profile = () => {
       if (user) {
         setEmail(user.email);
 
-        const userDoc = doc(db, 'profiles', user.uid);
-        const docSnap = await getDoc(userDoc);
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
+        // Kiểm tra Local Storage trước khi gọi Firebase
+        const localData = localStorage.getItem(`userProfile_${user.uid}`);
+        if (localData) {
+          const userData = JSON.parse(localData);
           setUsername(userData.username || '');
           setBio(userData.bio || '');
           setProfilePictureUrl(userData.profilePictureUrl || '');
@@ -47,9 +47,29 @@ const Profile = () => {
           setFriends(userData.friends || []);
           setFriendRequests(userData.friendRequestsReceived || []);
           setSentRequests(userData.friendRequestsSent || []);
+          setNewFriendRequestsCount(userData.friendRequestsReceived?.length || 0);
           await fetchFriendsData(userData.friends || []);
           await fetchRequestsData(userData.friendRequestsReceived || []);
+          return; // Dừng lại nếu đã lấy dữ liệu từ Local Storage
+        }
+
+        // Chỉ gọi Firestore nếu không có dữ liệu trong Local Storage
+        const userDoc = doc(db, 'profiles', user.uid);
+        const docSnap = await getDoc(userDoc);
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          // Lưu dữ liệu vào Local Storage
+          localStorage.setItem(`userProfile_${user.uid}`, JSON.stringify(userData));
+          setUsername(userData.username || '');
+          setBio(userData.bio || '');
+          setProfilePictureUrl(userData.profilePictureUrl || '');
+          setBackground(userData.profilePictureUrl || '');
+          setFriends(userData.friends || []);
+          setFriendRequests(userData.friendRequestsReceived || []);
+          setSentRequests(userData.friendRequestsSent || []);
           setNewFriendRequestsCount(userData.friendRequestsReceived?.length || 0);
+          await fetchFriendsData(userData.friends || []);
+          await fetchRequestsData(userData.friendRequestsReceived || []);
         }
       }
     };
@@ -84,7 +104,16 @@ const Profile = () => {
       const user = auth.currentUser;
       if (user) {
         const userDoc = doc(db, 'profiles', user.uid);
-        await setDoc(userDoc, userData, { merge: true });
+        // Chỉ ghi vào Firestore nếu có thay đổi
+        const localData = localStorage.getItem(`userProfile_${user.uid}`);
+        const localUserData = localData ? JSON.parse(localData) : {};
+
+        // So sánh dữ liệu cũ và mới
+        if (JSON.stringify(localUserData) !== JSON.stringify(userData)) {
+          await setDoc(userDoc, userData, { merge: true });
+          // Cập nhật Local Storage sau khi ghi vào Firestore
+          localStorage.setItem(`userProfile_${user.uid}`, JSON.stringify(userData));
+        }
       }
     } catch (error) {
       console.error('Error saving user data:', error);
