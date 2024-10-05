@@ -23,13 +23,13 @@ import { getStorage } from "firebase/storage";
 
 //truongthanhdat3010
 const firebaseConfig = {
-  apiKey: "AIzaSyAhE3t7pXJm7HWJAQtqM-E8MrvTS8LKos4",
-  authDomain: "luyenthihoahoc-799f0.firebaseapp.com",
-  projectId: "luyenthihoahoc-799f0",
-  storageBucket: "luyenthihoahoc-799f0.appspot.com",
-  messagingSenderId: "564732237808",
-  appId: "1:564732237808:web:075e58e0c6cde23bf16f35",
-  measurementId: "G-2V6FVXRD21"
+  apiKey: "AIzaSyCy-g_XG4KvUwW2V7P4zAHvvceU0VDOgmY",
+  authDomain: "chemgenie-ai.firebaseapp.com",
+  projectId: "chemgenie-ai",
+  storageBucket: "chemgenie-ai.appspot.com",
+  messagingSenderId: "914619588548",
+  appId: "1:914619588548:web:e0e0921822058a49974e91",
+  measurementId: "G-FH80JKK0Y0"
 };
 
 
