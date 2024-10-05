@@ -1,12 +1,13 @@
 import './Login.css';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { auth } from './firebase'; // Import Firebase authentication
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from "firebase/auth";
 import google from "../assets/google-icon.png";
 import Notification from './Notification';
 const Login = (props) => {
     const [email, setEmail] = useState('');
+    const location = useLocation();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -15,6 +16,7 @@ const Login = (props) => {
     const [showNotification, setShowNotification] = useState(false); // Thêm state mới cho thông báo
     const [notificationMessage, setNotificationMessage] = useState(''); // Thêm state cho thông báo
     const navigate = useNavigate();
+    const from = location.state?.from || '/'; // Đường dẫn trở lại hoặc trang chính
 
     const onButtonClick = async () => {
         setEmailError('');
@@ -30,7 +32,7 @@ const Login = (props) => {
                 localStorage.setItem('isLoggedIn', true);
                 props.setLoggedIn(true);
                 props.setEmail(email);
-                navigate('/');
+                navigate(from); // Quay lại đường dẫn trước đó
             } else {
                 // Đăng ký bằng email và mật khẩu
                 if (password !== confirmPassword) {
@@ -71,7 +73,7 @@ const Login = (props) => {
             localStorage.setItem('isLoggedIn', true);
             props.setLoggedIn(true);
             props.setEmail(user.email);
-            navigate('/');
+            navigate(from); // Quay lại đường dẫn trước đó
         } catch (error) {
             console.error('Lỗi đăng nhập bằng Google:', error);
         }

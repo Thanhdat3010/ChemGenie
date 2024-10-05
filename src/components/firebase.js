@@ -11,15 +11,27 @@ import { getStorage } from "firebase/storage";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
 //tait
+// const firebaseConfig = {
+//   apiKey: "AIzaSyDJ4nC12lFu8ASZUup7il1wCr-XSh7_qhA",
+//   authDomain: "login-satweb.firebaseapp.com",
+//   projectId: "login-satweb",
+//   storageBucket: "login-satweb.appspot.com",
+//   messagingSenderId: "694307193524",
+//   appId: "1:694307193524:web:662e95723f51f7b6cc0de1",
+//   measurementId: "G-BH50VJN30Y"
+// };
+
+//truongthanhdat3010
 const firebaseConfig = {
-  apiKey: "AIzaSyDJ4nC12lFu8ASZUup7il1wCr-XSh7_qhA",
-  authDomain: "login-satweb.firebaseapp.com",
-  projectId: "login-satweb",
-  storageBucket: "login-satweb.appspot.com",
-  messagingSenderId: "694307193524",
-  appId: "1:694307193524:web:662e95723f51f7b6cc0de1",
-  measurementId: "G-BH50VJN30Y"
+  apiKey: "AIzaSyAhE3t7pXJm7HWJAQtqM-E8MrvTS8LKos4",
+  authDomain: "luyenthihoahoc-799f0.firebaseapp.com",
+  projectId: "luyenthihoahoc-799f0",
+  storageBucket: "luyenthihoahoc-799f0.appspot.com",
+  messagingSenderId: "564732237808",
+  appId: "1:564732237808:web:075e58e0c6cde23bf16f35",
+  measurementId: "G-2V6FVXRD21"
 };
+
 
 //dat9900
 // const firebaseConfig = {
