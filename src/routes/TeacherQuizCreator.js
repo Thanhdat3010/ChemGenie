@@ -39,9 +39,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
   const handleQuestionTypeChange = (type) => {
     setQuestionTypes(prev => {
       const newTypes = { ...prev, [type]: !prev[type] };
-      // Ensure at least one type is selected
+      // Đảm bảo ít nhất một loại được chọn
       if (!newTypes.multipleChoice && !newTypes.trueFalse && !newTypes.shortAnswer) {
-        return prev; // Revert the change if it would result in no types selected
+        return prev;
       }
       return newTypes;
     });
@@ -81,17 +81,19 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
           difficultyDistribution = "10% câu hỏi ở mức độ dễ, 40% câu hỏi ở mức độ trung bình, 50% câu hỏi ở mức độ khó";
           break;
         default:
-          difficultyDistribution = "Mức độ không hợp lệ"; // Default case handling
+          difficultyDistribution = "Mức độ không hợp lệ";
       }
 
-      const prompt = `Nội dung bài giảng: ${extractedText}. Dựa trên nội dung này, hãy tạo 
+      const prompt = `Hãy tạo 
         ${questionTypes.multipleChoice ? teacherNumMultipleChoice + ' câu hỏi trắc nghiệm' : ''} 
         ${questionTypes.multipleChoice && (questionTypes.trueFalse || questionTypes.shortAnswer) ? 'và' : ''} 
         ${questionTypes.trueFalse ? teacherNumTrueFalse + ' câu hỏi đúng/sai' : ''}
         ${(questionTypes.multipleChoice || questionTypes.trueFalse) && questionTypes.shortAnswer ? 'và' : ''}
         ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
-        với độ khó đa dạng để tạo độ phân hóa. Cụ thể:
+        từ Nội dung bài giảng này: ${extractedText}.
+        Độ khó đa dạng để tạo độ phân hóa. Cụ thể:
         ${difficultyDistribution}
+        Các yêu cầu của tôi về đề là:
         Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng.
         Các câu hỏi không được lặp lại.
         Lưu ý quan trọng: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học tiếng anh). Không được tự ý đổi về danh pháp hóa học tiếng Việt(ví dụ: ester thì không tự ý đổi thành este, acid thì không tự ý đổi thành axit).
@@ -100,6 +102,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu đúng/sai liên kết với nhau, đề bài cần có câu dẫn hỗ trợ làm, ví dụ như "Chất béo là một trong các nguồn cung cấp năng lượng chính cho người và nhiều loài động vật, có chức năng quan trọng như dự trữ năng lượng, chống thấm, cách nhiệt," chứ không phải nói hãy chọn đúng/sai, và phát biểu cuối cùng phải khó nhất.
         Đối với câu hỏi trả lời ngắn: Tôi muốn phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(thường câu khó nằm ở phần này).
         Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4).
+        Lưu ý: Bạn phải tạo đủ số lượng câu hỏi như đã yêu cầu.
         Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
           {
             type: "multiple-choice",

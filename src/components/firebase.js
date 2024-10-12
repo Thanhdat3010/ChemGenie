@@ -12,26 +12,26 @@ import { getStorage } from "firebase/storage";
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
 //tait
-const firebaseConfig = {
-  apiKey: "AIzaSyDJ4nC12lFu8ASZUup7il1wCr-XSh7_qhA",
-  authDomain: "login-satweb.firebaseapp.com",
-  projectId: "login-satweb",
-  storageBucket: "login-satweb.appspot.com",
-  messagingSenderId: "694307193524",
-  appId: "1:694307193524:web:662e95723f51f7b6cc0de1",
-  measurementId: "G-BH50VJN30Y"
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyDJ4nC12lFu8ASZUup7il1wCr-XSh7_qhA",
+//   authDomain: "login-satweb.firebaseapp.com",
+//   projectId: "login-satweb",
+//   storageBucket: "login-satweb.appspot.com",
+//   messagingSenderId: "694307193524",
+//   appId: "1:694307193524:web:662e95723f51f7b6cc0de1",
+//   measurementId: "G-BH50VJN30Y"
+// };
 
 //truongthanhdat3010
-// const firebaseConfig = {
-//   apiKey: "AIzaSyCy-g_XG4KvUwW2V7P4zAHvvceU0VDOgmY",
-//   authDomain: "chemgenie-ai.firebaseapp.com",
-//   projectId: "chemgenie-ai",
-//   storageBucket: "chemgenie-ai.appspot.com",
-//   messagingSenderId: "914619588548",
-//   appId: "1:914619588548:web:e0e0921822058a49974e91",
-//   measurementId: "G-FH80JKK0Y0"
-// };
+const firebaseConfig = {
+  apiKey: "AIzaSyCy-g_XG4KvUwW2V7P4zAHvvceU0VDOgmY",
+  authDomain: "chemgenie-ai.firebaseapp.com",
+  projectId: "chemgenie-ai",
+  storageBucket: "chemgenie-ai.appspot.com",
+  messagingSenderId: "914619588548",
+  appId: "1:914619588548:web:e0e0921822058a49974e91",
+  measurementId: "G-FH80JKK0Y0"
+};
 
 
 //dat9900
