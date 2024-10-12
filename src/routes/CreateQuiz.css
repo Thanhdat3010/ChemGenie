@@ -246,6 +246,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 100%; /* Make buttons full width */
+  max-width: 200px; /* Optional: limit max width */
 }
 
 .create-quiz-download-btn:hover {
@@ -257,6 +259,12 @@
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
   margin-right: 8px;
+}
+@media (max-width: 600px) {
+  .create-quiz-download-btn {
+    margin-left: 0; /* Remove left margin on small screens */
+    margin-top: 10px; /* Add top margin for spacing */
+  }
 }
 .question-type-selection {
   display: flex;
