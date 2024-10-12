@@ -23,6 +23,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     trueFalse: true,
     shortAnswer: true
   });
+  const [answers, setAnswers] = useState([]); // Thêm state để lưu trữ đáp án
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
@@ -91,6 +92,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         ${(questionTypes.multipleChoice || questionTypes.trueFalse) && questionTypes.shortAnswer ? 'và' : ''}
         ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
         từ Nội dung bài giảng này: ${extractedText}.
+        Vui lòng tạo đủ số lượng câu hỏi theo yêu cầu cho tôi.
         Độ khó đa dạng để tạo độ phân hóa. Cụ thể:
         ${difficultyDistribution}
         Các yêu cầu của tôi về đề là:
@@ -110,20 +112,17 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
             options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
             correctAnswer: "Đáp án đúng",
             explain: "Giải thích cho đáp án đúng",
-            difficulty: "easy|medium|hard"
           },
           {
             type: "true-false",
             question: "Câu hỏi đúng/sai 1",
             options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
-            correctAnswer: ["true", "false", "true", "false"],
-            difficulty: "easy|medium|hard"
+            correctAnswer: ["Đúng", "Sai", "Đúng", "Sai"],
           },
           {
             type: "short-answer",
             question: "Câu hỏi trả lời ngắn 1",
-            answer: "Đáp án ngắn gọn",
-            difficulty: "easy|medium|hard"
+            correctAnswer: "Đáp án ngắn gọn",
           }
         ])}.`;
 
@@ -146,7 +145,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         generatedQuestions = JSON.parse(cleanText);
       } catch (parseError) {
         console.error('Error parsing JSON:', parseError);
-        alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
+        alert('Đã xảy ra lỗi khi tạo đề, xin vui lòng hãy tạo lại.');
         return;
       }
 
@@ -392,6 +391,34 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     saveAs(blob, `${quizTitle}.docx`);
   };
 
+  // hàm tạo file đáp án
+  const generateAnswerDocument = async () => {
+    const answerDoc = new Document({
+      sections: [{
+        properties: {},
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Đáp án cho bộ câu hỏi", bold: true }),
+            ],
+            alignment: AlignmentType.CENTER,
+          }),
+          ...allQuestions.map((question, index) => (
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Câu ${index + 1}: ${question.correctAnswer || 'Chưa có đáp án'}`, bold: true }), // Lấy đáp án từ câu hỏi
+              ],
+              alignment: AlignmentType.LEFT,
+            })
+          )),
+        ],
+      }],
+    });
+
+    const blob = await Packer.toBlob(answerDoc);
+    saveAs(blob, `${quizTitle}_answers.docx`); // Tạo file đáp án riêng
+  };
+
   return (
     <div className="create-quiz-title-form">
       <h2 className="Createquizz-title-feature">Tạo bài tập từ bài giảng</h2>
@@ -515,6 +542,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         subject,
         examTime,
       })}>Tạo file Word</button>
+      <button className="create-quiz-download-btn" onClick={generateAnswerDocument}>Tạo file đáp án</button> {/* Nút để tạo file đáp án */}
     </div>
   );
 };
