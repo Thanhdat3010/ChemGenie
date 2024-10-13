@@ -4,6 +4,7 @@ import Tesseract from 'tesseract.js';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { db, auth } from '../components/firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import mammoth from 'mammoth';
 import "./FlashcardGenerator.css";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -14,7 +15,7 @@ import icon2 from '../assets/magic-wand.png';
 const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
 function FlashcardGenerator() {
-  const [image, setImage] = useState(null);
+  const [file, setFile] = useState(null);
   const [flashcards, setFlashcards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
@@ -27,9 +28,9 @@ function FlashcardGenerator() {
     return () => unsubscribe();
   }, []);
 
-  const handleImageUpload = (event) => {
+  const handleFileUpload = (event) => {
     if (event.target.files && event.target.files[0]) {
-      setImage(event.target.files[0]);
+      setFile(event.target.files[0]);
     }
   };
 
@@ -42,34 +43,54 @@ function FlashcardGenerator() {
     event.preventDefault();
     event.stopPropagation();
     if (event.dataTransfer.files && event.dataTransfer.files[0]) {
-      setImage(event.dataTransfer.files[0]);
+      setFile(event.dataTransfer.files[0]);
     }
   };
 
+  const extractTextFromImage = async (imageFile) => {
+    const ocrResult = await Tesseract.recognize(imageFile);
+    return ocrResult.data.text;
+  };
+
+  const extractTextFromWord = async (wordFile) => {
+    const arrayBuffer = await wordFile.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  };
+
   const generateFlashcards = async () => {
-    if (!image) return;
+    if (!file) return;
 
     setIsLoading(true);
 
     try {
-      // OCR
-      const ocrResult = await Tesseract.recognize(image);
-      const extractedText = ocrResult.data.text;
+      let extractedText;
+      if (file.type.includes('image')) {
+        extractedText = await extractTextFromImage(file);
+      } else if (file.name.endsWith('.docx')) {
+        extractedText = await extractTextFromWord(file);
+      } else {
+        throw new Error('Unsupported file type');
+      }
 
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const flashcardStructure = {
         title: "Tiêu đề chi tiết",
-        summary: "Tóm tắt chi tiết về kiến thức mà người dùng cần học (khoảng 100 từ)",
+        summary: "Tóm tắt chi tiết về kiến thức mà người dùng cần học (khoảng 50 từ)",
         keyPoints: [
-          "Kiến thức cần học 1: Mô tả chi tiết",
-          "Kiến thức cần học 2: Mô tả chi tiết",
-          "Kiến thức cần học 3: Mô tả chi tiết",
-          "Kiến thức cần học 4: Mô tả chi tiết",
+          "Kiến thức cần học 1: Mô tả ngắn gọn(khoảng 30 từ)",
+          "Kiến thức cần học 2: Mô tả ngắn gọn(khoảng 30 từ)",
+          "Kiến thức cần học 3: Mô tả ngắn gọn(khoảng 30 từ)",
+          "Kiến thức cần học 4: Mô tả ngắn gọn(khoảng 30 từ)",
           "Tùy theo bài dài hay ngắn mà số lượng kiến thức cần học có thể thay đổi"
         ]
       };
       const prompt = `Bạn là một chuyên gia giáo dục có kinh nghiệm trong việc tạo flashcard. 
-      Hãy tạo một flashcard từ văn bản sau đây. Flashcard nên tóm tắt chi tiết thông tin chính của văn bản để người học có thể dễ dàng học tập. 
+      Hãy tạo một flashcard từ văn bản sau đây. 
+      Flashcard nên tóm tắt chi tiết thông tin chính của văn bản để người học có thể dễ dàng học tập.
+      Nếu là môn hóa thì phải ghi đúng danh pháp quốc tế cho các chất(tiếng anh).
+      Lưu ý: Ngôn ngữ phải sử dụng tiếng việt.
+      Flashcard phải ngắn gọn, dễ học.
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
       ${JSON.stringify(flashcardStructure, null, 2)}
       Văn bản: ${extractedText}`;
@@ -137,23 +158,32 @@ function FlashcardGenerator() {
       <Navbar />
       <section className="full-screen">
         <div className="flashcard-generator-page">
-        <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
-        <h2 className="solver-form-title">AI tạo Flashcard</h2>
-          <p className="solver-intro">AI sẽ tự động tạo flashcard từ hình ảnh bạn tải lên, giúp bạn học tập hiệu quả hơn.</p>
+          <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
+          <h2 className="solver-form-title">AI tạo Flashcard</h2>
+          <p className="solver-intro">AI sẽ tự động tạo flashcard từ hình ảnh hoặc file Word bạn tải lên, giúp bạn học tập hiệu quả hơn.</p>
           <div className="flashcard-generator-page__file-input"
                onDragOver={handleDragOver}
                onDrop={handleDrop}>
-            <label htmlFor="image-upload">
-              {!image && (
+            <label htmlFor="file-upload">
+              {!file && (
                 <>
-                  <span className="drag-text">Kéo và thả hình ảnh vào đây hoặc</span><br />
-                  Nhấp để chọn hình ảnh
+                  <span className="drag-text">Kéo và thả hình ảnh hoặc file Word vào đây hoặc</span><br />
+                  Nhấp để chọn file
                 </>
               )}
-              <input type="file" accept="image/*" onChange={handleImageUpload} id="image-upload" />
-              {image && (
-                <div className="flashcard-generator-page__image-preview">
-                  <img src={URL.createObjectURL(image)} alt="Uploaded" className="uploaded-image" />
+              <input 
+                type="file" 
+                accept="image/*,.docx" 
+                onChange={handleFileUpload} 
+                id="file-upload" 
+              />
+              {file && (
+                <div className="flashcard-generator-page__file-preview">
+                  {file.type.includes('image') ? (
+                    <img src={URL.createObjectURL(file)} alt="Uploaded" className="uploaded-image" />
+                  ) : (
+                    <p>{file.name}</p>
+                  )}
                 </div>
               )}
             </label>
@@ -162,7 +192,7 @@ function FlashcardGenerator() {
           <button 
             className="flashcard-generator-page__generate-btn" 
             onClick={generateFlashcards} 
-            disabled={!image || isLoading}
+            disabled={!file || isLoading}
           >
             {isLoading ? 'Đang xử lý...' : 'Tạo Flashcard'}
           </button>
