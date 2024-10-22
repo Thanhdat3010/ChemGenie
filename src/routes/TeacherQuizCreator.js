@@ -23,7 +23,6 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     trueFalse: true,
     shortAnswer: true
   });
-  const [answers, setAnswers] = useState([]); // Thêm state để lưu trữ đáp án
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
@@ -287,6 +286,12 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
                 },
               ],
             }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Đáp án: `, bold: true }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
           ]),
           ...(trueFalseQuestions.length > 0 ? [
             new Paragraph({
@@ -318,8 +323,20 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
               }),
               new Paragraph({
                 children: [
+                  new TextRun({ text: `Đáp án: `, bold: true }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              new Paragraph({
+                children: [
                   new TextRun({ text: 'b) ', bold: true }),
                   new TextRun({ text: `${question.options[1]}` }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Đáp án: `, bold: true }),
                 ],
                 alignment: AlignmentType.LEFT,
               }),
@@ -332,8 +349,20 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
               }),
               new Paragraph({
                 children: [
+                  new TextRun({ text: `Đáp án: `, bold: true }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              new Paragraph({
+                children: [
                   new TextRun({ text: 'd) ', bold: true }),
                   new TextRun({ text: `${question.options[3]}` }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Đáp án: `, bold: true }),
                 ],
                 alignment: AlignmentType.LEFT,
               }),
@@ -393,30 +422,193 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
 
   // hàm tạo file đáp án
   const generateAnswerDocument = async () => {
-    const answerDoc = new Document({
+    const multipleChoiceQuestions = allQuestions.filter(q => q.type === 'multiple-choice');
+    const trueFalseQuestions = allQuestions.filter(q => q.type === 'true-false');
+    const shortAnswerQuestions = allQuestions.filter(q => q.type === 'short-answer');
+
+    const doc = new Document({
       sections: [{
         properties: {},
         children: [
           new Paragraph({
             children: [
-              new TextRun({ text: "Đáp án cho bộ câu hỏi", bold: true }),
+              new TextRun({ text: mainTitle, bold: true }),
+              new TextRun({ text: '\t' }),
+              new TextRun({ text: subTitle, bold: true }),
+            ],
+            tabStops: [
+              {
+                type: TabStopType.RIGHT,
+                position: TabStopPosition.MAX,
+              },
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Môn: ${subject}`, bold: true }),
+              new TextRun({ text: '\t' }),
+              new TextRun({ text: `Thời gian làm bài: ${examTime} (không kể thời gian giao đề)`, italics: true }),
+            ],
+            tabStops: [
+              {
+                type: TabStopType.RIGHT,
+                position: TabStopPosition.MAX,
+              },
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "(Đề thi gồm ....trang, có ... câu)" }),
+              new TextRun({ text: '\t' }),
+              new TextRun({ text: "Ngày thi :.../.../...."}),
+            ],
+            tabStops: [
+              {
+                type: TabStopType.RIGHT,
+                position: TabStopPosition.MAX,
+              },
+            ],
+          }),
+          new Paragraph({ text: " " }), // Blank line
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Họ và tên thí sinh:.......................................................", bold: true }),
+            ],
+            alignment: AlignmentType.LEFT,
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Số báo danh: ............................................................", bold: true }),
+            ],
+            alignment: AlignmentType.LEFT,
+          }),
+          new Paragraph({ text: " " }), // Blank line
+          new Paragraph({
+            children: [
+              new TextRun({ text: `PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn. Thí sinh trả lời từ câu 1 đến câu ${multipleChoiceQuestions.length}. Mỗi câu hỏi thí sinh chỉ chọn một phương án.`, bold: true }),
+            ],
+            alignment: AlignmentType.LEFT,
+          }),
+          ...multipleChoiceQuestions.flatMap((question, index) => [
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Câu ${index + 1}:`, bold: true }),
+                new TextRun({ text: ` ${question.question}` }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: 'A.', bold: true }),
+                new TextRun(` ${question.options[0]}`),
+                new TextRun({ text: '\t' }),
+                new TextRun({ text: 'B.', bold: true }),
+                new TextRun(` ${question.options[1]}`),
+              ],
+              tabStops: [
+                {
+                  type: TabStopType.LEFT,
+                  position: TabStopPosition.MAX / 2,
+                },
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: 'C.', bold: true }),
+                new TextRun(` ${question.options[2]}`),
+                new TextRun({ text: '\t' }),
+                new TextRun({ text: 'D.', bold: true }),
+                new TextRun(` ${question.options[3]}`),
+              ],
+              tabStops: [
+                {
+                  type: TabStopType.LEFT,
+                  position: TabStopPosition.MAX / 2,
+                },
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: `Đáp án: `, bold: true }),
+                new TextRun({ text: question.correctAnswer }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ]),
+          ...(trueFalseQuestions.length > 0 ? [
+            new Paragraph({ text: " " }), // Blank line
+            new Paragraph({
+              children: [
+                new TextRun({ text: `PHẦN II. Câu trắc nghiệm đúng sai. Thí sinh trả lời từ câu ${multipleChoiceQuestions.length + 1} đến câu ${multipleChoiceQuestions.length + trueFalseQuestions.length}. Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn đúng hoặc sai.`, bold: true }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+            ...trueFalseQuestions.flatMap((question, index) => [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Câu `, bold: true }),
+                  new TextRun({ text: `${multipleChoiceQuestions.length + index + 1}: `, bold: true }),
+                  new TextRun({ text: `${question.question}` }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              ...question.options.map((option, optionIndex) => [
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: `${String.fromCharCode(97 + optionIndex)}) `, bold: true }),
+                    new TextRun({ text: `${option}` }),
+                  ],
+                  alignment: AlignmentType.LEFT,
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: `Đáp án: `, bold: true }),
+                    new TextRun({ text: question.correctAnswer[optionIndex] }),
+                  ],
+                  alignment: AlignmentType.LEFT,
+                }),
+              ]).flat(),
+            ]),
+          ] : []),
+          ...(shortAnswerQuestions.length > 0 ? [
+            new Paragraph({ text: " " }), // Blank line
+            new Paragraph({
+              children: [
+                new TextRun({ text: `PHẦN III: Câu trắc nghiệm yêu cầu trả lời ngắn. Thí sinh trả lời từ câu ${multipleChoiceQuestions.length + trueFalseQuestions.length + 1} đến câu ${allQuestions.length}.`, bold: true }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+            ...shortAnswerQuestions.flatMap((question, index) => [
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Câu ${multipleChoiceQuestions.length + trueFalseQuestions.length + index + 1}: `, bold: true }),
+                  new TextRun({ text: `${question.question}` }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Đáp án: `, bold: true }),
+                  new TextRun({ text: question.correctAnswer }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+            ]),
+          ] : []),
+          new Paragraph({ text: " " }), // Blank line
+          new Paragraph({ text: " " }), // Blank line
+          new Paragraph({
+            children: [
+              new TextRun({ text: "HẾT", bold: true }),
             ],
             alignment: AlignmentType.CENTER,
           }),
-          ...allQuestions.map((question, index) => (
-            new Paragraph({
-              children: [
-                new TextRun({ text: `Câu ${index + 1}: ${question.correctAnswer || 'Chưa có đáp án'}`, bold: true }), // Lấy đáp án từ câu hỏi
-              ],
-              alignment: AlignmentType.LEFT,
-            })
-          )),
         ],
       }],
     });
 
-    const blob = await Packer.toBlob(answerDoc);
-    saveAs(blob, `${quizTitle}_answers.docx`); // Tạo file đáp án riêng
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${quizTitle}_answers.docx`);
   };
 
   return (
@@ -542,7 +734,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         subject,
         examTime,
       })}>Tạo file Word</button>
-      <button className="create-quiz-download-btn" onClick={generateAnswerDocument}>Tạo file đáp án</button> {/* Nút để tạo file đáp án */}
+      <button className="create-quiz-download-btn" onClick={generateAnswerDocument}>Tạo file đáp án</button>
     </div>
   );
 };

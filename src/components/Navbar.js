@@ -134,11 +134,11 @@ const Navbar = () => {
     Trắc nghiệm
   </Link>
     </li>
-    {/* <li>
-      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/Lythuyet">
-    Tạo đề thi
+    <li>
+      <Link className={`nav-links ${isActive('/Lythuyet') ? 'active' : ''}`} to="/AIQuizGrader">
+   Chấm bài
   </Link>
-    </li> */}
+    </li>
     <li>
     <Link className={`nav-links ${isActive('/Room') ? 'active' : ''}`} to="/Room">
     Phòng thi ảo

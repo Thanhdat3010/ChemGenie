@@ -36,6 +36,7 @@ import FlashcardStorage from "./routes/FlashcardStorage";
 import FlashcardDetail from "./routes/FlashcardDetail";
 import IUPACPronunciationGame from "./routes/IUPACPronunciationGame";
 import TeacherQuizCreator from "./routes/TeacherQuizCreator";
+import AIQuizGrader from "./routes/AIQuizGrader";
 function App() {
   useEffect(() => {
     // Tìm nạp email và mã thông báo của người dùng từ localStorage
@@ -76,6 +77,7 @@ function App() {
     <Route path='/RecommendExercises' element={<RecommendExercises/>}/>
     <Route path='/FlashcardGenerator' element={<FlashcardGenerator/>}/>
     <Route path='/TeacherQuizCreator' element={<TeacherQuizCreator/>}/>
+    <Route path='/AIQuizGrader' element={<AIQuizGrader/>}/>
     <Route path='/ExperimentProposal' element={<ExperimentProposal/>}/>
     <Route path='/CustomQuiz' element={<CustomQuiz/>}/>
     <Route path='/Room' element={<Room/>}/>
