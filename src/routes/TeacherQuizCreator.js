@@ -89,11 +89,32 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     1. Các câu hỏi mới KHÔNG ĐƯỢC TRÙNG LẶP với các câu hỏi hiện có
     2. Phải tuân theo phân bố độ khó: ${difficultyDistribution}
     3. Giữ nguyên danh pháp hóa học như trong bài giảng
-    ${missingCounts['multiple-choice'] > 0 ? '4. Đối với câu hỏi trắc nghiệm: Mỗi câu có 4 lựa chọn, 1 đáp án đúng và giải thích' : ''}
-    ${missingCounts['true-false'] > 0 ? '5. Đối với câu hỏi đúng/sai: Mỗi câu có 4 phát biểu đúng/sai liên kết với nhau' : ''}
-    ${missingCounts['short-answer'] > 0 ? '6. Đối với câu hỏi trả lời ngắn: Phải là câu hỏi tính toán với đáp án ngắn gọn' : ''}
+    4. Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4)
+    ${missingCounts['multiple-choice'] > 0 ? '5. Đối với câu hỏi trắc nghiệm: Mỗi câu có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết' : ''}
+    ${missingCounts['true-false'] > 0 ? '6. Đối với câu hỏi đúng/sai: Mỗi câu có 4 phát biểu đúng/sai liên kết với nhau, đề bài cần có câu dẫn hỗ trợ làm, và phát biểu cuối cùng phải khó nhất' : ''}
+    ${missingCounts['short-answer'] > 0 ? '7. Đối với câu hỏi trả lời ngắn: Phải là câu hỏi tính toán với đáp án ngắn gọn' : ''}
 
-    Trả về kết quả dưới dạng JSON với cấu trúc tương tự câu hỏi hiện có.`;
+    Trả về kết quả dưới dạng JSON với cấu trúc sau:
+    [
+      {
+        "type": "multiple-choice",
+        "question": "Nội dung câu hỏi",
+        "options": ["A", "B", "C", "D"],
+        "correctAnswer": "A", // phải là một trong các options
+        "explain": "Giải thích chi tiết"
+      },
+      {
+        "type": "true-false",
+        "question": "Câu dẫn + Nội dung câu hỏi",
+        "options": ["Phát biểu 1", "Phát biểu 2", "Phát biểu 3", "Phát biểu khó nhất"],
+        "correctAnswer": ["Đúng", "Sai", "Đúng", "Sai"]
+      },
+      {
+        "type": "short-answer",
+        "question": "Nội dung câu hỏi tính toán",
+        "correctAnswer": "Đáp án ngắn gọn"
+      }
+    ]`;
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
@@ -109,7 +130,44 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         .replace(/\s+/g, ' ')
         .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
 
-      const supplementaryQuestions = JSON.parse(cleanText);
+      let supplementaryQuestions = JSON.parse(cleanText);
+      
+      // Đảm bảo supplementaryQuestions luôn là mảng
+      if (!Array.isArray(supplementaryQuestions)) {
+        supplementaryQuestions = [supplementaryQuestions];
+      }
+
+      // Chuẩn hóa format cho từng câu hỏi
+      supplementaryQuestions = supplementaryQuestions.map(question => {
+        switch (question.type) {
+          case 'multiple-choice':
+            return {
+              type: 'multiple-choice',
+              question: question.question,
+              options: question.options || [],
+              correctAnswer: question.correctAnswer || question.options?.[0],
+              explain: question.explain || 'Không có giải thích'
+            };
+          case 'true-false':
+            return {
+              type: 'true-false',
+              question: question.question,
+              options: question.options || [],
+              correctAnswer: Array.isArray(question.correctAnswer) ? 
+                question.correctAnswer : 
+                question.options?.map(() => 'Đúng') || []
+            };
+          case 'short-answer':
+            return {
+              type: 'short-answer',
+              question: question.question,
+              correctAnswer: question.correctAnswer || ''
+            };
+          default:
+            return question;
+        }
+      });
+
       return [...existingQuestions, ...supplementaryQuestions];
     } catch (error) {
       console.error('Error supplementing questions:', error);
@@ -487,17 +545,61 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
             children: [new TextRun({ text: "Đáp án", bold: true })],
             alignment: AlignmentType.CENTER,
           }),
-          ...allQuestions.map((question, index) => 
+          // Phần I: Trắc nghiệm
+          new Paragraph({
+            children: [new TextRun({ text: "PHẦN I. TRẮC NGHIỆM", bold: true })],
+            alignment: AlignmentType.LEFT,
+          }),
+          ...allQuestions
+            .filter(q => q.type === 'multiple-choice')
+            .map((question, index) => 
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Câu ${index + 1}: `, bold: true }),
+                  new TextRun({ text: question.correctAnswer }),
+                ],
+              })
+            ),
+          // Phần II: Đúng/Sai
+          ...(allQuestions.some(q => q.type === 'true-false') ? [
             new Paragraph({
-              children: [
-                new TextRun({ text: `Câu ${index + 1}: `, bold: true }),
-                new TextRun({ text: question.type === 'true-false' 
-                  ? question.correctAnswer.join(', ')
-                  : question.correctAnswer 
-                }),
-              ],
-            })
-          ),
+              children: [new TextRun({ text: "PHẦN II. ĐÚNG/SAI", bold: true })],
+              alignment: AlignmentType.LEFT,
+            }),
+            ...allQuestions
+              .filter(q => q.type === 'true-false')
+              .map((question, index) => {
+                const startIndex = allQuestions.filter(q => q.type === 'multiple-choice').length;
+                return new Paragraph({
+                  children: [
+                    new TextRun({ text: `Câu ${startIndex + index + 1}: `, bold: true }),
+                    ...question.correctAnswer.map((ans, i) => 
+                      new TextRun({ text: `${String.fromCharCode(97 + i)}) ${ans}  ` })
+                    ),
+                  ],
+                });
+              })
+          ] : []),
+          // Phần III: Trả lời ngắn
+          ...(allQuestions.some(q => q.type === 'short-answer') ? [
+            new Paragraph({
+              children: [new TextRun({ text: "PHẦN III. TRẢ LỜI NGẮN", bold: true })],
+              alignment: AlignmentType.LEFT,
+            }),
+            ...allQuestions
+              .filter(q => q.type === 'short-answer')
+              .map((question, index) => {
+                const startIndex = allQuestions.filter(q => 
+                  q.type === 'multiple-choice' || q.type === 'true-false'
+                ).length;
+                return new Paragraph({
+                  children: [
+                    new TextRun({ text: `Câu ${startIndex + index + 1}: `, bold: true }),
+                    new TextRun({ text: question.correctAnswer }),
+                  ],
+                });
+              })
+          ] : []),
         ],
       }],
     });
