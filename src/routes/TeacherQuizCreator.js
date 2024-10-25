@@ -85,14 +85,23 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     Hãy tạo thêm:
     ${missingRequests.join('\n')}
 
-    Yêu cầu:
+    Yêu cầu quan trọng về định dạng:
+    1. KHÔNG sử dụng bất kỳ thẻ HTML nào trong câu hỏi và đáp án
+    2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp; hay <br>
+    3. Chỉ sử dụng văn bản thuần túy (plain text)
+    4. Sử dụng dấu xuống dòng thông thường nếu cần thiết
+
+    Các yêu cầu về nội dung:
     1. Các câu hỏi mới KHÔNG ĐƯỢC TRÙNG LẶP với các câu hỏi hiện có
     2. Phải tuân theo phân bố độ khó: ${difficultyDistribution}
-    3. Giữ nguyên danh pháp hóa học như trong bài giảng
-    4. Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4)
-    ${missingCounts['multiple-choice'] > 0 ? '5. Đối với câu hỏi trắc nghiệm: Mỗi câu có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết' : ''}
-    ${missingCounts['true-false'] > 0 ? '6. Đối với câu hỏi đúng/sai: Mỗi câu có 4 phát biểu đúng/sai liên kết với nhau, đề bài cần có câu dẫn hỗ trợ làm, và phát biểu cuối cùng phải khó nhất' : ''}
-    ${missingCounts['short-answer'] > 0 ? '7. Đối với câu hỏi trả lời ngắn: Phải là câu hỏi tính toán với đáp án ngắn gọn' : ''}
+    3. QUAN TRỌNG: Giữ nguyên danh pháp hóa học như trong bài giảng(danh pháp hóa học tiếng anh)
+    4. Câu hỏi được đặt bằng tiếng Việt
+    5. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+
+    Yêu cầu cho từng loại câu hỏi:
+    ${missingCounts['multiple-choice'] > 0 ? '- Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết' : ''}
+    ${missingCounts['true-false'] > 0 ? '- Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất' : ''}
+    ${missingCounts['short-answer'] > 0 ? '- Trả lời ngắn: Câu hỏi tính toán với đáp án ngắn gọn' : ''}
 
     Trả về kết quả dưới dạng JSON với cấu trúc sau:
     [
@@ -100,7 +109,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         "type": "multiple-choice",
         "question": "Nội dung câu hỏi",
         "options": ["A", "B", "C", "D"],
-        "correctAnswer": "A", // phải là một trong các options
+        "correctAnswer": "A",
         "explain": "Giải thích chi tiết"
       },
       {
@@ -128,6 +137,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         .replace(/'/g, "'")
         .replace(/\\n/g, '')
         .replace(/\s+/g, ' ')
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace HTML non-breaking spaces
+        .replace(/&[a-z]+;/g, '') // Remove other HTML entities
         .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
 
       let supplementaryQuestions = JSON.parse(cleanText);
@@ -197,7 +209,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
 
     try {
       const extractedContent = await extractTextFromWord(teacherFile);
-      setExtractedText(extractedContent); // Save the extracted text
+      setExtractedText(extractedContent);
 
       let difficultyDistribution;
       switch (differentiationLevel) {
@@ -221,20 +233,28 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         ${(questionTypes.multipleChoice || questionTypes.trueFalse) && questionTypes.shortAnswer ? 'và' : ''}
         ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
         từ Nội dung bài giảng này: ${extractedContent}.
-        Vui lòng tạo đủ số lượng câu hỏi theo yêu cầu cho tôi.
-        Độ khó đa dạng để tạo độ phân hóa. Cụ thể:
-        ${difficultyDistribution}
-        Các yêu cầu của tôi về đề là:
-        Tôi không muốn bạn tự ý thêm câu hỏi mà không có trong bài giảng.
-        Các câu hỏi không được lặp lại.
-        Lưu ý quan trọng: Câu hỏi và các đáp án phải giữ nguyên danh pháp hóa học giống trong file (danh pháp hóa học tiếng anh). Không được tự ý đổi về danh pháp hóa học tiếng Việt(ví dụ: ester thì không tự ý đổi thành este, acid thì không tự ý đổi thành axit).
-        Lưu ý: Câu hỏi được đặt bằng tiếng Việt.
-        Đối với câu hỏi trắc nghiệm: Mỗi câu hỏi cần có 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết.
-        Đối với câu hỏi đúng/sai: Mỗi câu hỏi cần có 4 phát biểu đúng/sai liên kết với nhau, đề bài cần có câu dẫn hỗ trợ làm, ví dụ như "Chất béo là một trong các nguồn cung cấp năng lượng chính cho người và nhiều loài động vật, có chức năng quan trọng như dự trữ năng lượng, chống thấm, cách nhiệt," chứ không phải nói hãy chọn đúng/sai, và phát biểu cuối cùng phải khó nhất.
-        Đối với câu hỏi trả lời ngắn: Tôi muốn phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(thường câu khó nằm ở phần này).
-        Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4).
-        Lưu ý: Bạn phải tạo đủ số lượng câu hỏi như đã yêu cầu.
-        Kết quả cần được trả về dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
+
+        Yêu cầu quan trọng về định dạng:
+        1. KHÔNG sử dụng bất kỳ thẻ HTML nào trong câu hỏi và đáp án
+        2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp; hay <br>
+        3. Chỉ sử dụng văn bản thuần túy (plain text)
+        4. Sử dụng dấu xuống dòng thông thường nếu cần thiết
+
+        Các yêu cầu về nội dung:
+        1. Tạo đủ số lượng câu hỏi theo yêu cầu
+        2. Độ khó đa dạng để tạo độ phân hóa: ${difficultyDistribution}
+        3. Không tự ý thêm câu hỏi không có trong bài giảng
+        4. Các câu hỏi không được lặp lại
+        5. QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh)
+        6. Câu hỏi được đặt bằng tiếng Việt
+        7. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+
+        Yêu cầu cho từng loại câu hỏi:
+        - Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết
+        - Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất
+        - Trả lời ngắn: Câu hỏi tính toán với đáp án ngắn gọn
+
+        Trả về kết quả dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
           {
             type: "multiple-choice",
             question: "Câu hỏi trắc nghiệm 1",
@@ -245,7 +265,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
           {
             type: "true-false",
             question: "Câu hỏi đúng/sai 1",
-            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
+            options: ["Phát biểu A", "Phát biểu B", "Ph��t biểu C", "Phát biểu D"],
             correctAnswer: ["Đúng", "Sai", "Đúng", "Sai"],
           },
           {
