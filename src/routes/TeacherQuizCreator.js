@@ -94,14 +94,14 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     Các yêu cầu về nội dung:
     1. Các câu hỏi mới KHÔNG ĐƯỢC TRÙNG LẶP với các câu hỏi hiện có
     2. Phải tuân theo phân bố độ khó: ${difficultyDistribution}
-    3. QUAN TRỌNG: Giữ nguyên danh pháp hóa học như trong bài giảng(danh pháp hóa học tiếng anh)
+    3. QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh)
     4. Câu hỏi được đặt bằng tiếng Việt
     5. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
 
     Yêu cầu cho từng loại câu hỏi:
     ${missingCounts['multiple-choice'] > 0 ? '- Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết' : ''}
     ${missingCounts['true-false'] > 0 ? '- Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất' : ''}
-    ${missingCounts['short-answer'] > 0 ? '- Trả lời ngắn: Câu hỏi tính toán với đáp án ngắn gọn' : ''}
+    ${missingCounts['short-answer'] > 0 ? '- Trả lời ngắn: phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(không có chữ nha), bỏ các dạng toán đốt cháy' : ''}
 
     Trả về kết quả dưới dạng JSON với cấu trúc sau:
     [
@@ -252,7 +252,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         Yêu cầu cho từng loại câu hỏi:
         - Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết
         - Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất
-        - Trả lời ngắn: Câu hỏi tính toán với đáp án ngắn gọn
+        - Trả lời ngắn: phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(không có chữ nha), bỏ các dạng toán đốt cháy.
 
         Trả về kết quả dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
           {
@@ -265,7 +265,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
           {
             type: "true-false",
             question: "Câu hỏi đúng/sai 1",
-            options: ["Phát biểu A", "Phát biểu B", "Ph��t biểu C", "Phát biểu D"],
+            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
             correctAnswer: ["Đúng", "Sai", "Đúng", "Sai"],
           },
           {
@@ -572,14 +572,16 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
           }),
           ...allQuestions
             .filter(q => q.type === 'multiple-choice')
-            .map((question, index) => 
-              new Paragraph({
+            .map((question, index) => {
+              const correctAnswerIndex = question.options.indexOf(question.correctAnswer);
+              const correctAnswerLabel = String.fromCharCode(65 + correctAnswerIndex); // A, B, C, D
+              return new Paragraph({
                 children: [
                   new TextRun({ text: `Câu ${index + 1}: `, bold: true }),
-                  new TextRun({ text: question.correctAnswer }),
+                  new TextRun({ text: `${correctAnswerLabel}` }), // Hiển thị đáp án đúng là A, B, C, D
                 ],
-              })
-            ),
+              });
+            }),
           // Phần II: Đúng/Sai
           ...(allQuestions.some(q => q.type === 'true-false') ? [
             new Paragraph({
@@ -623,7 +625,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         ],
       }],
     });
-
+  
     const blob = await Packer.toBlob(doc);
     saveAs(blob, `${quizTitle}_answers.docx`);
   };
