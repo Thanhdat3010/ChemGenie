@@ -7,7 +7,7 @@ import mammoth from 'mammoth';
 import { Document, Packer, Paragraph, TextRun,  AlignmentType, TabStopPosition, TabStopType } from 'docx';
 import { saveAs } from 'file-saver';
 import magic from "../assets/magic-dust.png";
-import './CreateQuiz.css';
+import './TeacherQuizCreator.css';
 
 const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [teacherFile, setTeacherFile] = useState(null);
@@ -30,8 +30,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     trueFalse: true,
     shortAnswer: true
   });
-  const [extractedText, setExtractedText] = useState(''); // Add this new state
-  const [questions, setQuestions] = useState([]); // Initialize questions state
+  const [extractedText, setExtractedText] = useState('');
+  const [questions, setQuestions] = useState([]);
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
