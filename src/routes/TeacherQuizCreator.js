@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { doc, setDoc } from 'firebase/firestore';
+import { db, auth } from '../components/firebase';
+
 import mammoth from 'mammoth';
 import { Document, Packer, Paragraph, TextRun,  AlignmentType, TabStopPosition, TabStopType } from 'docx';
 import { saveAs } from 'file-saver';
 import magic from "../assets/magic-dust.png";
 import './CreateQuiz.css';
 
-const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }) => {
+const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [teacherFile, setTeacherFile] = useState(null);
   const [teacherNumMultipleChoice, setTeacherNumMultipleChoice] = useState();
   const [teacherNumTrueFalse, setTeacherNumTrueFalse] = useState();
@@ -16,14 +19,19 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
   const [subject, setSubject] = useState('HÓA HỌC');
   const [examTime, setExamTime] = useState('15 phút');
   const [loading, setLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [allQuestions, setAllQuestions] = useState([]);
   const [teacherNumShortAnswer, setTeacherNumShortAnswer] = useState();
+  const closeModal = () => {
+    setModalOpen(false);
+  };
   const [questionTypes, setQuestionTypes] = useState({
     multipleChoice: true,
     trueFalse: true,
     shortAnswer: true
   });
   const [extractedText, setExtractedText] = useState(''); // Add this new state
+  const [questions, setQuestions] = useState([]); // Initialize questions state
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
 
@@ -47,7 +55,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
       return newTypes;
     });
   };
-
+  const handleDeleteQuestion = (index) => {
+    setQuestions(prevQuestions => prevQuestions.filter((_, i) => i !== index));
+  };
   const supplementMissingQuestions = async (existingQuestions, targetCounts, originalText, difficultyDistribution) => {
     const currentCounts = {
       'multiple-choice': existingQuestions.filter(q => q.type === 'multiple-choice').length,
@@ -630,6 +640,52 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
     saveAs(blob, `${quizTitle}_answers.docx`);
   };
 
+  const saveQuestions = () => {
+    const blob = new Blob([JSON.stringify(questions)], { type: 'application/json' });
+    saveAs(blob, `${quizTitle}_questions.json`);
+  };
+  const handleSaveQuiz = async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+  
+    if (!user) {
+      alert('Bạn cần đăng nhập để lưu bộ câu hỏi.');
+      return;
+    }
+  
+    if (quizTitle.trim() === '') {
+      alert('Vui lòng nhập tiêu đề cho bộ câu hỏi.');
+      return;
+    }
+  
+    if (questions.length === 0) {
+      alert('Bạn phải thêm ít nhất một câu hỏi để lưu.');
+      return;
+    }
+  
+    // Kiểm tra và loại bỏ các thuộc tính có giá trị undefined
+    const cleanQuestions = questions.map(question => {
+      const cleanedQuestion = { ...question };
+      for (const key in cleanedQuestion) {
+        if (cleanedQuestion[key] === undefined) {
+          cleanedQuestion[key] = ''; // Hoặc giá trị mặc định phù hợp
+        }
+      }
+      return cleanedQuestion;
+    });
+  
+    try {
+      const userId = user.uid;
+      const docRef = doc(db, 'createdQuizzes', `${quizTitle}-${userId}`);
+      await setDoc(docRef, { userId, title: quizTitle, questions: cleanQuestions });
+      setModalOpen(true);
+      setQuizTitle('');
+      setQuestions([]);
+    } catch (error) {
+      console.error('Error saving quiz:', error);
+      alert('Đã xảy ra lỗi khi lưu bộ câu hỏi.');
+    }
+  };
   return (
     <div className="create-quiz-title-form">
       <h2 className="Createquizz-title-feature">Tạo bài tập từ bài giảng</h2>
@@ -754,6 +810,46 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle, questions, setQuestions }
         examTime,
       })}>Tạo file Word</button>
       <button className="create-quiz-download-btn" onClick={generateAnswerDocument}>Tạo file đáp án</button>
+      <div className="create-quiz-question-list">
+        <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
+        <ul>
+          {questions && questions.length > 0 ? (
+            questions.map((question, index) => (
+              <li key={index}>
+                <div className="create-quiz-question-content">
+                  <p dangerouslySetInnerHTML={{ __html: `<strong>Câu hỏi:</strong> ${question.question}` }} />
+                  {question.type === 'multiple-choice' && (
+                    <div className="create-quiz-question-options">
+                      {question.options.map((option, i) => (
+                        <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)} ${option}` }} />
+                      ))}
+                    </div>
+                  )}
+                  {question.type === 'fill-in-the-blank' && (
+                    <p><strong>Đáp án:</strong> {question.correctAnswer}</p>
+                  )}
+                  <p className="create-quiz-correct-answer" dangerouslySetInnerHTML={{ __html: `<strong>Đáp án đúng:</strong> ${question.correctAnswer || ''}` }} />
+                  <p dangerouslySetInnerHTML={{ __html: `<strong>Giải thích:</strong> ${question.explain}` }} />
+                  <button className='create-quiz-delete-question-btn' onClick={() => handleDeleteQuestion(index)}>Xóa</button>
+                </div>
+              </li>
+            ))
+            
+          ) : (
+            <p>Chưa có câu hỏi nào.</p>
+          )}
+        </ul>
+        
+      </div>
+      <button className="create-quiz-save-quiz-btn" onClick={handleSaveQuiz}>Lưu Bộ Câu Hỏi</button>
+          {modalOpen && (
+            <div className="modal" style={{ display: 'flex' }}>
+              <div className="modal-content">
+                <p>Bộ câu hỏi đã được lưu thành công!</p>
+                <button className="close-btn" onClick={closeModal}>Đóng</button>
+              </div>
+            </div>
+          )}
     </div>
   );
 };

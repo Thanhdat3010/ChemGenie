@@ -179,7 +179,7 @@ const CreateQuiz = () => {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();    
-      // Giả sử text trả về là một chuỗi JSON các câu hỏi
+      // Gi�� sử text trả về là một chuỗi JSON các câu hỏi
       const cleanText = text
       .replace(/`/g, '')
       .replace(/json/g, '')
@@ -473,18 +473,7 @@ const CreateQuiz = () => {
           placeholder="Nhập giải thích cho câu hỏi..."
         />
     <button className="create-quiz-add-question-btn" onClick={handleAddQuestion}>Thêm câu hỏi</button>
-    </div>        
-            </Tab>
-            <Tab eventKey="teacher" title={<span style={{ color: activeTab === 'teacher' ? '#7b31c9' : 'black', fontWeight: activeTab === 'teacher' ? 'bold' : 'normal' }}>Giáo viên</span>}>
-            <TeacherQuizCreator 
-              quizTitle={quizTitle}
-              setQuizTitle={setQuizTitle}
-              questions={questions}
-              setQuestions={setQuestions}
-            />
-          </Tab>
-          </Tabs>
-          <div className="create-quiz-question-list">
+    <div className="create-quiz-question-list">
       <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
       <ul>
       {questions.map((question, index) => (
@@ -518,6 +507,15 @@ const CreateQuiz = () => {
               </div>
             </div>
           )}
+    </div>        
+            </Tab>
+            <Tab eventKey="teacher" title={<span style={{ color: activeTab === 'teacher' ? '#7b31c9' : 'black', fontWeight: activeTab === 'teacher' ? 'bold' : 'normal' }}>Giáo viên</span>}>
+            <TeacherQuizCreator 
+              quizTitle={quizTitle}
+              setQuizTitle={setQuizTitle}
+            />
+          </Tab>
+          </Tabs>
         </div>
       </section>
       <Footer />

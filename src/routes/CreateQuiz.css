@@ -248,6 +248,7 @@
   justify-content: center;
   width: 100%; /* Make buttons full width */
   max-width: 200px; /* Optional: limit max width */
+  margin-bottom: 20px;
 }
 
 .create-quiz-download-btn:hover {
