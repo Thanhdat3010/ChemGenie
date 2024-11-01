@@ -48,7 +48,55 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const extractTextFromWord = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
-    return result.value;
+    
+    // Làm sạch văn bản đã trích xuất
+    let cleanedText = result.value
+      // Chuẩn hóa dấu câu tiếng Việt
+      .replace(/\s*,\s*/g, ', ')
+      .replace(/\s*\.\s*/g, '. ')
+      .replace(/\s*;\s*/g, '; ')
+      .replace(/\s*:\s*/g, ': ')
+      .replace(/\s*\?\s*/g, '? ')
+      .replace(/\s*!\s*/g, '! ')
+      
+      // Xử lý khoảng trắng và xuống dòng
+      .replace(/\s+/g, ' ')           // Gộp nhiều khoảng trắng thành một
+      .replace(/^\s*[\r\n]/gm, '')    // Xóa dòng trống
+      .replace(/[\r\n]+/g, '\n')      // Gộp nhiều dòng trống thành một
+      
+      // Xử lý các ký tự đặc biệt
+      .replace(/[""]/g, '"')          // Chuẩn hóa dấu ngoặc kép
+      .replace(/['']/g, "'")          // Chuẩn hóa dấu ngoặc đơn
+      
+      // Xử lý công thức hóa học
+      .replace(/(\d+)([A-Za-z])/g, '$1 $2')  // Thêm khoảng trắng giữa số và chữ
+      .replace(/([A-Za-z])(\d+)/g, '$1₍$2₎') // Chuyển số thành chỉ số dưới
+      
+      // Xử lý các đơn vị đo lường
+      .replace(/(\d+)\s*(ml|g|kg|m|cm|mm|L)/gi, '$1 $2')
+      
+      // Loại bỏ khoảng trắng đầu và cuối
+      .trim();
+
+    // Xử lý thêm cho văn bản tiếng Việt
+    cleanedText = cleanedText
+      // Đảm bảo khoảng trắng sau dấu câu tiếng Việt
+      .replace(/([.,!?;:])\s*([^\s])/g, '$1 $2')
+      
+      // Xử lý dấu gạch ngang trong từ ghép
+      .replace(/\s+-\s+/g, '-')
+      
+      // Chuẩn hóa khoảng trắng trong ngoặc
+      .replace(/\(\s+/g, '(')
+      .replace(/\s+\)/g, ')')
+      
+      // Xử lý các từ viết tắt phổ biến
+      .replace(/([A-Z]+)\s+([A-Z]+)/g, '$1$2')  // VD: T P H C M -> TPHCM
+      
+      // Đảm bảo không có khoảng trắng trước dấu phẩy và chấm
+      .replace(/\s+([.,])/g, '$1');
+
+    return cleanedText;
   };
 
   const handleQuestionTypeChange = (type) => {
@@ -238,7 +286,11 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         })
       );
       
-      const combined = contents.join('\n\n=====\n\n');
+      // Kết hợp nhiều file với phân cách rõ ràng
+      const combined = contents
+        .filter(content => content.trim().length > 0)
+        .join('\n\n=== Tài liệu mới ===\n\n');
+      
       setCombinedContent(combined);
       setExtractedText(combined);
 
@@ -320,6 +372,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
 
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
       const result = await model.generateContent(prompt);
+      console.log(prompt);
       const response = await result.response;
       const cleanText = response.text()
         .replace(/`/g, '')
@@ -331,7 +384,6 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         .replace(/\s+/g, ' ')
         .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
 
-      console.log(cleanText);
       let generatedQuestions;
       try {
         generatedQuestions = JSON.parse(cleanText);
