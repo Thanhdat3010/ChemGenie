@@ -7,21 +7,38 @@ import { getDoc, doc, setDoc, collection, query, orderBy, getDocs } from 'fireba
 
 const QuizRoom = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { quizId, roomId, timeLimit } = location.state || {};
+  
+  // Simplified state
   const [questions, setQuestions] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [answerState, setAnswerState] = useState([]);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(timeLimit * 60);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [remainingTime, setRemainingTime] = useState(timeLimit * 60);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const navigate = useNavigate();
 
+  // Thêm state leaderboard
+  const [leaderboard, setLeaderboard] = useState([]);
+
+  // Thêm hàm fetchLeaderboard
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const scoresRef = collection(db, 'rooms', roomId, 'scores');
+      const q = query(scoresRef, orderBy('score', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const leaderboardData = [];
+      querySnapshot.forEach((doc) => {
+        leaderboardData.push(doc.data());
+      });
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    }
+  }, [roomId]);
+
+  // Fetch quiz questions
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -30,199 +47,160 @@ const QuizRoom = () => {
           const quizSnap = await getDoc(quizRef);
           if (quizSnap.exists()) {
             setQuestions(quizSnap.data().questions);
-          } else {
-            console.log('Quiz does not exist');
           }
         }
       } catch (error) {
         console.error('Error fetching quiz:', error);
       }
     };
-
     fetchQuiz();
   }, [quizId]);
 
-  const fetchLeaderboard = useCallback(async () => {
-    const scoresRef = collection(db, 'rooms', roomId, 'scores');
-    const q = query(scoresRef, orderBy('score', 'desc'));
-    const querySnapshot = await getDocs(q);
-    const leaderboardData = [];
-    querySnapshot.forEach((doc) => {
-      leaderboardData.push(doc.data());
-    });
-    setLeaderboard(leaderboardData);
-  }, [roomId]);
-
-  const saveScore = useCallback(async () => {
-    const user = auth.currentUser;
-    if (user) {
-      const userProfileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const userProfile = userProfileDoc.data();
-
-      const scoreRef = doc(db, 'rooms', roomId, 'scores', user.uid);
-      await setDoc(scoreRef, {
-        uid: user.uid,
-        name: userProfile.username,
-        avatar: userProfile.profilePictureUrl,
-        score: score
-      });
-
-      fetchLeaderboard();
-    }
-  }, [roomId, score, fetchLeaderboard]);
-
-  const saveProgress = useCallback(async () => {
-    const user = auth.currentUser;
-    if (user && quizId) {
-      const docRef = doc(db, 'quizProgress', `${user.uid}_${quizId}`);
-      await setDoc(docRef, {
-        questions,
-        currentQuestion,
-        answerState,
-        score,
-        progress,
-        quizCompleted
-      });
-    }
-  }, [quizId, questions, currentQuestion, answerState, score, progress, quizCompleted]);
-
-  useEffect(() => {
-    if (remainingTime > 0) {
-      const timer = setInterval(() => {
-        setRemainingTime(prevTime => prevTime - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    } else {
-      setQuizCompleted(true);
-      saveScore();
-    }
-  }, [remainingTime, saveScore]);
-
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-  };
-
-  const handleOptionClick = (selectedAnswer) => {
-    if (selectedOption === null) {
-      setSelectedOption(selectedAnswer);
-
-      const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
-      const newAnswerState = [...answerState];
-      newAnswerState[currentQuestion] = isCorrect;
-      setAnswerState(newAnswerState);
-
-      if (isCorrect) {
-        setScore(prevScore => prevScore + 1);
-      }
-
-      saveProgress();
+  // Handle answer selection for multiple choice
+  const handleOptionClick = (questionIndex, selectedAnswer) => {
+    if (!isSubmitted) {
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionIndex]: selectedAnswer
+      }));
     }
   };
 
-  const handleTrueFalseClick = (selectedAnswer) => {
-    if (selectedOption === null) {
-      setSelectedOption(selectedAnswer);
-
-      const isCorrect = selectedAnswer === (questions[currentQuestion].correctAnswer === "true");
-      const newAnswerState = [...answerState];
-      newAnswerState[currentQuestion] = isCorrect;
-      setAnswerState(newAnswerState);
-
-      if (isCorrect) {
-        setScore(prevScore => prevScore + 1);
-      }
-
-      saveProgress();
+  // Handle answer selection for true/false
+  const handleTrueFalseClick = (questionIndex, selectedAnswer) => {
+    if (!isSubmitted) {
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionIndex]: selectedAnswer
+      }));
     }
   };
 
-  const handleFillInTheBlankSubmit = (event) => {
-    event.preventDefault();
-    if (selectedOption === null) {
-      const userAnswer = event.target.elements[0].value.trim().toLowerCase();
-      setSelectedOption(userAnswer);
-
-      const isCorrect = userAnswer === questions[currentQuestion].correctAnswer.toLowerCase();
-      const newAnswerState = [...answerState];
-      newAnswerState[currentQuestion] = isCorrect;
-      setAnswerState(newAnswerState);
-
-      if (isCorrect) {
-        setScore(prevScore => prevScore + 1);
-      }
-      event.target.elements[0].classList.toggle('quiz-room-page-correct-answer', isCorrect);
-      event.target.elements[0].classList.toggle('quiz-room-page-incorrect-answer', !isCorrect);
-
-      saveProgress();
+  // Handle short answer input
+  const handleShortAnswerChange = (questionIndex, answer) => {
+    if (!isSubmitted) {
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionIndex]: answer.trim()
+      }));
     }
   };
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      const submitButton = document.getElementById('quiz-room-page-submit-button');
-      submitButton.click();
-    }
+  // Check if all questions are answered
+  const areAllQuestionsAnswered = () => {
+    return questions.every((_, index) => userAnswers[index] !== undefined);
   };
 
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  const nextQuestion = async () => {
-    if (selectedOption === null) {
-      setNotificationMessage("Bạn cần chọn đáp án trước khi tiếp tục.");
+  // Handle quiz submission
+  const handleSubmitQuiz = async () => {
+    if (!areAllQuestionsAnswered()) {
+      setNotificationMessage("Vui lòng trả lời tất cả câu hỏi trước khi nộp bài");
       setShowNotification(true);
       return;
     }
 
-    setSelectedOption(null);
+    // Tính điểm và lưu chi tiết câu trả lời
+    let totalScore = 0;
+    const detailedAnswers = questions.map((question, index) => {
+      const userAnswer = userAnswers[index];
+      const correctAnswer = question.correctAnswer;
+      let isCorrect = false;
+      
+      if (question.type === 'multiple-choice' || question.type === 'true-false') {
+        isCorrect = userAnswer === correctAnswer;
+      } else if (question.type === 'short-answer') {
+        isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+      }
 
-    const nextQ = currentQuestion + 1;
-    if (nextQ < questions.length) {
-      setCurrentQuestion(nextQ);
-      const newProgress = (nextQ / questions.length) * 100;
-      setProgress(newProgress);
-    } else {
-      setQuizCompleted(true);
-      await Promise.all([saveProgress(), saveScore()]); // Lưu cả tiến trình và điểm số khi hoàn thành
+      if (isCorrect) totalScore++;
+
+      return {
+        questionType: question.type,
+        question: question.question,
+        userAnswer: userAnswer,
+        correctAnswer: correctAnswer,
+        isCorrect: isCorrect
+      };
+    });
+
+    setScore(totalScore);
+    setIsSubmitted(true);
+
+    try {
+      if (auth.currentUser) {
+        const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
+        const userProfile = userProfileDoc.data();
+
+        // Lưu điểm vào bảng xếp hạng
+        await setDoc(doc(db, 'rooms', roomId, 'scores', auth.currentUser.uid), {
+          uid: auth.currentUser.uid,
+          name: userProfile.username,
+          avatar: userProfile.profilePictureUrl,
+          score: totalScore,
+          timestamp: new Date().toISOString()
+        });
+
+        // Lưu chi tiết bài làm
+        await setDoc(doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${quizId}`), {
+          uid: auth.currentUser.uid,
+          quizId: quizId,
+          roomId: roomId,
+          score: totalScore,
+          detailedAnswers: detailedAnswers,
+          submittedAt: new Date().toISOString()
+        });
+
+        await fetchLeaderboard();
+      }
+    } catch (error) {
+      console.error('Error saving quiz results:', error);
+      setNotificationMessage("Có lỗi xảy ra khi lưu kết quả");
+      setShowNotification(true);
     }
   };
 
-  const toggleExplanation = () => {
-    setShowExplanation(!showExplanation);
-  };
-
+  // Timer effect
   useEffect(() => {
-    if (quizCompleted) {
-      fetchLeaderboard();
+    if (remainingTime > 0 && !isSubmitted) {
+      const timer = setInterval(() => {
+        setRemainingTime(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else if (remainingTime === 0 && !isSubmitted) {
+      handleSubmitQuiz();
     }
-  }, [quizCompleted, fetchLeaderboard]);
+  }, [remainingTime, isSubmitted]);
 
-  if (quizCompleted) {
+  if (isSubmitted) {
     return (
       <div className="quiz-room-page">
-        <h2>Hoàn thành</h2>
-        <div className="quiz-room-page-score-container">
-          <p className="quiz-room-page-score-label">Điểm số của bạn:</p>
-          <p className="quiz-room-page-score">{score}</p>
-          <h3>Bảng xếp hạng</h3>
-          <div className="leaderboard">
-            {leaderboard.map((player, index) => (
-              <div key={index} className="leaderboard-item">
-                <div className="leaderboard-ranking">{index + 1}</div>
-                <img src={player.avatar} alt={`${player.name}'s avatar`} className="leaderboard-avatar" />
-                <p className="leaderboard-name">{player.name}</p>
-                <p className="leaderboard-score">Điểm số: {player.score}</p>
-              </div>
-            ))}
+        <div className="quiz-result">
+          <h2>Kết quả</h2>
+          <p>Điểm số của bạn: {score}/{questions.length}</p>
+          
+          <div className="leaderboard-container">
+            <h3>Bảng xếp hạng</h3>
+            <div className="leaderboard">
+              {leaderboard.map((player, index) => (
+                <div key={index} className="leaderboard-item">
+                  <div className="leaderboard-ranking">{index + 1}</div>
+                  <img 
+                    src={player.avatar} 
+                    alt={`${player.name}'s avatar`} 
+                    className="leaderboard-avatar" 
+                  />
+                  <div className="leaderboard-info">
+                    <p className="leaderboard-name">{player.name}</p>
+                    <p className="leaderboard-score">Điểm: {player.score}/{questions.length}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <button onClick={() => navigate('/')} className="quiz-room-page-back-button">Quay về trang chủ</button>
+
+          <button onClick={() => navigate('/')} className="home-button">
+            Về trang chủ
+          </button>
         </div>
       </div>
     );
@@ -230,117 +208,77 @@ const QuizRoom = () => {
 
   return (
     <div className="quiz-room-page">
-      <h2>Bộ câu hỏi của bạn</h2>
-      {questions.length === 0 ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="quiz-room-page-questions-container">
-          <div className="quiz-room-page-progress-bar" style={{ width: `${progress}%` }}></div>
-          {currentQuestion < questions.length && (
-            <div className="quiz-room-page-question">
-              <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
-              <p>Thời gian còn lại: {formatTime(remainingTime)}</p>
-              {questions[currentQuestion].type === "multiple-choice" && (
-                <ul>
-                  {questions[currentQuestion].options.map((option, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleOptionClick(option)}
-                      className={
-                        selectedOption !== null &&
-                        answerState[currentQuestion] !== null &&
-                        option === questions[currentQuestion].correctAnswer
-                          ? "quiz-room-page-correct"
-                          : selectedOption !== null &&
-                            answerState[currentQuestion] !== null &&
-                            selectedOption === option &&
-                            option !== questions[currentQuestion].correctAnswer
-                          ? "quiz-room-page-incorrect"
-                          : ""
-                      }
-                    >
-                      <span dangerouslySetInnerHTML={{ __html: `(${String.fromCharCode(65 + index)}) ${option}` }} />
-                      {selectedOption === option && answerState[currentQuestion] !== null && option === questions[currentQuestion].correctAnswer ? <span className="quiz-room-page-correct-mark">&#10003;</span> : ''}
-                      {selectedOption === option && answerState[currentQuestion] !== null && option !== questions[currentQuestion].correctAnswer ? <span className="quiz-room-page-incorrect-mark">&#10007;</span> : ''}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {questions[currentQuestion].type === "true-false" && (
-                <ul>
-                  <li
-                    onClick={() => handleTrueFalseClick(true)}
-                    className={
-                      selectedOption !== null &&
-                      answerState[currentQuestion] !== null &&
-                      true === (questions[currentQuestion].correctAnswer === "true")
-                        ? "quiz-room-page-correct"
-                        : selectedOption !== null &&
-                          answerState[currentQuestion] !== null &&
-                          selectedOption === true &&
-                          true !== (questions[currentQuestion].correctAnswer === "true")
-                        ? "quiz-room-page-incorrect"
-                        : ""
-                    }
+      <div className="quiz-header">
+        <h2>Bài kiểm tra</h2>
+        
+        <p className="timer">Thời gian còn lại: {Math.floor(remainingTime / 60)}:{(remainingTime % 60).toString().padStart(2, '0')}</p>
+      </div>
+
+      <div className="questions-container">
+        {questions.map((question, index) => (
+          <div key={index} className="question-box">
+            <h3>Câu {index + 1}</h3>
+            <p className="question-text">{question.question}</p>
+
+            {question.type === 'multiple-choice' && (
+              <div className="options-grid">
+                {question.options.map((option, optionIndex) => (
+                  <button
+                    key={optionIndex}
+                    className={`option-button ${userAnswers[index] === option ? 'selected' : ''}`}
+                    onClick={() => handleOptionClick(index, option)}
                   >
-                    (A) True
-                    {selectedOption === true && answerState[currentQuestion] !== null && true === (questions[currentQuestion].correctAnswer === "true") ? <span className="quiz-room-page-correct-mark">&#10003;</span> : ''}
-                    {selectedOption === true && answerState[currentQuestion] !== null && true !== (questions[currentQuestion].correctAnswer === "true") ? <span className="quiz-room-page-incorrect-mark">&#10007;</span> : ''}
-                  </li>
-                  <li
-                    onClick={() => handleTrueFalseClick(false)}
-                    className={
-                      selectedOption !== null &&
-                      answerState[currentQuestion] !== null &&
-                      false === (questions[currentQuestion].correctAnswer === "true")
-                        ? "quiz-room-page-correct"
-                        : selectedOption !== null &&
-                          answerState[currentQuestion] !== null &&
-                          selectedOption === false &&
-                          false !== (questions[currentQuestion].correctAnswer === "true")
-                        ? "quiz-room-page-incorrect"
-                        : ""
-                    }
-                  >
-                    (B) False
-                    {selectedOption === false && answerState[currentQuestion] !== null && false === (questions[currentQuestion].correctAnswer === "true") ? <span className="quiz-room-page-correct-mark">&#10003;</span> : ''}
-                    {selectedOption === false && answerState[currentQuestion] !== null && false !== (questions[currentQuestion].correctAnswer === "true") ? <span className="quiz-room-page-incorrect-mark">&#10007;</span> : ''}
-                  </li>
-                </ul>
-              )}
-              {questions[currentQuestion].type === "fill-in-the-blank" && (
-                <form onSubmit={handleFillInTheBlankSubmit} className="quiz-room-page-fill-in-the-blank-form">
-                  <input
-                    type="text"
-                    className="quiz-room-page-fill-in-the-blank-input"
-                    placeholder="Nhập câu trả lời..."
-                  />
-                  <button type="submit" id="quiz-room-page-submit-button" className="quiz-room-page-submit-button">Submit</button>
-                </form>
-              )}
-              {selectedOption !== null && (
-                <>
-                  <button onClick={toggleExplanation} className="quiz-room-page-explanation-button">Giải thích</button>
-                  {showExplanation && (
-                    <div className="quiz-room-page-explanation">
-                      <p>Đáp án đúng: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].correctAnswer.toString() }} /></p>
-                      <p>Giải thích: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].explain }} /></p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-          {currentQuestion < questions.length && (
-            <button onClick={nextQuestion} className="quiz-room-page-next-button">Câu hỏi tiếp theo</button>
-          )}
-          {showNotification && (
-            <Notification
-              message={notificationMessage}
-              onClose={() => setShowNotification(false)}
-            />
-          )}
-        </div>
+                    {String.fromCharCode(65 + optionIndex)}. {option}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {question.type === 'true-false' && (
+              <div className="true-false-buttons">
+                <button
+                  className={`tf-button ${userAnswers[index] === true ? 'selected' : ''}`}
+                  onClick={() => handleTrueFalseClick(index, true)}
+                >
+                  Đúng
+                </button>
+                <button
+                  className={`tf-button ${userAnswers[index] === false ? 'selected' : ''}`}
+                  onClick={() => handleTrueFalseClick(index, false)}
+                >
+                  Sai
+                </button>
+              </div>
+            )}
+
+            {question.type === 'short-answer' && (
+              <input
+                type="text"
+                className="short-answer-input"
+                value={userAnswers[index] || ''}
+                onChange={(e) => handleShortAnswerChange(index, e.target.value)}
+                placeholder="Nhập câu trả lời..."
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="submit-section1">
+        <button
+          className="submit-button1"
+          onClick={handleSubmitQuiz}
+          disabled={!areAllQuestionsAnswered()}
+        >
+          Nộp bài
+        </button>
+      </div>
+
+      {showNotification && (
+        <Notification
+          message={notificationMessage}
+          onClose={() => setShowNotification(false)}
+        />
       )}
     </div>
   );

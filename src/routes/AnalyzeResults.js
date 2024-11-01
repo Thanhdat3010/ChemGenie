@@ -60,41 +60,55 @@ const AnalyzeResults = () => {
   
   const fetchQuizData = async (type, itemId) => {
     try {
-      const userId = JSON.parse(localStorage.getItem('user'))?.email || 'defaultUser';
-      let docRef;
-      
-      if (type === 'chapter') {
-        docRef = doc(db, 'users', userId, 'chapters', itemId);
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user is logged in.');
+
+      let questions = [];
+      let detailedAnswers = [];
+
+      if (type === 'quiz') {
+        // Fetch quiz submission data
+        const submissionRef = doc(db, 'quizSubmissions', `${user.uid}_${itemId}`);
+        const submissionSnap = await getDoc(submissionRef);
+        
+        if (submissionSnap.exists()) {
+          const submissionData = submissionSnap.data();
+          detailedAnswers = submissionData.detailedAnswers || [];
+          
+          // Convert detailed answers to the format needed for analysis
+          questions = detailedAnswers.map(answer => ({
+            question: answer.question,
+            type: answer.questionType
+          }));
+          
+          const answerState = detailedAnswers.map(answer => answer.isCorrect);
+          return { answerState, questions, detailedAnswers };
+        }
       } else {
-        const user = auth.currentUser;
-        if (user) {
-          docRef = doc(db, 'quizProgress', `${user.uid}_${itemId}`);
-        } else {
-          throw new Error('No user is logged in.');
+        // Existing chapter analysis logic
+        const userId = JSON.parse(localStorage.getItem('user'))?.email || 'defaultUser';
+        const docRef = doc(db, 'users', userId, 'chapters', itemId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          questions = data.questions || [];
+          const answerState = data.answerState || [];
+          return { answerState, questions };
         }
       }
 
-      const docSnap = await getDoc(docRef);
-      let questions = [];
-      let answerState = [];
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        questions = data.questions || [];
-        answerState = data.answerState || [];
-      }
-
-      return { answerState, questions };
+      throw new Error('No data found');
     } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu từ Firestore:', error);
-      return { answerState: [], questions: [] };
+      console.error('Error fetching quiz data:', error);
+      return { answerState: [], questions: [], detailedAnswers: [] };
     }
   };
 
   const handleAnalyzeResults = async () => {
     setLoading(true);
 
-    const { answerState, questions } = await fetchQuizData(selectedType, selectedItem);
+    const { answerState, questions, detailedAnswers } = await fetchQuizData(selectedType, selectedItem);
 
     if (answerState.length === 0 || questions.length === 0) {
       setAnalysis('Không có dữ liệu để phân tích.');
@@ -105,10 +119,18 @@ const AnalyzeResults = () => {
     const prompt = `
       Dưới đây là dữ liệu đầu vào cho hệ thống đánh giá:
       Kết quả bài kiểm tra:
-      ${questions.map((question, index) => `
-        Câu ${index + 1}: ${question.question}
-        Kết quả: ${answerState[index] ? 'Đúng' : 'Sai'}
-      `).join('\n\n')}
+      ${questions.map((question, index) => {
+        const detail = detailedAnswers?.[index];
+        return `
+          Câu ${index + 1}: ${question.question}
+          ${detail ? `
+          Loại câu hỏi: ${detail.questionType}
+          Câu trả lời của học sinh: ${detail.userAnswer}
+          Đáp án đúng: ${detail.correctAnswer}
+          Kết quả: ${detail.isCorrect ? 'Đúng' : 'Sai'}
+          ` : `Kết quả: ${answerState[index] ? 'Đúng' : 'Sai'}`}
+        `;
+      }).join('\n\n')}
       
       Dựa trên các thông tin này, hãy:
       1. Phân tích kết quả:
@@ -116,11 +138,11 @@ const AnalyzeResults = () => {
       - Xác định các câu hỏi học sinh trả lời đúng và sai.
       - Tính toán điểm tổng cộng và tỷ lệ phần trăm đúng.
       2. Đánh giá kỹ năng:
-      - Đánh giá các kỹ năng cụ thể dựa trên các câu hỏi đúng và sai (ví dụ: hiểu biết về phản ứng hóa học, khả năng cân bằng phương trình, hiểu biết về bảng tuần hoàn, v.v.).
+      - Đánh giá các kỹ năng cụ thể dựa trên các câu hỏi đúng và sai.
       - Nhận diện các chủ đề mà học sinh có vẻ yếu kém hoặc mạnh mẽ.
       3. Phân loại năng lực:
-      - Phân loại học sinh vào các mức năng lực khác nhau dựa trên kết quả (ví dụ: xuất sắc, giỏi, khá, trung bình, yếu).
-      - Đưa ra lời khuyên cho học sinh về các chủ đề cần cải thiện và các tài liệu học tập có liên quan.
+      - Phân loại học sinh vào các mức năng lực khác nhau dựa trên kết quả.
+      - Đưa ra lời khuyên cho học sinh về các chủ đề cần cải thiện.
       4. Đưa ra nhận xét:
       - Viết một đoạn nhận xét chi tiết cho học sinh, bao gồm các điểm mạnh, điểm yếu, và đề xuất cách cải thiện.
     `;
