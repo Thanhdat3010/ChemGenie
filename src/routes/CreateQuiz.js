@@ -483,7 +483,7 @@ const CreateQuiz = () => {
           {question.type === 'multiple-choice' && (
             <div className="create-quiz-question-options">
               {question.options.map((option, i) => (
-                <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)} ${option}` }} />
+                <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)}) ${option}` }} />
               ))}
             </div>
           )}

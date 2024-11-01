@@ -10,7 +10,7 @@ import magic from "../assets/magic-dust.png";
 import './TeacherQuizCreator.css';
 
 const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
-  const [teacherFile, setTeacherFile] = useState(null);
+  const [teacherFiles, setTeacherFiles] = useState([]);
   const [teacherNumMultipleChoice, setTeacherNumMultipleChoice] = useState();
   const [teacherNumTrueFalse, setTeacherNumTrueFalse] = useState();
   const [differentiationLevel, setDifferentiationLevel] = useState('medium');
@@ -32,11 +32,17 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   });
   const [extractedText, setExtractedText] = useState('');
   const [questions, setQuestions] = useState([]);
+  const [combinedContent, setCombinedContent] = useState('');
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
-
+  // AIzaSyBc1fHj2tGSwmVraM39ZXzFjvy_qubMct8 API dự phòng
   const handleTeacherFileUpload = (event) => {
-    setTeacherFile(event.target.files[0]);
+    const newFiles = Array.from(event.target.files);
+    if (newFiles.some(file => !file.name.endsWith('.docx'))) {
+      alert('Chỉ chấp nhận file định dạng .docx');
+      return;
+    }
+    setTeacherFiles(prevFiles => [...prevFiles, ...newFiles]);
   };
 
   const extractTextFromWord = async (file) => {
@@ -99,7 +105,14 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     1. KHÔNG sử dụng bất kỳ thẻ HTML nào trong câu hỏi và đáp án
     2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp; hay <br>
     3. Chỉ sử dụng văn bản thuần túy (plain text)
-    4. Sử dụng dấu xuống dòng thông thường nếu cần thiết
+    4. Với các công thức hóa học:
+       - Viết chỉ số dưới bằng ký tự Unicode trực tiếp (ví dụ: H₂O thay vì H<sub>2</sub>O)
+       - Sử dụng ký tự → cho mũi tên phản ứng
+       - Sử dụng dấu ⇌ cho phản ứng thuận nghịch
+    5. Với các đơn vị đo:
+       - Viết m³ thay vì m<sup>3</sup>
+       - Viết cm³ thay vì cm<sup>3</sup>
+       - Tương tự cho các đơn vị khác
 
     Các yêu cầu về nội dung:
     1. Các câu hỏi mới KHÔNG ĐƯỢC TRÙNG LẶP với các câu hỏi hiện có
@@ -110,7 +123,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
 
     Yêu cầu cho từng loại câu hỏi:
     ${missingCounts['multiple-choice'] > 0 ? '- Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết' : ''}
-    ${missingCounts['true-false'] > 0 ? '- Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất' : ''}
+    ${missingCounts['true-false'] > 0 ? '- Đúng/sai: mỗi câu hỏi sẽ có 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất' : ''}
     ${missingCounts['short-answer'] > 0 ? '- Trả lời ngắn: phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(không có chữ nha), bỏ các dạng toán đốt cháy' : ''}
 
     Trả về kết quả dưới dạng JSON với cấu trúc sau:
@@ -147,9 +160,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         .replace(/'/g, "'")
         .replace(/\\n/g, '')
         .replace(/\s+/g, ' ')
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .replace(/&nbsp;/g, ' ') // Replace HTML non-breaking spaces
-        .replace(/&[a-z]+;/g, '') // Remove other HTML entities
+        .replace(/<[^>]*>/g, '') 
+        .replace(/&nbsp;/g, ' ') 
+        .replace(/&[a-z]+;/g, '')
         .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
 
       let supplementaryQuestions = JSON.parse(cleanText);
@@ -198,8 +211,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   };
 
   const generateQuestionsFromWord = async () => {
-    if (!teacherFile || !teacherFile.name.endsWith('.docx')) {
-      alert('Vui lòng tải lên tệp Word (.docx).');
+    if (teacherFiles.length === 0) {
+      alert('Vui lòng tải lên ít nhất một tệp Word (.docx)');
       return;
     }
 
@@ -218,8 +231,16 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     setLoading(true);
 
     try {
-      const extractedContent = await extractTextFromWord(teacherFile);
-      setExtractedText(extractedContent);
+      const contents = await Promise.all(
+        teacherFiles.map(async (file) => {
+          const content = await extractTextFromWord(file);
+          return content;
+        })
+      );
+      
+      const combined = contents.join('\n\n=====\n\n');
+      setCombinedContent(combined);
+      setExtractedText(combined);
 
       let difficultyDistribution;
       switch (differentiationLevel) {
@@ -236,28 +257,40 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
           difficultyDistribution = "Mức độ không hợp lệ";
       }
 
-      const prompt = `Hãy tạo 
+      const prompt = `Bạn là một chuyên gia trong việc tạo đề thi hóa học.
+        Hãy tạo 
         ${questionTypes.multipleChoice ? teacherNumMultipleChoice + ' câu hỏi trắc nghiệm' : ''} 
         ${questionTypes.multipleChoice && (questionTypes.trueFalse || questionTypes.shortAnswer) ? 'và' : ''} 
         ${questionTypes.trueFalse ? teacherNumTrueFalse + ' câu hỏi đúng/sai' : ''}
         ${(questionTypes.multipleChoice || questionTypes.trueFalse) && questionTypes.shortAnswer ? 'và' : ''}
         ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
-        từ Nội dung bài giảng này: ${extractedContent}.
+        từ Nội dung bài giảng này: ${combined}.
 
-        Yêu cầu quan trọng về định dạng:
-        1. KHÔNG sử dụng bất kỳ thẻ HTML nào trong câu hỏi và đáp án
-        2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp; hay <br>
-        3. Chỉ sử dụng văn bản thuần túy (plain text)
-        4. Sử dụng dấu xuống dòng thông thường nếu cần thiết
+        Yêu cầu QUAN TRỌNG về định dạng:
+      1. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ thẻ HTML nào (<sub>, <sup>, <br>, etc.)
+      2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp;
+      3. Chỉ sử dụng văn bản thuần túy (plain text)
+      4. Với các công thức hóa học:
+       - Viết chỉ số dưới bằng ký tự Unicode trực tiếp (ví dụ: H₂O, CO₂)
+       - Sử dụng ký tự → cho mũi tên phản ứng
+       - Sử dụng dấu ⇌ cho phản ứng thuận nghịch
+      5. Với các đơn vị đo:
+       - Viết m³ thay vì m3
+       - Viết cm³ thay vì cm3
+       - Viết độ C thay vì °C
+     6. Với các số mũ và chỉ số:
+       - Sử dụng ký tự Unicode trực tiếp (ví dụ: x², x₁, x₂)
 
         Các yêu cầu về nội dung:
         1. Tạo đủ số lượng câu hỏi theo yêu cầu
         2. Độ khó đa dạng để tạo độ phân hóa: ${difficultyDistribution}
         3. Không tự ý thêm câu hỏi không có trong bài giảng
         4. Các câu hỏi không được lặp lại
-        5. QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh)
+        5. ĐẶC BIỆT QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh, IUPAC)
         6. Câu hỏi được đặt bằng tiếng Việt
         7. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+        8. Phân bố câu hỏi đều giữa các bài giảng, không tập trung quá nhiều vào một bài
+        9. Tạo các câu hỏi có tính liên kết giữa các bài giảng khi có thể
 
         Yêu cầu cho từng loại câu hỏi:
         - Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết
@@ -275,12 +308,12 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
           {
             type: "true-false",
             question: "Câu hỏi đúng/sai 1",
-            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
+            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D(khó nhất)"],
             correctAnswer: ["Đúng", "Sai", "Đúng", "Sai"],
           },
           {
             type: "short-answer",
-            question: "Câu hỏi trả lời ngắn 1",
+            question: "Nội dung câu hỏi tính toán",
             correctAnswer: "Đáp án ngắn gọn",
           }
         ])}.`;
@@ -324,7 +357,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
           trueFalse: parseInt(teacherNumTrueFalse) || 0,
           shortAnswer: parseInt(teacherNumShortAnswer) || 0
         },
-        extractedContent,
+        combined,
         difficultyDistribution
       );
 
@@ -336,8 +369,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       setAllQuestions(finalQuestions);
 
     } catch (error) {
-      console.error('Error generating questions from Word:', error);
-      alert('Đã xảy ra lỗi khi tạo câu hỏi từ tệp Word.');
+      console.error('Error generating questions:', error);
+      alert('Đã xảy ra lỗi khi tạo câu hỏi');
     } finally {
       setLoading(false);
     }
@@ -686,6 +719,12 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       alert('Đã xảy ra lỗi khi lưu bộ câu hỏi.');
     }
   };
+
+  const handleRemoveFile = (index) => {
+    setTeacherFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    setCombinedContent('');
+  };
+
   return (
     <div className="create-quiz-title-form">
       <h2 className="Createquizz-title-feature">Tạo bài tập từ bài giảng</h2>
@@ -698,11 +737,28 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         placeholder="Nhập tiêu đề bài tập..."
       />
       <p className="solver-intro">Tải lên tệp bài giảng (Word) để tạo câu hỏi tự động</p>
-      <input
-        type="file"
-        accept=".docx"
-        onChange={handleTeacherFileUpload}
-      />
+      <div className="file-upload-section">
+        <input
+          type="file"
+          accept=".docx"
+          onChange={handleTeacherFileUpload}
+          multiple
+        />
+        
+        {teacherFiles.length > 0 && (
+          <div className="uploaded-files-list">
+            <h3>Danh sách file đã tải lên:</h3>
+            {teacherFiles.map((file, index) => (
+              <div key={index} className="uploaded-file-item">
+                <span>{file.name}</span>
+                <button onClick={() => handleRemoveFile(index)}>
+                  Xóa
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       {questionTypes.multipleChoice && (
         <input
           id="numMultipleChoice"
@@ -821,7 +877,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
                   {question.type === 'multiple-choice' && (
                     <div className="create-quiz-question-options">
                       {question.options.map((option, i) => (
-                        <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)} ${option}` }} />
+                        <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)}) ${option}` }} />
                       ))}
                     </div>
                   )}
