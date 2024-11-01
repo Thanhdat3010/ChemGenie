@@ -5,10 +5,29 @@
   margin-bottom: 70px;
 }
 
+.custom-quiz-list-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+.custom-quiz-list-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  width: 100%;
+  text-align: center;
+}
+
 .custom-quiz-list {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  width: 100%;
+  justify-content: center;
 }
 
 .custom-quiz-item {

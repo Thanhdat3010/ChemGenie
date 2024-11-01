@@ -9,14 +9,14 @@ const CustomQuiz = () => {
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [answerState, setAnswerState] = useState([]);
   const [score, setScore] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [currentQuizId, setCurrentQuizId] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -41,47 +41,63 @@ const CustomQuiz = () => {
   }, []);
 
   const startQuiz = async (quiz) => {
-    setQuestions(quiz.questions);
-    setCurrentQuestion(0);
-    setAnswerState(Array(quiz.questions.length).fill(null));
-    setScore(0);
-    setProgress(0);
-    setCurrentQuizId(quiz.id);
-  
-    const user = auth.currentUser;
-    if (user) {
-      const docRef = doc(db, 'quizProgress', `${user.uid}_${quiz.id}`);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setQuestions(data.questions);
-        setCurrentQuestion(data.currentQuestion);
-        setAnswerState(data.answerState);
-        setScore(data.score);
-        setProgress(data.progress);
-        setQuizCompleted(data.quizCompleted); // Đọc trạng thái quizCompleted từ Firestore
-      } else {
-        setQuizCompleted(false); // Nếu không có dữ liệu, đặt lại quizCompleted
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        setNotificationMessage("Vui lòng đăng nhập để thực hiện thao tác này");
+        setShowNotification(true);
+        return;
       }
+
+      // Kiểm tra xem đã có submission chưa
+      const submissionRef = doc(db, 'quizSubmissions', `${user.uid}_${quiz.id}`);
+      const submissionSnap = await getDoc(submissionRef);
+
+      if (submissionSnap.exists()) {
+        // Nếu đã có submission, xóa nó để cho phép làm lại
+        await deleteDoc(submissionRef);
+      }
+
+      // Khởi tạo state cho quiz mới
+      setQuestions(quiz.questions || []);
+      setCurrentQuestion(0);
+      setScore(0);
+      setCurrentQuizId(quiz.id);
+      setUserAnswers({});
+      setQuizCompleted(false);
+    } catch (error) {
+      console.error('Error starting quiz:', error);
+      setNotificationMessage("Có lỗi khi bắt đầu bài kiểm tra");
+      setShowNotification(true);
     }
   };
 
   const deleteQuiz = async (quizId) => {
     try {
-      // Xóa bộ câu hỏi trong collection 'createdQuizzes'
-      await deleteDoc(doc(db, 'createdQuizzes', quizId));
-  
-      // Lấy ID của người dùng hiện tại
       const user = auth.currentUser;
-      if (user) {
-        // Xóa tiến trình liên quan trong collection 'quizProgress'
-        await deleteDoc(doc(db, 'quizProgress', `${user.uid}_${quizId}`));
+      if (!user) {
+        setNotificationMessage("Vui lòng đăng nhập để thực hiện thao tác này");
+        setShowNotification(true);
+        return;
       }
-  
-      // Cập nhật lại danh sách bộ câu hỏi
-      setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
+
+      // Delete the quiz document
+      const quizRef = doc(db, 'createdQuizzes', quizId);
+      await deleteDoc(quizRef);
+
+      // Delete submission if exists
+      const submissionRef = doc(db, 'quizSubmissions', `${user.uid}_${quizId}`);
+      await deleteDoc(submissionRef);
+
+      // Update local state
+      setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizId));
+      
+      setNotificationMessage("Đã xóa bài kiểm tra thành công");
+      setShowNotification(true);
     } catch (error) {
-      console.error('lỗi xóa progress:', error);
+      console.error('Error deleting quiz:', error);
+      setNotificationMessage("Có lỗi khi xóa bài kiểm tra");
+      setShowNotification(true);
     }
   };
 
@@ -92,62 +108,99 @@ const CustomQuiz = () => {
       await setDoc(docRef, {
         questions,
         currentQuestion,
-        answerState,
         score,
-        progress,
         quizCompleted  // Lưu trạng thái hoàn thành
       });
     }
   };
 
-  const handleOptionClick = async (selectedAnswer) => {
-    if (selectedOption === null) {
-      setSelectedOption(selectedAnswer);
-
-      const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
-      const newAnswerState = [...answerState];
-      newAnswerState[currentQuestion] = isCorrect;
-      setAnswerState(newAnswerState);
-
-      if (isCorrect) {
-        setScore(prevScore => prevScore + 1);
-      }
+  const handleOptionClick = (questionIndex, selectedAnswer) => {
+    if (!quizCompleted) {
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionIndex]: selectedAnswer
+      }));
     }
   };
 
-  const handleTrueFalseClick = async (selectedAnswer) => {
-    if (selectedOption === null) {
-      setSelectedOption(selectedAnswer);
-
-      const isCorrect = selectedAnswer === (questions[currentQuestion].correctAnswer === "true");
-      const newAnswerState = [...answerState];
-      newAnswerState[currentQuestion] = isCorrect;
-      setAnswerState(newAnswerState);
-
-      if (isCorrect) {
-        setScore(prevScore => prevScore + 1);
-      }
+  const handleTrueFalseClick = (questionIndex, selectedAnswer) => {
+    if (!quizCompleted) {
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionIndex]: selectedAnswer
+      }));
     }
   };
 
-  const handleFillInTheBlankSubmit = async (event) => {
-    event.preventDefault();
-    if (selectedOption === null) {
-      const userAnswer = event.target.elements[0].value.trim().toLowerCase();
-      setSelectedOption(userAnswer);
-
-      const isCorrect = userAnswer === questions[currentQuestion].correctAnswer.toLowerCase();
-      const newAnswerState = [...answerState];
-      newAnswerState[currentQuestion] = isCorrect;
-      setAnswerState(newAnswerState);
-
-      if (isCorrect) {
-        setScore(prevScore => prevScore + 1);
-      }
-      event.target.elements[0].classList.toggle('custom-quiz-correct-answer', isCorrect);
-      event.target.elements[0].classList.toggle('custom-quiz-incorrect-answer', !isCorrect);
+  const handleShortAnswerChange = (questionIndex, answer) => {
+    if (!quizCompleted) {
+      setUserAnswers(prev => ({
+        ...prev,
+        [questionIndex]: answer.trim()
+      }));
     }
   };
+
+  const areAllQuestionsAnswered = () => {
+    return questions.every((_, index) => userAnswers[index] !== undefined);
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!areAllQuestionsAnswered()) {
+      setNotificationMessage("Vui lòng trả lời tất cả câu hỏi trước khi nộp bài");
+      setShowNotification(true);
+      return;
+    }
+
+    let totalScore = 0;
+    const detailedAnswers = questions.map((question, index) => {
+      const userAnswer = userAnswers[index];
+      const correctAnswer = question.correctAnswer;
+      let isCorrect = false;
+      
+      if (question.type === 'multiple-choice' || question.type === 'true-false') {
+        isCorrect = userAnswer === correctAnswer;
+      } else if (question.type === 'short-answer') {
+        isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+      }
+
+      if (isCorrect) totalScore++;
+
+      return {
+        questionType: question.type,
+        question: question.question,
+        userAnswer: userAnswer,
+        correctAnswer: correctAnswer,
+        isCorrect: isCorrect
+      };
+    });
+
+    setScore(totalScore);
+    setQuizCompleted(true);
+
+    try {
+      if (auth.currentUser) {
+        const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
+        const userProfile = userProfileDoc.data();
+
+        // Save quiz submission details
+        await setDoc(doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${currentQuizId}`), {
+          uid: auth.currentUser.uid,
+          quizId: currentQuizId,
+          score: totalScore,
+          detailedAnswers: detailedAnswers,
+          submittedAt: new Date().toISOString()
+        });
+
+        await saveProgress();
+      }
+    } catch (error) {
+      console.error('Error saving quiz results:', error);
+      setNotificationMessage("Có lỗi xảy ra khi lưu kết quả");
+      setShowNotification(true);
+    }
+  };
+
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
@@ -164,33 +217,12 @@ const CustomQuiz = () => {
     };
   }, []);
 
-  const nextQuestion = async () => {
-    if (selectedOption === null) {
-      setNotificationMessage("Bạn cần chọn đáp án trước khi tiếp tục.");
-      setShowNotification(true);
-      return;
-    }
-  
-    setSelectedOption(null);
-  
-    const nextQ = currentQuestion + 1;
-    if (nextQ < questions.length) {
-      setCurrentQuestion(nextQ);
-      const newProgress = (nextQ / questions.length) * 100;
-      setProgress(newProgress);
-    } else {
-      setQuizCompleted(true);
-      await saveProgress(); // Lưu trạng thái hoàn thành vào Firestore
-    }
-  };
 
   const resetQuiz = async () => {
     setQuestions([]);
     setCurrentQuestion(0);
     setSelectedOption(null);
-    setAnswerState([]);
     setScore(0);
-    setProgress(0);
     setQuizCompleted(false); // Đặt lại trạng thái quizCompleted
   
     const user = auth.currentUser;
@@ -199,144 +231,111 @@ const CustomQuiz = () => {
     }
   };
 
-  const toggleExplanation = () => {
-    setShowExplanation(!showExplanation);
-  };
+  
 
   if (quizCompleted) {
     return (
-      <div className="custom-quiz-hoan-thanh">
-        <h2>Hoàn thành</h2>
-        <div className="custom-quiz-score-container">
-          <p className="custom-quiz-score-label">Điểm số của bạn:</p>
-          <p className="custom-quiz-score">{score}</p>
-          <button onClick={resetQuiz} className="custom-quiz-next-button">Làm lại</button>
+      <div className="quiz-room-page">
+        <div className="quiz-result">
+          <h2>Kết quả</h2>
+          <p>Điểm số của bạn: {score}/{questions.length}</p>
+          
+          <button onClick={resetQuiz} className="home-button">
+            Làm lại
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="custom-quiz-page">
-      <h2>Bộ câu hỏi của bạn</h2>
+    <div className="quiz-room-page">
       {questions.length === 0 ? (
-        <div className="custom-quiz-list">
-          {quizzes.map((quiz, index) => (
-            <div key={index} className="custom-quiz-item">
-              <h3>{quiz.title}</h3>
-              <button onClick={() => startQuiz(quiz)} className='custom-quiz-start-button'>Bắt đầu</button>
-              <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">Xóa</button>
-            </div>
-          ))}
+        <div className="custom-quiz-list-container">
+      <h2 className="custom-quiz-list-title">Bộ câu hỏi của bạn</h2>
+      <div className="custom-quiz-list">
+        {quizzes.map((quiz, index) => (
+          <div key={index} className="custom-quiz-item">
+            <h3>{quiz.title}</h3>
+            <button onClick={() => startQuiz(quiz)} className='custom-quiz-start-button'>Bắt đầu</button>
+            <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">Xóa</button>
+          </div>
+        ))}
+      </div>
         </div>
       ) : (
-        <div className="custom-quiz-questions-container">
-          <div className="custom-quiz-progress-bar" style={{ width: `${progress}%` }}></div>
-          {currentQuestion < questions.length && (
-            <div className="custom-quiz-question">
-            <p dangerouslySetInnerHTML={{ __html: `${currentQuestion + 1}. ${questions[currentQuestion].question}` }} />
-            {questions[currentQuestion].type === "multiple-choice" && (
-                <ul>
-                  {questions[currentQuestion].options.map((option, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleOptionClick(option)}
-                      className={
-                        selectedOption !== null &&
-                        answerState[currentQuestion] !== null &&
-                        option === questions[currentQuestion].correctAnswer
-                          ? "custom-quiz-correct"
-                          : selectedOption !== null &&
-                            answerState[currentQuestion] !== null &&
-                            selectedOption === option &&
-                            option !== questions[currentQuestion].correctAnswer
-                          ? "custom-quiz-incorrect"
-                          : ""
-                      }
+        <>
+          <div className="quiz-header">
+            <h2>Bài kiểm tra</h2>
+          </div>
+
+          <div className="questions-container">
+            {questions.map((question, index) => (
+              <div key={index} className="question-box">
+                <h3>Câu {index + 1}</h3>
+                <p className="question-text">{question.question}</p>
+
+                {question.type === 'multiple-choice' && (
+                  <div className="options-grid">
+                    {question.options.map((option, optionIndex) => (
+                      <button
+                        key={optionIndex}
+                        className={`option-button ${userAnswers[index] === option ? 'selected' : ''}`}
+                        onClick={() => handleOptionClick(index, option)}
+                      >
+                        {String.fromCharCode(65 + optionIndex)}. {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {question.type === 'true-false' && (
+                  <div className="true-false-buttons">
+                    <button
+                      className={`tf-button ${userAnswers[index] === true ? 'selected' : ''}`}
+                      onClick={() => handleTrueFalseClick(index, true)}
                     >
-                      <span dangerouslySetInnerHTML={{ __html: `(${String.fromCharCode(65 + index)}) ${option}` }} />
-                      {selectedOption === option && answerState[currentQuestion] !== null && option === questions[currentQuestion].correctAnswer ? <span className="custom-quiz-correct-mark">&#10003;</span> : ''}
-                      {selectedOption === option && answerState[currentQuestion] !== null && option !== questions[currentQuestion].correctAnswer ? <span className="custom-quiz-incorrect-mark">&#10007;</span> : ''}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {questions[currentQuestion].type === "true-false" && (
-                <ul>
-                  <li
-                    onClick={() => handleTrueFalseClick(true)}
-                    className={
-                      selectedOption !== null &&
-                      answerState[currentQuestion] !== null &&
-                      true === (questions[currentQuestion].correctAnswer === "true")
-                        ? "custom-quiz-correct"
-                        : selectedOption !== null &&
-                          answerState[currentQuestion] !== null &&
-                          selectedOption === true &&
-                          true !== (questions[currentQuestion].correctAnswer === "true")
-                        ? "custom-quiz-incorrect"
-                        : ""
-                    }
-                  >
-                    (A) True
-                    {selectedOption === true && answerState[currentQuestion] !== null && true === (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-correct-mark">&#10003;</span> : ''}
-                    {selectedOption === true && answerState[currentQuestion] !== null && true !== (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-incorrect-mark">&#10007;</span> : ''}
-                  </li>
-                  <li
-                    onClick={() => handleTrueFalseClick(false)}
-                    className={
-                      selectedOption !== null &&
-                      answerState[currentQuestion] !== null &&
-                      false === (questions[currentQuestion].correctAnswer === "true")
-                        ? "custom-quiz-correct"
-                        : selectedOption !== null &&
-                          answerState[currentQuestion] !== null &&
-                          selectedOption === false &&
-                          false !== (questions[currentQuestion].correctAnswer === "true")
-                        ? "custom-quiz-incorrect"
-                        : ""
-                    }
-                  >
-                    (B) False
-                    {selectedOption === false && answerState[currentQuestion] !== null && false === (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-correct-mark">&#10003;</span> : ''}
-                    {selectedOption === false && answerState[currentQuestion] !== null && false !== (questions[currentQuestion].correctAnswer === "true") ? <span className="custom-quiz-incorrect-mark">&#10007;</span> : ''}
-                  </li>
-                </ul>
-              )}
-              {questions[currentQuestion].type === "fill-in-the-blank" && (
-                <form onSubmit={handleFillInTheBlankSubmit} className="custom-quiz-fill-in-the-blank-form">
+                      Đúng
+                    </button>
+                    <button
+                      className={`tf-button ${userAnswers[index] === false ? 'selected' : ''}`}
+                      onClick={() => handleTrueFalseClick(index, false)}
+                    >
+                      Sai
+                    </button>
+                  </div>
+                )}
+
+                {question.type === 'short-answer' && (
                   <input
                     type="text"
-                    className="custom-quiz-fill-in-the-blank-input"
+                    className="short-answer-input"
+                    value={userAnswers[index] || ''}
+                    onChange={(e) => handleShortAnswerChange(index, e.target.value)}
                     placeholder="Nhập câu trả lời..."
                   />
-                  <button type="submit" id="submit-button" className="custom-quiz-submit-button">Submit</button>
-                  {/* Hiển thị dấu tích hoặc dấu x tùy thuộc vào đáp án */}
-                </form>
-              )}
-              {selectedOption !== null && (
-                <>
-                  <button onClick={toggleExplanation} className="custom-quiz-explanation-button">Giải thích</button>
-                  {showExplanation && (
-                    <div className="custom-quiz-explanation">
-                    <p>Đáp án đúng: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].correctAnswer.toString() }} /></p>
-                    <p>Giải thích: <span dangerouslySetInnerHTML={{ __html: questions[currentQuestion].explain }} /></p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-          {currentQuestion < questions.length && (
-            <button onClick={nextQuestion} className="custom-quiz-next-button">Câu hỏi tiếp theo</button>
-          )}
-          {showNotification && (
-            <Notification
-              message={notificationMessage}
-              onClose={() => setShowNotification(false)}
-            />
-          )}
-        </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="submit-section1">
+            <button
+              className="submit-button1"
+              onClick={handleSubmitQuiz}
+              disabled={!areAllQuestionsAnswered()}
+            >
+              Nộp bài
+            </button>
+          </div>
+        </>
+      )}
+
+      {showNotification && (
+        <Notification
+          message={notificationMessage}
+          onClose={() => setShowNotification(false)}
+        />
       )}
     </div>
   );

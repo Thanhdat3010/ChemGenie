@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import './QuizRoom.css';
 import Notification from '../components/Notification';
 import { db, auth } from '../components/firebase';
-import { getDoc, doc, setDoc, collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { getDoc, doc, setDoc, collection, query, orderBy, getDocs, writeBatch, serverTimestamp } from 'firebase/firestore';
 
 const QuizRoom = () => {
   const location = useLocation();
@@ -99,62 +99,94 @@ const QuizRoom = () => {
       return;
     }
 
-    // Tính điểm và lưu chi tiết câu trả lời
-    let totalScore = 0;
-    const detailedAnswers = questions.map((question, index) => {
-      const userAnswer = userAnswers[index];
-      const correctAnswer = question.correctAnswer;
-      let isCorrect = false;
-      
-      if (question.type === 'multiple-choice' || question.type === 'true-false') {
-        isCorrect = userAnswer === correctAnswer;
-      } else if (question.type === 'short-answer') {
-        isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
-      }
-
-      if (isCorrect) totalScore++;
-
-      return {
-        questionType: question.type,
-        question: question.question,
-        userAnswer: userAnswer,
-        correctAnswer: correctAnswer,
-        isCorrect: isCorrect
-      };
-    });
-
-    setScore(totalScore);
-    setIsSubmitted(true);
-
     try {
-      if (auth.currentUser) {
-        const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
-        const userProfile = userProfileDoc.data();
-
-        // Lưu điểm vào bảng xếp hạng
-        await setDoc(doc(db, 'rooms', roomId, 'scores', auth.currentUser.uid), {
-          uid: auth.currentUser.uid,
-          name: userProfile.username,
-          avatar: userProfile.profilePictureUrl,
-          score: totalScore,
-          timestamp: new Date().toISOString()
-        });
-
-        // Lưu chi tiết bài làm
-        await setDoc(doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${quizId}`), {
-          uid: auth.currentUser.uid,
-          quizId: quizId,
-          roomId: roomId,
-          score: totalScore,
-          detailedAnswers: detailedAnswers,
-          submittedAt: new Date().toISOString()
-        });
-
-        await fetchLeaderboard();
+      if (!auth.currentUser) {
+        setNotificationMessage("Bạn cần đăng nhập để nộp bài");
+        setShowNotification(true);
+        return;
       }
+
+      // Tính điểm và chi tiết câu trả lời
+      let totalScore = 0;
+      const detailedAnswers = questions.map((question, index) => {
+        const userAnswer = userAnswers[index];
+        const correctAnswer = question.correctAnswer;
+        let isCorrect = false;
+        
+        if (question.type === 'multiple-choice' || question.type === 'true-false') {
+          isCorrect = userAnswer === correctAnswer;
+        } else if (question.type === 'short-answer') {
+          isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        }
+
+        if (isCorrect) totalScore++;
+
+        return {
+          questionType: question.type,
+          question: question.question,
+          userAnswer: userAnswer,
+          correctAnswer: correctAnswer,
+          isCorrect: isCorrect
+        };
+      });
+
+      // Lấy thông tin user profile
+      const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
+      if (!userProfileDoc.exists()) {
+        throw new Error('User profile not found');
+      }
+      const userProfile = userProfileDoc.data();
+
+      // Batch write để đảm bảo tính nhất quán của dữ liệu
+      const batch = writeBatch(db);
+
+      // 1. Lưu kết quả chi tiết vào quizSubmissions
+      const submissionRef = doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${quizId}_${roomId}`);
+      batch.set(submissionRef, {
+        uid: auth.currentUser.uid,
+        username: userProfile.username,
+        quizId: quizId,
+        roomId: roomId,
+        score: totalScore,
+        maxScore: questions.length,
+        detailedAnswers: detailedAnswers,
+        submittedAt: serverTimestamp(),
+        timeSpent: timeLimit * 60 - remainingTime
+      });
+
+      // 2. Lưu điểm vào bảng xếp hạng của phòng
+      const scoreRef = doc(db, 'rooms', roomId, 'scores', auth.currentUser.uid);
+      batch.set(scoreRef, {
+        uid: auth.currentUser.uid,
+        username: userProfile.username,
+        displayName: userProfile.displayName || userProfile.username,
+        photoURL: userProfile.profilePictureUrl,
+        score: totalScore,
+        maxScore: questions.length,
+        submittedAt: serverTimestamp()
+      });
+
+      // 3. Cập nhật thông tin trong room
+      const roomRef = doc(db, 'rooms', roomId);
+      batch.update(roomRef, {
+        [`participants.${auth.currentUser.uid}.submitted`]: true,
+        [`participants.${auth.currentUser.uid}.score`]: totalScore,
+        [`participants.${auth.currentUser.uid}.submittedAt`]: serverTimestamp()
+      });
+
+      // Thực hiện tất cả các thao tác ghi
+      await batch.commit();
+
+      // Cập nhật state
+      setScore(totalScore);
+      setIsSubmitted(true);
+
+      // Fetch lại leaderboard
+      await fetchLeaderboard();
+
     } catch (error) {
-      console.error('Error saving quiz results:', error);
-      setNotificationMessage("Có lỗi xảy ra khi lưu kết quả");
+      console.error('Error submitting quiz:', error);
+      setNotificationMessage("Có lỗi xảy ra khi nộp bài: " + error.message);
       setShowNotification(true);
     }
   };
