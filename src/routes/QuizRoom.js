@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import './QuizRoom.css';
 import Notification from '../components/Notification';
 import { db, auth } from '../components/firebase';
-import { getDoc, doc, setDoc, collection, query, orderBy, getDocs, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { getDoc, doc, setDoc, collection, query, orderBy, getDocs, writeBatch, serverTimestamp, where } from 'firebase/firestore';
 
 const QuizRoom = () => {
   const location = useLocation();
@@ -25,18 +25,28 @@ const QuizRoom = () => {
   // Thêm hàm fetchLeaderboard
   const fetchLeaderboard = useCallback(async () => {
     try {
-      const scoresRef = collection(db, 'rooms', roomId, 'scores');
-      const q = query(scoresRef, orderBy('score', 'desc'));
+      const submissionsRef = collection(db, 'quizSubmissions');
+      const q = query(
+        submissionsRef, 
+        where('quizId', '==', quizId),
+        orderBy('score', 'desc')
+      );
+      
       const querySnapshot = await getDocs(q);
       const leaderboardData = [];
       querySnapshot.forEach((doc) => {
-        leaderboardData.push(doc.data());
+        const data = doc.data();
+        leaderboardData.push({
+          name: data.username,
+          score: data.score,
+          avatar: data.avatar || 'default-avatar-url.png' // Thêm URL avatar mặc định
+        });
       });
       setLeaderboard(leaderboardData);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     }
-  }, [roomId]);
+  }, [quizId]);
 
   // Fetch quiz questions
   useEffect(() => {
@@ -123,30 +133,16 @@ const QuizRoom = () => {
 
         return {
           questionType: question.type,
-          question: question.question,
           userAnswer: userAnswer,
           correctAnswer: correctAnswer,
           isCorrect: isCorrect
         };
       });
 
-      // Lấy thông tin user profile
-      const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
-      if (!userProfileDoc.exists()) {
-        throw new Error('User profile not found');
-      }
-      const userProfile = userProfileDoc.data();
-
-      // Batch write để đảm bảo tính nhất quán của dữ liệu
-      const batch = writeBatch(db);
-
-      // 1. Lưu kết quả chi tiết vào quizSubmissions
-      const submissionRef = doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${quizId}_${roomId}`);
-      batch.set(submissionRef, {
-        uid: auth.currentUser.uid,
-        username: userProfile.username,
+      // Lưu kết quả vào quizSubmissions với thông tin cần thiết
+      const submissionRef = doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${quizId}`);
+      await setDoc(submissionRef, {
         quizId: quizId,
-        roomId: roomId,
         score: totalScore,
         maxScore: questions.length,
         detailedAnswers: detailedAnswers,
@@ -154,35 +150,9 @@ const QuizRoom = () => {
         timeSpent: timeLimit * 60 - remainingTime
       });
 
-      // 2. Lưu điểm vào bảng xếp hạng của phòng
-      const scoreRef = doc(db, 'rooms', roomId, 'scores', auth.currentUser.uid);
-      batch.set(scoreRef, {
-        uid: auth.currentUser.uid,
-        username: userProfile.username,
-        displayName: userProfile.displayName || userProfile.username,
-        photoURL: userProfile.profilePictureUrl,
-        score: totalScore,
-        maxScore: questions.length,
-        submittedAt: serverTimestamp()
-      });
-
-      // 3. Cập nhật thông tin trong room
-      const roomRef = doc(db, 'rooms', roomId);
-      batch.update(roomRef, {
-        [`participants.${auth.currentUser.uid}.submitted`]: true,
-        [`participants.${auth.currentUser.uid}.score`]: totalScore,
-        [`participants.${auth.currentUser.uid}.submittedAt`]: serverTimestamp()
-      });
-
-      // Thực hiện tất cả các thao tác ghi
-      await batch.commit();
-
       // Cập nhật state
       setScore(totalScore);
       setIsSubmitted(true);
-
-      // Fetch lại leaderboard
-      await fetchLeaderboard();
 
     } catch (error) {
       console.error('Error submitting quiz:', error);
@@ -202,6 +172,13 @@ const QuizRoom = () => {
       handleSubmitQuiz();
     }
   }, [remainingTime, isSubmitted]);
+
+  // Thêm useEffect để fetch leaderboard khi isSubmitted thay đổi
+  useEffect(() => {
+    if (isSubmitted) {
+      fetchLeaderboard();
+    }
+  }, [isSubmitted, fetchLeaderboard]);
 
   if (isSubmitted) {
     return (

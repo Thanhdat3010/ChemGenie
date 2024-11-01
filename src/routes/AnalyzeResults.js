@@ -85,7 +85,7 @@ const AnalyzeResults = () => {
           return { answerState, questions, detailedAnswers };
         }
       } else {
-        // Existing chapter analysis logic
+        // Logic phân tích chương hiện có
         const userId = JSON.parse(localStorage.getItem('user'))?.email || 'defaultUser';
         const docRef = doc(db, 'users', userId, 'chapters', itemId);
         const docSnap = await getDoc(docRef);
