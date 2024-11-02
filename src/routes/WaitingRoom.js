@@ -66,19 +66,20 @@ const WaitingRoom = () => {
         const roomRef = doc(db, 'rooms', roomId);
         const roomSnap = await getDoc(roomRef);
         if (roomSnap.exists()) {
-          await updateDoc(roomRef, {
-            participants: arrayRemove(user.uid)
-          });
-
-          const updatedRoomSnap = await getDoc(roomRef);
-          const updatedRoomData = updatedRoomSnap.data();
-          if (updatedRoomData && updatedRoomData.participants && updatedRoomData.participants.length === 0) {
-            await deleteDoc(roomRef).catch((error) => {
-              console.error('Error deleting document: ', error);
+          const roomData = roomSnap.data();
+          if (!roomData.quizStarted) {
+            await updateDoc(roomRef, {
+              participants: arrayRemove(user.uid)
             });
+
+            const updatedRoomSnap = await getDoc(roomRef);
+            const updatedRoomData = updatedRoomSnap.data();
+            if (updatedRoomData && updatedRoomData.participants && updatedRoomData.participants.length === 0) {
+              await deleteDoc(roomRef).catch((error) => {
+                console.error('Error deleting document: ', error);
+              });
+            }
           }
-        } else {
-          console.log('Room does not exist');
         }
       }
     };
@@ -118,19 +119,20 @@ const WaitingRoom = () => {
       const roomRef = doc(db, 'rooms', roomId);
       const roomSnap = await getDoc(roomRef);
       if (roomSnap.exists()) {
-        await updateDoc(roomRef, {
-          participants: arrayRemove(user.uid)
-        });
-
-        const updatedRoomSnap = await getDoc(roomRef);
-        const updatedRoomData = updatedRoomSnap.data();
-        if (updatedRoomData && updatedRoomData.participants && updatedRoomData.participants.length === 0) {
-          await deleteDoc(roomRef).catch((error) => {
-            console.error('Error deleting document: ', error);
+        const roomData = roomSnap.data();
+        if (!roomData.quizStarted) {
+          await updateDoc(roomRef, {
+            participants: arrayRemove(user.uid)
           });
+
+          const updatedRoomSnap = await getDoc(roomRef);
+          const updatedRoomData = updatedRoomSnap.data();
+          if (updatedRoomData && updatedRoomData.participants && updatedRoomData.participants.length === 0) {
+            await deleteDoc(roomRef).catch((error) => {
+              console.error('Error deleting document: ', error);
+            });
+          }
         }
-      } else {
-        console.log('Room does not exist');
       }
       navigate('/');
     }
