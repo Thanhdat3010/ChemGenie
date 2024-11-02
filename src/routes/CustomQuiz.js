@@ -279,39 +279,39 @@ const CustomQuiz = () => {
   }
 
   return (
-    <div className="quiz-room-page">
+    <div className="custom-quiz-room-page">
       {questions.length === 0 ? (
         <div className="custom-quiz-list-container">
-      <h2 className="custom-quiz-list-title">Bộ câu hỏi của bạn</h2>
-      <div className="custom-quiz-list">
-        {quizzes.map((quiz, index) => (
-          <div key={index} className="custom-quiz-item">
-            <h3>{quiz.title}</h3>
-            <button onClick={() => startQuiz(quiz)} className='custom-quiz-start-button'>Bắt đầu</button>
-            <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">Xóa</button>
+          <h2 className="custom-quiz-list-title">Bộ câu hỏi của bạn</h2>
+          <div className="custom-quiz-list">
+            {quizzes.map((quiz, index) => (
+              <div key={index} className="custom-quiz-item">
+                <h3>{quiz.title}</h3>
+                <button onClick={() => startQuiz(quiz)} className="custom-quiz-start-button">Bắt đầu</button>
+                <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">Xóa</button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
         </div>
       ) : (
         <>
-          <div className="quiz-header">
+          <div className="custom-quiz-header">
             <h2>Bài kiểm tra</h2>
           </div>
 
-          <div className="quiz-container">
-            <div className="questions-section">
+          <div className="custom-quiz-container">
+            <div className="custom-quiz-questions-section">
               {questions.map((question, index) => (
-                <div key={index} className="question-box" id={`question-${index}`}>
+                <div key={index} className="custom-quiz-question-box" id={`question-${index}`}>
                   <h3>Câu {index + 1}</h3>
-                  <p className="question-text">{question.question}</p>
+                  <p className="custom-quiz-question-text">{question.question}</p>
 
                   {question.type === 'multiple-choice' && (
-                    <div className="options-grid">
+                    <div className="custom-quiz-options-grid">
                       {question.options.map((option, optionIndex) => (
                         <button
                           key={optionIndex}
-                          className={`option-button ${userAnswers[index] === option ? 'selected' : ''}`}
+                          className={`custom-quiz-option-button ${userAnswers[index] === option ? 'selected' : ''}`}
                           onClick={() => handleOptionClick(index, option)}
                         >
                           {String.fromCharCode(65 + optionIndex)}. {option}
@@ -321,29 +321,29 @@ const CustomQuiz = () => {
                   )}
 
                   {question.type === 'true-false' && (
-                    <div className="true-false-options">
+                    <div className="custom-quiz-true-false-options">
                       {question.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="true-false-option">
-                          <div className="option-row">
-                            <span className="option-text">{option}</span>
-                            <div className="radio-group">
-                              <label className="radio-label">
+                        <div key={optionIndex} className="custom-quiz-true-false-option">
+                          <div className="custom-quiz-option-row">
+                            <span className="custom-quiz-option-text">{option}</span>
+                            <div className="custom-quiz-radio-group">
+                              <label className="custom-quiz-radio-label">
                                 <input
                                   type="radio"
                                   name={`q${index}-opt${optionIndex}`}
                                   checked={userAnswers[index]?.[optionIndex] === true}
                                   onChange={() => handleTrueFalseClick(index, optionIndex, true)}
                                 />
-                                <span className="radio-text">Đúng</span>
+                                <span className="custom-quiz-radio-text">Đúng</span>
                               </label>
-                              <label className="radio-label">
+                              <label className="custom-quiz-radio-label">
                                 <input
                                   type="radio"
                                   name={`q${index}-opt${optionIndex}`}
                                   checked={userAnswers[index]?.[optionIndex] === false}
                                   onChange={() => handleTrueFalseClick(index, optionIndex, false)}
                                 />
-                                <span className="radio-text">Sai</span>
+                                <span className="custom-quiz-radio-text">Sai</span>
                               </label>
                             </div>
                           </div>
@@ -355,7 +355,7 @@ const CustomQuiz = () => {
                   {question.type === 'short-answer' && (
                     <input
                       type="text"
-                      className="short-answer-input"
+                      className="custom-quiz-short-answer-input"
                       value={userAnswers[index] || ''}
                       onChange={(e) => handleShortAnswerChange(index, e.target.value)}
                       placeholder="Nhập câu trả lời..."
@@ -365,13 +365,13 @@ const CustomQuiz = () => {
               ))}
             </div>
 
-            <div className="question-navigator">
+            <div className="custom-quiz-question-navigator">
               <h3>Danh sách câu hỏi</h3>
-              <div className="question-grid">
+              <div className="custom-quiz-question-grid">
                 {questions.map((_, index) => (
                   <div
                     key={index}
-                    className={`question-number ${isQuestionAnswered(index) ? 'answered' : ''}`}
+                    className={`custom-quiz-question-number ${isQuestionAnswered(index) ? 'answered' : ''}`}
                     onClick={() => scrollToQuestion(index)}
                   >
                     {index + 1}
@@ -381,9 +381,9 @@ const CustomQuiz = () => {
             </div>
           </div>
 
-          <div className="submit-section1">
+          <div className="custom-quiz-submit-section">
             <button
-              className="submit-button1"
+              className="custom-quiz-submit-button"
               onClick={handleSubmitQuiz}
               disabled={!areAllQuestionsAnswered()}
             >
