@@ -164,38 +164,88 @@ const CustomQuiz = () => {
       return;
     }
 
-    let totalScore = 0;
-    const detailedAnswers = questions.map((question, index) => {
-      const userAnswer = userAnswers[index];
-      const correctAnswer = question.correctAnswer;
-      let isCorrect = false;
-      
-      if (question.type === 'multiple-choice') {
-        isCorrect = userAnswer === correctAnswer;
-      } else if (question.type === 'true-false') {
-        // Kiểm tra từng option có đúng với đáp án không
-        isCorrect = question.options.every((_, optIdx) => 
-          userAnswer[optIdx] === correctAnswer[optIdx]
-        );
-      } else if (question.type === 'short-answer') {
-        isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
-      }
-
-      if (isCorrect) totalScore++;
-
-      return {
-        questionType: question.type,
-        question: question.question,
-        userAnswer: userAnswer,
-        correctAnswer: correctAnswer,
-        isCorrect: isCorrect
-      };
-    });
-
-    setScore(totalScore);
-    setQuizCompleted(true);
-
     try {
+      // Định nghĩa cấu trúc điểm chuẩn
+      const STANDARD_STRUCTURE = {
+        'multiple-choice': { points: 0.25, standardCount: 18, totalPoints: 4.5 },
+        'true-false': { points: 1.0, standardCount: 4, totalPoints: 4.0 },
+        'short-answer': { points: 0.25, standardCount: 6, totalPoints: 1.5 }
+      };
+
+      // Đếm số câu hỏi thực tế cho mỗi loại
+      const actualCounts = questions.reduce((acc, q) => {
+        acc[q.type] = (acc[q.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      console.log('Số câu hỏi thực tế:', actualCounts);
+
+      // Tính điểm thô theo thang chuẩn
+      let rawScore = 0;
+      const detailedAnswers = questions.map((question, index) => {
+        const userAnswer = userAnswers[index];
+        const correctAnswer = question.correctAnswer;
+        let isCorrect = false;
+        let questionScore = 0;
+        
+        if (question.type === 'multiple-choice') {
+          isCorrect = userAnswer === correctAnswer;
+          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
+        } 
+        else if (question.type === 'true-false') {
+          const correctCount = question.options.reduce((count, _, optIdx) => {
+            return userAnswer[optIdx] === correctAnswer[optIdx] ? count + 1 : count;
+          }, 0);
+
+          // Thang điểm cho câu đúng sai theo số ý đúng
+          questionScore = correctCount === 1 ? 0.1 :
+                         correctCount === 2 ? 0.25 :
+                         correctCount === 3 ? 0.5 :
+                         correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
+        } 
+        else if (question.type === 'short-answer') {
+          isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
+        }
+
+        rawScore += questionScore;
+        return {
+          questionType: question.type,
+          question: question.question,
+          userAnswer: userAnswer,
+          correctAnswer: correctAnswer,
+          isCorrect: isCorrect,
+          score: questionScore
+        };
+      });
+
+      // Tính điểm tối đa có thể đạt được với số câu hỏi hiện tại
+      let maxPossibleScore = Object.entries(actualCounts).reduce((total, [type, count]) => {
+        if (count > 0) {
+          return total + (STANDARD_STRUCTURE[type].points * count);
+        }
+        return total;
+      }, 0);
+
+      // Quy đổi về thang điểm 10
+      const finalScore = (rawScore * 10) / maxPossibleScore;
+      const totalScore = Math.round(finalScore * 100) / 100;
+
+      console.log({
+        rawScore: rawScore,
+        maxPossibleScore: maxPossibleScore,
+        finalScore: totalScore,
+        detailedScores: detailedAnswers.map((a, i) => ({
+          question: i + 1,
+          type: a.questionType,
+          rawScore: a.score,
+          adjustedScore: (a.score * 10) / maxPossibleScore
+        }))
+      });
+
+      setScore(totalScore);
+      setQuizCompleted(true);
+
       if (auth.currentUser) {
         // Save quiz submission details
         await setDoc(doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${currentQuizId}`), {
@@ -209,7 +259,7 @@ const CustomQuiz = () => {
         await saveProgress();
       }
     } catch (error) {
-      console.error('Error saving quiz results:', error);
+      console.error('Error submitting quiz:', error);
       setNotificationMessage("Có lỗi xảy ra khi lưu kết quả");
       setShowNotification(true);
     }
@@ -268,7 +318,7 @@ const CustomQuiz = () => {
       <div className="quiz-room-page">
         <div className="quiz-result">
           <h2>Kết quả</h2>
-          <p>Điểm số của bạn: {score}/{questions.length}</p>
+          <p>Điểm số của bạn: {score}/10</p>
           
           <button onClick={resetQuiz} className="home-button">
             Làm lại

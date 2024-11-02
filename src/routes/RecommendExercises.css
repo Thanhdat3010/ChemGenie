@@ -449,3 +449,108 @@
     padding: 12px 15px;
   }
 }
+
+.recommend-exercises-result-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.recommend-exercises-result-container {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recommend-exercises-result-container h2 {
+  color: #7b31c9;
+  margin-bottom: 20px;
+}
+
+.recommend-exercises-score {
+  font-size: 1.2em;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.recommend-exercises-detailed-results {
+  text-align: left;
+}
+
+.recommend-exercises-result-item {
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.recommend-exercises-result-item.recommend-exercises-correct {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.recommend-exercises-result-item.recommend-exercises-partially-correct {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+}
+
+.recommend-exercises-result-item.recommend-exercises-incorrect {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
+.recommend-exercises-result-item h3 {
+  color: #7b31c9;
+  margin-bottom: 15px;
+}
+
+.recommend-exercises-question-text {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.recommend-exercises-answer-status {
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.recommend-exercises-true-false-results {
+  margin-top: 15px;
+}
+
+.recommend-exercises-explanation {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+}
+
+.recommend-exercises-explanation h4 {
+  color: #7b31c9;
+  margin-bottom: 10px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .recommend-exercises-result-container {
+    padding: 20px;
+  }
+  
+  .recommend-exercises-result-item {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recommend-exercises-result-page {
+    padding: 10px;
+  }
+  
+  .recommend-exercises-score {
+    font-size: 1.1em;
+  }
+}

@@ -74,7 +74,7 @@ const QuizRoom = () => {
         ...prev,
         [questionIndex]: {
           ...(prev[questionIndex] || {}),
-          [optionIndex]: selectedAnswer
+          [optionIndex]: selectedAnswer ? "Đúng" : "Sai"
         }
       }));
     }
@@ -113,33 +113,82 @@ const QuizRoom = () => {
         return;
       }
 
-      // Tính điểm và chi tiết câu trả lời
-      let totalScore = 0;
+      // Định nghĩa cấu trúc điểm chuẩn
+      const STANDARD_STRUCTURE = {
+        'multiple-choice': { points: 0.25, standardCount: 18, totalPoints: 4.5 },
+        'true-false': { points: 1.0, standardCount: 4, totalPoints: 4.0 },
+        'short-answer': { points: 0.25, standardCount: 6, totalPoints: 1.5 }
+      };
+
+      // Đếm số câu hỏi thực tế cho mỗi loại
+      const actualCounts = questions.reduce((acc, q) => {
+        acc[q.type] = (acc[q.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      console.log('Số câu hỏi thực tế:', actualCounts);
+
+      // Tính điểm thô theo thang chuẩn
+      let rawScore = 0;
       const detailedAnswers = questions.map((question, index) => {
         const userAnswer = userAnswers[index];
         const correctAnswer = question.correctAnswer;
         let isCorrect = false;
+        let questionScore = 0;
         
         if (question.type === 'multiple-choice') {
           isCorrect = userAnswer === correctAnswer;
-        } else if (question.type === 'true-false') {
-          // Kiểm tra từng option có đúng với đáp án không
-          isCorrect = question.options.every((_, optIdx) => 
-            userAnswer[optIdx] === correctAnswer[optIdx]
-          );
-        } else if (question.type === 'short-answer') {
+          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
+        } 
+        else if (question.type === 'true-false') {
+          const correctCount = question.options.reduce((count, _, optIdx) => {
+            return userAnswer[optIdx] === correctAnswer[optIdx] ? count + 1 : count;
+          }, 0);
+
+          // Thang điểm cho câu đúng sai theo số ý đúng
+          questionScore = correctCount === 1 ? 0.1 :
+                         correctCount === 2 ? 0.25 :
+                         correctCount === 3 ? 0.5 :
+                         correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
+        } 
+        else if (question.type === 'short-answer') {
           isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
         }
 
-        if (isCorrect) totalScore++;
-
+        rawScore += questionScore;
         return {
           questionType: question.type,
           question: question.question,
           userAnswer: userAnswer,
           correctAnswer: correctAnswer,
-          isCorrect: isCorrect
+          isCorrect: isCorrect,
+          score: questionScore
         };
+      });
+
+      // Tính điểm tối đa có thể đạt được với số câu hỏi hiện tại
+      let maxPossibleScore = Object.entries(actualCounts).reduce((total, [type, count]) => {
+        if (count > 0) {
+          return total + (STANDARD_STRUCTURE[type].points * count);
+        }
+        return total;
+      }, 0);
+
+      // Quy đổi về thang điểm 10
+      const finalScore = (rawScore * 10) / maxPossibleScore;
+      const totalScore = Math.round(finalScore * 100) / 100;
+
+      console.log({
+        rawScore: rawScore,
+        maxPossibleScore: maxPossibleScore,
+        finalScore: totalScore,
+        detailedScores: detailedAnswers.map((a, i) => ({
+          question: i + 1,
+          type: a.questionType,
+          rawScore: a.score,
+          adjustedScore: (a.score * 10) / maxPossibleScore
+        }))
       });
 
       // Lấy thông tin user profile
@@ -160,7 +209,6 @@ const QuizRoom = () => {
         quizId: quizId,
         roomId: roomId,
         score: totalScore,
-        maxScore: questions.length,
         detailedAnswers: detailedAnswers,
         submittedAt: serverTimestamp(),
         timeSpent: timeLimit * 60 - remainingTime
@@ -174,7 +222,6 @@ const QuizRoom = () => {
         displayName: userProfile.displayName || userProfile.username,
         photoURL: userProfile.profilePictureUrl || null,
         score: totalScore,
-        maxScore: questions.length,
         submittedAt: serverTimestamp()
       });
 
@@ -282,7 +329,7 @@ const QuizRoom = () => {
       <div className="quiz-room-page">
         <div className="quiz-result">
           <h2>Kết quả</h2>
-          <p>Điểm số của bạn: {score}/{questions.length}</p>
+          <p>Điểm số của bạn: {score}/10</p>
           
           <div className="leaderboard-container">
             <h3>Bảng xếp hạng</h3>
@@ -298,7 +345,7 @@ const QuizRoom = () => {
                   />
                   <div className="leaderboard-info">
                     <p className="leaderboard-name">{player.displayName}</p>
-                    <p className="leaderboard-score">Điểm: {player.score}/{player.maxScore}</p>
+                    <p className="leaderboard-score">Điểm: {player.score}/10</p>
                   </div>
                 </div>
               ))}
@@ -353,7 +400,7 @@ const QuizRoom = () => {
                             <input
                               type="radio"
                               name={`q${index}-opt${optionIndex}`}
-                              checked={userAnswers[index]?.[optionIndex] === true}
+                              checked={userAnswers[index]?.[optionIndex] === "Đúng"}
                               onChange={() => handleTrueFalseClick(index, optionIndex, true)}
                             />
                             <span className="radio-text">Đúng</span>
@@ -362,7 +409,7 @@ const QuizRoom = () => {
                             <input
                               type="radio"
                               name={`q${index}-opt${optionIndex}`}
-                              checked={userAnswers[index]?.[optionIndex] === false}
+                              checked={userAnswers[index]?.[optionIndex] === "Sai"}
                               onChange={() => handleTrueFalseClick(index, optionIndex, false)}
                             />
                             <span className="radio-text">Sai</span>

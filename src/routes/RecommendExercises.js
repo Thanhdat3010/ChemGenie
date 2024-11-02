@@ -71,7 +71,7 @@ const RecommendExercises = () => {
       Yêu cầu về nội dung:
       1. Câu hỏi phải phù hợp với năng lực hiện tại của học sinh
       2. Độ khó tăng dần theo thứ tự câu hỏi
-      3. Giữ nguyên danh pháp hóa học (IUPAC)
+      3. Sử dụng danh pháp hóa học quốc tế (tiếng anh)
       4. Câu hỏi được đặt bằng tiếng Việt
       5. Mỗi câu hỏi phải có giải thích chi tiết
 
@@ -79,9 +79,9 @@ const RecommendExercises = () => {
       [
         {
           "type": "multiple-choice",
-          "question": "Nội dung câu hỏi",
-          "options": ["A", "B", "C", "D"],
-          "correctAnswer": "A",
+          "question": "Câu hỏi trắc nghiệm 1",
+          "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+          "correctAnswer": "Đáp án đúng",
           "explain": "Giải thích chi tiết"
         },
         {
@@ -188,68 +188,89 @@ const RecommendExercises = () => {
     }
 
     try {
-      let totalScore = 0;
+      // Định nghĩa cấu trúc điểm chuẩn
+      const STANDARD_STRUCTURE = {
+        'multiple-choice': { points: 0.25, standardCount: 18, totalPoints: 4.5 },
+        'true-false': { points: 1.0, standardCount: 4, totalPoints: 4.0 },
+        'short-answer': { points: 0.25, standardCount: 6, totalPoints: 1.5 }
+      };
+
+      // Đếm số câu hỏi thực tế cho mỗi loại
+      const actualCounts = questions.reduce((acc, q) => {
+        acc[q.type] = (acc[q.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      console.log('Số câu hỏi thực tế:', actualCounts);
+
+      // Tính điểm thô theo thang chuẩn
+      let rawScore = 0;
       const detailedAnswers = questions.map((question, index) => {
         const userAnswer = userAnswers[index];
         const correctAnswer = question.correctAnswer;
         let isCorrect = false;
         let questionScore = 0;
         
-        console.log(`Question ${index + 1}:`, {
-          type: question.type,
-          userAnswer,
-          correctAnswer
-        });
-
         if (question.type === 'multiple-choice') {
-          isCorrect = String(userAnswer).trim() === String(correctAnswer).trim();
-          questionScore = isCorrect ? 1 : 0;
+          isCorrect = userAnswer === correctAnswer;
+          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
         } 
         else if (question.type === 'true-false') {
           const correctCount = question.options.reduce((count, _, optIdx) => {
-            const userBool = Boolean(userAnswer[optIdx]);
-            const correctBool = correctAnswer[optIdx] === "Đúng" || correctAnswer[optIdx] === true;
-            return count + (userBool === correctBool ? 1 : 0);
+            const userChoice = userAnswer[optIdx] === true ? "Đúng" : "Sai";
+            return userChoice === correctAnswer[optIdx] ? count + 1 : count;
           }, 0);
-          
-          questionScore = (correctCount / 4) * 2;
-          isCorrect = correctCount === 4;
+
+          // Thang điểm cho câu đúng sai theo số ý đúng
+          questionScore = correctCount === 1 ? 0.1 :
+                         correctCount === 2 ? 0.25 :
+                         correctCount === 3 ? 0.5 :
+                         correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
         } 
         else if (question.type === 'short-answer') {
-          const normalizedUser = String(userAnswer).toLowerCase().trim();
-          const normalizedCorrect = String(correctAnswer).toLowerCase().trim();
-          isCorrect = normalizedUser === normalizedCorrect;
-          questionScore = isCorrect ? 3 : 0;
+          isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
         }
 
-        totalScore += questionScore;
-
-        console.log(`Score for question ${index + 1}:`, {
-          isCorrect,
-          questionScore,
-          totalScore
-        });
-
+        rawScore += questionScore;
         return {
           questionType: question.type,
           question: question.question,
-          userAnswer,
-          correctAnswer,
-          isCorrect,
+          userAnswer: userAnswer,
+          correctAnswer: correctAnswer,
+          isCorrect: isCorrect,
           score: questionScore
         };
       });
 
-      const finalScore = (totalScore * 10) / 13;
-      setScore(Math.round(finalScore * 100) / 100);
+      // Tính điểm tối đa có thể đạt được với số câu hỏi hiện tại
+      let maxPossibleScore = Object.entries(actualCounts).reduce((total, [type, count]) => {
+        if (count > 0) {
+          return total + (STANDARD_STRUCTURE[type].points * count);
+        }
+        return total;
+      }, 0);
+
+      // Quy đi về thang điểm 10
+      const finalScore = (rawScore * 10) / maxPossibleScore;
+      const totalScore = Math.round(finalScore * 100) / 100;
+
+      console.log({
+        rawScore: rawScore,
+        maxPossibleScore: maxPossibleScore,
+        finalScore: totalScore,
+        detailedScores: detailedAnswers.map((a, i) => ({
+          question: i + 1,
+          type: a.questionType,
+          rawScore: a.score,
+          adjustedScore: (a.score * 10) / maxPossibleScore
+        }))
+      });
+
+      setScore(totalScore);
       setIsSubmitted(true);
       setNotificationMessage("Nộp bài thành công!");
       setShowNotification(true);
-
-      console.log('Final calculation:', {
-        totalScore,
-        finalScore: Math.round(finalScore * 100) / 100
-      });
 
     } catch (error) {
       console.error('Error submitting quiz:', error);
@@ -349,12 +370,12 @@ const RecommendExercises = () => {
 
   if (isSubmitted) {
     return (
-      <div className="quiz-room-page">
-        <div className="quiz-result">
+      <div className="recommend-exercises-result-page">
+        <div className="recommend-exercises-result-container">
           <h2>Kết quả</h2>
-          <p>Điểm số của bạn: {score}/{questions.length}</p>
+          <p className="recommend-exercises-score">Điểm số của bạn: {score}/10</p>
           
-          <div className="detailed-results">
+          <div className="recommend-exercises-detailed-results">
             {questions.map((question, index) => {
               const userAnswer = userAnswers[index];
               let isCorrect = false;
@@ -365,9 +386,8 @@ const RecommendExercises = () => {
                 isCorrect = userAnswer === question.correctAnswer;
               } else if (question.type === 'true-false') {
                 correctCount = question.options.reduce((count, _, optIdx) => {
-                  const userBool = Boolean(userAnswer[optIdx]);
-                  const correctBool = question.correctAnswer[optIdx] === "Đúng" || question.correctAnswer[optIdx] === true;
-                  return count + (userBool === correctBool ? 1 : 0);
+                  const userChoice = userAnswer[optIdx] === true ? "Đúng" : "Sai";
+                  return userChoice === question.correctAnswer[optIdx] ? count + 1 : count;
                 }, 0);
                 isCorrect = correctCount === 4;
                 partiallyCorrect = correctCount > 0 && correctCount < 4;
@@ -376,28 +396,31 @@ const RecommendExercises = () => {
               }
 
               return (
-                <div key={index} className={`result-item ${isCorrect ? 'correct' : partiallyCorrect ? 'partially-correct' : 'incorrect'}`}>
+                <div key={index} className={`recommend-exercises-result-item ${
+                  isCorrect ? 'recommend-exercises-correct' : 
+                  partiallyCorrect ? 'recommend-exercises-partially-correct' : 
+                  'recommend-exercises-incorrect'
+                }`}>
                   <h3>Câu {index + 1}</h3>
-                  <p className="question-text">{question.question}</p>
+                  <p className="recommend-exercises-question-text">{question.question}</p>
                   
                   {question.type === 'true-false' ? (
                     <>
-                      <p className="answer-status">
+                      <p className="recommend-exercises-answer-status">
                         {correctCount}/4 phát biểu đúng
                       </p>
-                      <div className="true-false-results">
+                      <div className="recommend-exercises-true-false-results">
                         {question.options.map((option, optIdx) => {
-                          const userBool = Boolean(userAnswer[optIdx]);
-                          const correctBool = question.correctAnswer[optIdx] === "Đúng" || question.correctAnswer[optIdx] === true;
-                          const isOptionCorrect = userBool === correctBool;
+                          const userChoice = userAnswer[optIdx] === true ? "Đúng" : "Sai";
+                          const isOptionCorrect = userChoice === question.correctAnswer[optIdx];
                           
                           return (
-                            <div key={optIdx} className={`true-false-result ${isOptionCorrect ? 'correct' : 'incorrect'}`}>
-                              <span className="option-text">{option}</span>
-                              <span className="result-indicator">
+                            <div key={optIdx} className={`recommend-exercises-true-false-result ${isOptionCorrect ? 'recommend-exercises-correct' : 'recommend-exercises-incorrect'}`}>
+                              <span className="recommend-exercises-option-text">{option}</span>
+                              <span className="recommend-exercises-result-indicator">
                                 {isOptionCorrect ? '✓' : '✗'} 
-                                (Bạn chọn: {userBool ? 'Đúng' : 'Sai'}, 
-                                Đáp án: {correctBool ? 'Đúng' : 'Sai'})
+                                (Bạn chọn: {userChoice}, 
+                                Đáp án: {question.correctAnswer[optIdx]})
                               </span>
                             </div>
                           );
@@ -405,13 +428,13 @@ const RecommendExercises = () => {
                       </div>
                     </>
                   ) : (
-                    <p className="answer-status">
+                    <p className="recommend-exercises-answer-status">
                       {isCorrect ? '✓ Đúng' : '✗ Sai'}
                     </p>
                   )}
                   
                   {question.explain && (
-                    <div className="explanation">
+                    <div className="recommend-exercises-explanation">
                       <h4>Giải thích:</h4>
                       <p>{question.explain}</p>
                     </div>
