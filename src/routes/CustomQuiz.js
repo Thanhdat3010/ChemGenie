@@ -123,11 +123,14 @@ const CustomQuiz = () => {
     }
   };
 
-  const handleTrueFalseClick = (questionIndex, selectedAnswer) => {
+  const handleTrueFalseClick = (questionIndex, optionIndex, selectedAnswer) => {
     if (!quizCompleted) {
       setUserAnswers(prev => ({
         ...prev,
-        [questionIndex]: selectedAnswer
+        [questionIndex]: {
+          ...(prev[questionIndex] || {}),
+          [optionIndex]: selectedAnswer
+        }
       }));
     }
   };
@@ -142,7 +145,16 @@ const CustomQuiz = () => {
   };
 
   const areAllQuestionsAnswered = () => {
-    return questions.every((_, index) => userAnswers[index] !== undefined);
+    return questions.every((question, index) => {
+      if (question.type === 'true-false') {
+        // Kiểm tra xem tất cả các options đã được trả lời chưa
+        return userAnswers[index] && 
+               question.options.every((_, optIdx) => 
+                 userAnswers[index][optIdx] !== undefined
+               );
+      }
+      return userAnswers[index] !== undefined;
+    });
   };
 
   const handleSubmitQuiz = async () => {
@@ -158,8 +170,13 @@ const CustomQuiz = () => {
       const correctAnswer = question.correctAnswer;
       let isCorrect = false;
       
-      if (question.type === 'multiple-choice' || question.type === 'true-false') {
+      if (question.type === 'multiple-choice') {
         isCorrect = userAnswer === correctAnswer;
+      } else if (question.type === 'true-false') {
+        // Kiểm tra từng option có đúng với đáp án không
+        isCorrect = question.options.every((_, optIdx) => 
+          userAnswer[optIdx] === correctAnswer[optIdx]
+        );
       } else if (question.type === 'short-answer') {
         isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
       }
@@ -180,9 +197,6 @@ const CustomQuiz = () => {
 
     try {
       if (auth.currentUser) {
-        const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
-        const userProfile = userProfileDoc.data();
-
         // Save quiz submission details
         await setDoc(doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${currentQuizId}`), {
           uid: auth.currentUser.uid,
@@ -231,7 +245,23 @@ const CustomQuiz = () => {
     }
   };
 
-  
+  const isQuestionAnswered = (questionIndex) => {
+    const answer = userAnswers[questionIndex];
+    if (!answer) return false;
+    
+    const question = questions[questionIndex];
+    if (question.type === 'true-false') {
+      return question.options.every((_, optIdx) => answer[optIdx] !== undefined);
+    }
+    return true;
+  };
+
+  const scrollToQuestion = (questionIndex) => {
+    const questionElement = document.getElementById(`question-${questionIndex}`);
+    if (questionElement) {
+      questionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   if (quizCompleted) {
     return (
@@ -269,54 +299,86 @@ const CustomQuiz = () => {
             <h2>Bài kiểm tra</h2>
           </div>
 
-          <div className="questions-container">
-            {questions.map((question, index) => (
-              <div key={index} className="question-box">
-                <h3>Câu {index + 1}</h3>
-                <p className="question-text">{question.question}</p>
+          <div className="quiz-container">
+            <div className="questions-section">
+              {questions.map((question, index) => (
+                <div key={index} className="question-box" id={`question-${index}`}>
+                  <h3>Câu {index + 1}</h3>
+                  <p className="question-text">{question.question}</p>
 
-                {question.type === 'multiple-choice' && (
-                  <div className="options-grid">
-                    {question.options.map((option, optionIndex) => (
-                      <button
-                        key={optionIndex}
-                        className={`option-button ${userAnswers[index] === option ? 'selected' : ''}`}
-                        onClick={() => handleOptionClick(index, option)}
-                      >
-                        {String.fromCharCode(65 + optionIndex)}. {option}
-                      </button>
-                    ))}
+                  {question.type === 'multiple-choice' && (
+                    <div className="options-grid">
+                      {question.options.map((option, optionIndex) => (
+                        <button
+                          key={optionIndex}
+                          className={`option-button ${userAnswers[index] === option ? 'selected' : ''}`}
+                          onClick={() => handleOptionClick(index, option)}
+                        >
+                          {String.fromCharCode(65 + optionIndex)}. {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === 'true-false' && (
+                    <div className="true-false-options">
+                      {question.options.map((option, optionIndex) => (
+                        <div key={optionIndex} className="true-false-option">
+                          <div className="option-row">
+                            <span className="option-text">{option}</span>
+                            <div className="radio-group">
+                              <label className="radio-label">
+                                <input
+                                  type="radio"
+                                  name={`q${index}-opt${optionIndex}`}
+                                  checked={userAnswers[index]?.[optionIndex] === true}
+                                  onChange={() => handleTrueFalseClick(index, optionIndex, true)}
+                                />
+                                <span className="radio-text">Đúng</span>
+                              </label>
+                              <label className="radio-label">
+                                <input
+                                  type="radio"
+                                  name={`q${index}-opt${optionIndex}`}
+                                  checked={userAnswers[index]?.[optionIndex] === false}
+                                  onChange={() => handleTrueFalseClick(index, optionIndex, false)}
+                                />
+                                <span className="radio-text">Sai</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === 'short-answer' && (
+                    <input
+                      type="text"
+                      className="short-answer-input"
+                      value={userAnswers[index] || ''}
+                      onChange={(e) => handleShortAnswerChange(index, e.target.value)}
+                      placeholder="Nhập câu trả lời..."
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="question-navigator">
+              <h3>Danh sách câu hỏi</h3>
+              <div className="question-grid">
+                {questions.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`question-number ${isQuestionAnswered(index) ? 'answered' : ''}`}
+                    onClick={() => scrollToQuestion(index)}
+                  >
+                    {index + 1}
                   </div>
-                )}
-
-                {question.type === 'true-false' && (
-                  <div className="true-false-buttons">
-                    <button
-                      className={`tf-button ${userAnswers[index] === true ? 'selected' : ''}`}
-                      onClick={() => handleTrueFalseClick(index, true)}
-                    >
-                      Đúng
-                    </button>
-                    <button
-                      className={`tf-button ${userAnswers[index] === false ? 'selected' : ''}`}
-                      onClick={() => handleTrueFalseClick(index, false)}
-                    >
-                      Sai
-                    </button>
-                  </div>
-                )}
-
-                {question.type === 'short-answer' && (
-                  <input
-                    type="text"
-                    className="short-answer-input"
-                    value={userAnswers[index] || ''}
-                    onChange={(e) => handleShortAnswerChange(index, e.target.value)}
-                    placeholder="Nhập câu trả lời..."
-                  />
-                )}
+                ))}
               </div>
-            ))}
+            </div>
           </div>
 
           <div className="submit-section1">

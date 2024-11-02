@@ -67,18 +67,33 @@ const AnalyzeResults = () => {
       let detailedAnswers = [];
 
       if (type === 'quiz') {
-        // Fetch quiz submission data
-        const submissionRef = doc(db, 'quizSubmissions', `${user.uid}_${itemId}`);
-        const submissionSnap = await getDoc(submissionRef);
+        // Fetch quiz submission data - check for both regular and room submissions
+        const regularSubmissionRef = doc(db, 'quizSubmissions', `${user.uid}_${itemId}`);
+        let submissionSnap = await getDoc(regularSubmissionRef);
+        
+        // If not found, try to find room submission
+        if (!submissionSnap.exists()) {
+          // Query all submissions that match the pattern uid_quizId_*
+          const submissionsRef = collection(db, 'quizSubmissions');
+          const submissions = await getDocs(submissionsRef);
+          const matchingDoc = submissions.docs.find(doc => 
+            doc.id.startsWith(`${user.uid}_${itemId}_`)
+          );
+          if (matchingDoc) {
+            submissionSnap = matchingDoc;
+          }
+        }
         
         if (submissionSnap.exists()) {
           const submissionData = submissionSnap.data();
           detailedAnswers = submissionData.detailedAnswers || [];
           
-          // Convert detailed answers to the format needed for analysis
           questions = detailedAnswers.map(answer => ({
             question: answer.question,
-            type: answer.questionType
+            type: answer.questionType,
+            userAnswer: answer.userAnswer,
+            correctAnswer: answer.correctAnswer,
+            isCorrect: answer.isCorrect
           }));
           
           const answerState = detailedAnswers.map(answer => answer.isCorrect);
@@ -120,31 +135,66 @@ const AnalyzeResults = () => {
       Dưới đây là dữ liệu đầu vào cho hệ thống đánh giá:
       Kết quả bài kiểm tra:
       ${questions.map((question, index) => {
-        const detail = detailedAnswers?.[index];
+        const detail = detailedAnswers[index];
+        let answerDisplay = '';
+        
+        if (detail.questionType === 'multiple-choice') {
+          answerDisplay = `
+            Các lựa chọn: ${detail.options ? detail.options.join(', ') : 'Không có'}
+            Câu trả lời của học sinh: ${detail.userAnswer}
+            Đáp án đúng: ${detail.correctAnswer}
+          `;
+        } else if (detail.questionType === 'true-false') {
+          answerDisplay = `
+            Câu trả lời của học sinh: ${JSON.stringify(detail.userAnswer)}
+            Đáp án đúng: ${JSON.stringify(detail.correctAnswer)}
+          `;
+        } else {
+          answerDisplay = `
+            Câu trả lời của học sinh: ${detail.userAnswer}
+            Đáp án đúng: ${detail.correctAnswer}
+          `;
+        }
+
         return `
           Câu ${index + 1}: ${question.question}
-          ${detail ? `
           Loại câu hỏi: ${detail.questionType}
-          Câu trả lời của học sinh: ${detail.userAnswer}
-          Đáp án đúng: ${detail.correctAnswer}
+          ${answerDisplay}
           Kết quả: ${detail.isCorrect ? 'Đúng' : 'Sai'}
-          ` : `Kết quả: ${answerState[index] ? 'Đúng' : 'Sai'}`}
         `;
       }).join('\n\n')}
       
-      Dựa trên các thông tin này, hãy:
+      Với vai trò là một chuyên gia phân tích giáo dục, hãy đánh giá chi tiết theo các mục sau:
+
       1. Phân tích kết quả:
-      - Xác định số câu trả lời đúng và sai.
-      - Xác định các câu hỏi học sinh trả lời đúng và sai.
-      - Tính toán điểm tổng cộng và tỷ lệ phần trăm đúng.
+      - Thống kê chi tiết số câu trả lời đúng và sai
+      - Tính toán điểm tổng và tỷ lệ phần trăm đúng
+      - Phân tích phân bố điểm theo từng loại câu hỏi
+      - Đánh giá mức độ hoàn thành so với yêu cầu đầu ra
+
       2. Đánh giá kỹ năng:
-      - Đánh giá các kỹ năng cụ thể dựa trên các câu hỏi đúng và sai.
-      - Nhận diện các chủ đề mà học sinh có vẻ yếu kém hoặc mạnh mẽ.
+      - Phân tích sâu kỹ năng thể hiện qua từng loại câu hỏi
+      - Nhận diện điểm mạnh và điểm yếu trong từng chủ đề
+      - Đánh giá mức độ hiểu biết về các khái niệm cốt lõi
+      - Chỉ ra các lỗi tư duy hoặc hiểu sai cần khắc phục
+
       3. Phân loại năng lực:
-      - Phân loại học sinh vào các mức năng lực khác nhau dựa trên kết quả.
-      - Đưa ra lời khuyên cho học sinh về các chủ đề cần cải thiện.
-      4. Đưa ra nhận xét:
-      - Viết một đoạn nhận xét chi tiết cho học sinh, bao gồm các điểm mạnh, điểm yếu, và đề xuất cách cải thiện.
+      - Phân tích khả năng tư duy logic và giải quyết vấn đề
+      - Đánh giá năng lực vận dụng kiến thức vào thực tế
+      - Nhận xét về kỹ năng phân tích và tổng hợp thông tin
+      - Xác định mức độ thành thạo trong từng lĩnh vực kiến thức
+
+      4. Tổng kết:
+      - Nhận xét tổng quát về kết quả và tiềm năng phát triển
+      - Đánh giá tổng thể về năng lực hiện tại
+      - Đề xuất hướng phát triển trong tương lai
+      - Các lời khuyên thiết thực để cải thiện kết quả
+
+      Yêu cầu về cách trình bày:
+      - Sử dụng ngôn ngữ chuyên môn, chính xác và khách quan
+      - Các chất hóa học phải được viết bằng danh pháp hóa học quốc tế (tiếng Anh)
+      - Phân tích phải dựa trên dữ liệu cụ thể với số liệu minh chứng
+      - Đề xuất phải thực tế và có tính ứng dụng cao
     `;
 
     try {
@@ -168,31 +218,35 @@ const AnalyzeResults = () => {
   const formatTextWithLineBreaks = (text) => {
     return text.split('\n').map((line, index) => {
       if (!line.trim()) return null;
-  
-      // Loại bỏ các ký hiệu đặc biệt
-      const cleanedLine = line.replace(/^[\*\#\-\s]+/, '').replace(/\*\*/g, '');
-  
+
+      // Loại bỏ tất cả các ký tự đặc biệt ở đầu dòng và dấu * trong văn bản
+      const cleanedLine = line
+        .replace(/^[\*\#\-\s]+/, '')  // Loại bỏ ký tự đặc biệt ở đầu dòng
+        .replace(/\*/g, '')           // Loại bỏ tất cả dấu *
+        .trim();                      // Loại bỏ khoảng trắng thừa
+
       let iconSrc = '';
-  
+
+      // Xác định icon dựa trên nội dung đã được làm sạch
       if (cleanedLine.startsWith('1.') || cleanedLine.startsWith('Phân tích kết quả')) {
         iconSrc = icon4;
-      } else if (cleanedLine.startsWith('2.') || cleanedLine.startsWith('Đánh giá kỹ năng:')) {
+      } else if (cleanedLine.startsWith('2.') || cleanedLine.startsWith('Đánh giá kỹ năng')) {
         iconSrc = icon1;
       } else if (cleanedLine.startsWith('3.') || cleanedLine.startsWith('Phân loại năng lực')) {
         iconSrc = icon2;
-      } else if (cleanedLine.startsWith('4.') || cleanedLine.startsWith('Nhận xét')) {
+      } else if (cleanedLine.startsWith('4.') || cleanedLine.startsWith('Tổng kết')) {
         iconSrc = icon3;
       }
-  
+
       if (iconSrc) {
         return (
           <p key={index}>
             <img src={iconSrc} alt="icon" style={{ marginRight: '5px', width: '24px', height: '24px' }} />
-            <strong style={{ color: '#7b31c9',}}>{cleanedLine}</strong>
+            <strong style={{ color: '#7b31c9' }}>{cleanedLine}</strong>
           </p>
         );
       }
-  
+
       return <p key={index} className="AI-content">{cleanedLine}</p>;
     });
   };

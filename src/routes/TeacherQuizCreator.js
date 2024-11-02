@@ -20,7 +20,6 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [examTime, setExamTime] = useState('15 phút');
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [allQuestions, setAllQuestions] = useState([]);
   const [teacherNumShortAnswer, setTeacherNumShortAnswer] = useState();
   const closeModal = () => {
     setModalOpen(false);
@@ -413,12 +412,18 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         difficultyDistribution
       );
 
-      // Update questions state
-      const multipleChoiceQuestions = finalQuestions.filter(q => q.type === 'multiple-choice');
-      setQuestions(multipleChoiceQuestions);
+      // Sắp xếp câu hỏi theo thứ tự mong muốn
+      const sortedQuestions = finalQuestions.sort((a, b) => {
+        const typeOrder = {
+          'multiple-choice': 1,
+          'true-false': 2,
+          'short-answer': 3
+        };
+        return typeOrder[a.type] - typeOrder[b.type];
+      });
 
-      // Update all questions state
-      setAllQuestions(finalQuestions);
+      // Update questions state với danh sách đã được sắp xếp
+      setQuestions(sortedQuestions);
 
     } catch (error) {
       console.error('Error generating questions:', error);
@@ -665,7 +670,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
             children: [new TextRun({ text: "PHẦN I. TRẮC NGHIỆM", bold: true })],
             alignment: AlignmentType.LEFT,
           }),
-          ...allQuestions
+          ...questions
             .filter(q => q.type === 'multiple-choice')
             .map((question, index) => {
               const correctAnswerIndex = question.options.indexOf(question.correctAnswer);
@@ -678,15 +683,15 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
               });
             }),
           // Phần II: Đúng/Sai
-          ...(allQuestions.some(q => q.type === 'true-false') ? [
+          ...(questions.some(q => q.type === 'true-false') ? [
             new Paragraph({
               children: [new TextRun({ text: "PHẦN II. ĐÚNG/SAI", bold: true })],
               alignment: AlignmentType.LEFT,
             }),
-            ...allQuestions
+            ...questions
               .filter(q => q.type === 'true-false')
               .map((question, index) => {
-                const startIndex = allQuestions.filter(q => q.type === 'multiple-choice').length;
+                const startIndex = questions.filter(q => q.type === 'multiple-choice').length;
                 return new Paragraph({
                   children: [
                     new TextRun({ text: `Câu ${startIndex + index + 1}: `, bold: true }),
@@ -698,15 +703,15 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
               })
           ] : []),
           // Phần III: Trả lời ngắn
-          ...(allQuestions.some(q => q.type === 'short-answer') ? [
+          ...(questions.some(q => q.type === 'short-answer') ? [
             new Paragraph({
               children: [new TextRun({ text: "PHẦN III. TRẢ LỜI NGẮN", bold: true })],
               alignment: AlignmentType.LEFT,
             }),
-            ...allQuestions
+            ...questions
               .filter(q => q.type === 'short-answer')
               .map((question, index) => {
-                const startIndex = allQuestions.filter(q => 
+                const startIndex = questions.filter(q => 
                   q.type === 'multiple-choice' || q.type === 'true-false'
                 ).length;
                 return new Paragraph({
@@ -753,7 +758,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       const cleanedQuestion = { ...question };
       for (const key in cleanedQuestion) {
         if (cleanedQuestion[key] === undefined) {
-          cleanedQuestion[key] = ''; // Hoặc giá trị mặc định phù hợp
+          cleanedQuestion[key] = '';
         }
       }
       return cleanedQuestion;
@@ -911,7 +916,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
           placeholder="Thời gian làm bài"
         />
       </div>
-      <button className="create-quiz-download-btn" onClick={() => generateWordDocument(allQuestions, {
+      <button className="create-quiz-download-btn" onClick={() => generateWordDocument(questions, {
         mainTitle,
         subTitle,
         subject,
@@ -922,32 +927,67 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
         <ul>
           {questions && questions.length > 0 ? (
-            questions.map((question, index) => (
-              <li key={index}>
-                <div className="create-quiz-question-content">
-                  <p dangerouslySetInnerHTML={{ __html: `<strong>Câu hỏi:</strong> ${question.question}` }} />
-                  {question.type === 'multiple-choice' && (
-                    <div className="create-quiz-question-options">
-                      {question.options.map((option, i) => (
-                        <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)}) ${option}` }} />
-                      ))}
-                    </div>
-                  )}
-                  {question.type === 'fill-in-the-blank' && (
-                    <p><strong>Đáp án:</strong> {question.correctAnswer}</p>
-                  )}
-                  <p className="create-quiz-correct-answer" dangerouslySetInnerHTML={{ __html: `<strong>Đáp án đúng:</strong> ${question.correctAnswer || ''}` }} />
-                  <p dangerouslySetInnerHTML={{ __html: `<strong>Giải thích:</strong> ${question.explain}` }} />
-                  <button className='create-quiz-delete-question-btn' onClick={() => handleDeleteQuestion(index)}>Xóa</button>
-                </div>
-              </li>
-            ))
-            
+            // Sắp xếp và nhóm câu hỏi theo loại
+            [...questions]
+              .sort((a, b) => {
+                const typeOrder = {
+                  'multiple-choice': 1,
+                  'true-false': 2,
+                  'short-answer': 3
+                };
+                return typeOrder[a.type] - typeOrder[b.type];
+              })
+              .map((question, index) => (
+                <li key={index}>
+                  <div className="create-quiz-question-content">
+                    <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
+                    
+                    {question.type === 'multiple-choice' && (
+                      <div className="create-quiz-question-options">
+                        {question.options.map((option, i) => (
+                          <p key={i}>{String.fromCharCode(65 + i)}) {option}</p>
+                        ))}
+                        <p className="create-quiz-correct-answer">
+                          <strong>Đáp án đúng:</strong> {question.correctAnswer}
+                        </p>
+                        <p><strong>Giải thích:</strong> {question.explain}</p>
+                      </div>
+                    )}
+
+                    {question.type === 'true-false' && (
+                      <div className="create-quiz-question-options">
+                        {question.options.map((option, i) => (
+                          <p key={i}>
+                            {String.fromCharCode(97 + i)}) {option}  <p className='create-quiz-correct-answer'>{question.correctAnswer[i]}</p>
+                          </p>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.type === 'short-answer' && (
+                      <div className="create-quiz-question-options">
+                        <p className="create-quiz-correct-answer">
+                          <strong>Đáp án:</strong> {question.correctAnswer}
+                        </p>
+                      </div>
+                    )}
+
+                    <button 
+                      className='create-quiz-delete-question-btn' 
+                      onClick={() => {
+                        const newQuestions = questions.filter((_, i) => i !== index);
+                        setQuestions(newQuestions);
+                      }}
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </li>
+              ))
           ) : (
             <p>Chưa có câu hỏi nào.</p>
           )}
         </ul>
-        
       </div>
       <button className="create-quiz-save-quiz-btn" onClick={handleSaveQuiz}>Lưu Bộ Câu Hỏi</button>
           {modalOpen && (
