@@ -115,6 +115,16 @@ const QuizRoom = () => {
         return;
       }
 
+      // Lấy thông tin user profile với giá trị mặc định
+      const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
+      const userProfile = userProfileDoc.exists() 
+        ? userProfileDoc.data()
+        : {
+            username: auth.currentUser.email?.split('@')[0] || 'Anonymous',
+            displayName: auth.currentUser.displayName || 'Anonymous',
+            profilePictureUrl: null
+          };
+
       // Nếu hết giờ, điền giá trị mặc định cho các câu chưa làm
       let finalUserAnswers = { ...userAnswers };
       if (isTimeUp) {
@@ -218,13 +228,6 @@ const QuizRoom = () => {
           adjustedScore: (a.score * 10) / maxPossibleScore
         }))
       });
-
-      // Lấy thông tin user profile
-      const userProfileDoc = await getDoc(doc(db, 'profiles', auth.currentUser.uid));
-      if (!userProfileDoc.exists()) {
-        throw new Error('User profile not found');
-      }
-      const userProfile = userProfileDoc.data();
 
       // Batch write để đảm bảo tính nhất quán của dữ liệu
       const batch = writeBatch(db);
