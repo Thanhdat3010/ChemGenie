@@ -4,6 +4,7 @@ import { db, auth } from '../components/firebase';
 import { doc, updateDoc, arrayUnion, arrayRemove, getDoc, onSnapshot, deleteDoc, getDocs } from 'firebase/firestore';
 import { FaSignOutAlt } from 'react-icons/fa'; 
 import './WaitingRoom.css';
+import avatar from "../assets/profile-user.png";
 
 const WaitingRoom = () => {
   const navigate = useNavigate();
@@ -32,10 +33,18 @@ const WaitingRoom = () => {
         const membersData = await Promise.all(
           roomDetails.participants.map(async memberId => {
             const memberDoc = await getDoc(doc(db, 'profiles', memberId));
-            return memberDoc.exists() ? memberDoc.data() : null;
+            if (memberDoc.exists()) {
+              return memberDoc.data();
+            } else {
+              return {
+                uid: memberId,
+                username: 'Người dùng mới',
+                profilePictureUrl: avatar
+              };
+            }
           })
         );
-        setMembers(membersData.filter(member => member !== null));
+        setMembers(membersData);
       }
     };
   
@@ -149,7 +158,14 @@ const WaitingRoom = () => {
         <h3>Thành viên trong phòng:</h3>
         {members.map(member => (
           <div key={member.uid} className="member-item">
-            <img src={member.profilePictureUrl} alt="Avatar" />
+            <img 
+              src={member.profilePictureUrl} 
+              alt="Avatar" 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = avatar;
+              }}
+            />
             <p>{member.username}</p>
           </div>
         ))}

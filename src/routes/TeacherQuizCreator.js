@@ -336,7 +336,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         1. Tạo đủ số lượng câu hỏi theo yêu cầu
         2. Độ khó đa dạng để tạo độ phân hóa: ${difficultyDistribution}
         3. Không tự ý thêm câu hỏi không có trong bài giảng
-        4. Các câu hỏi không được lặp lại
+        4. Các câu hỏi không được giống nhau, các đáp án trong cùng một câu không được giống nhau
         5. ĐẶC BIỆT QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh, IUPAC)
         6. Câu hỏi được đặt bằng tiếng Việt
         7. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
@@ -958,7 +958,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
                       <div className="create-quiz-question-options">
                         {question.options.map((option, i) => (
                           <p key={i}>
-                            {String.fromCharCode(97 + i)}) {option}  <p className='create-quiz-correct-answer'>{question.correctAnswer[i]}</p>
+                            {String.fromCharCode(97 + i)}) {option}  <span className='create-quiz-correct-answer'>{question.correctAnswer[i]}</span>
                           </p>
                         ))}
                       </div>

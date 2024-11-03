@@ -3,7 +3,6 @@ import './CreateQuiz.css';
 import { db, auth } from '../components/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import Tesseract from 'tesseract.js';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
@@ -16,182 +15,138 @@ const CreateQuiz = () => {
     correctAnswer: '',
     explain: '',
     options: ['', '', '', ''],
+    correctAnswers: ['Đúng', 'Đúng', 'Đúng', 'Đúng']
   };
 
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState({ ...initialQuestionState });
   const [quizTitle, setQuizTitle] = useState('');
-  const [numQuestions, setNumQuestions] = useState(1);
   const [difficulty, setDifficulty] = useState('medium');
   const [grade, setGrade] = useState('');
   const [topic, setTopic] = useState('');
-  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('student');
+  const [questionTypes, setQuestionTypes] = useState({
+    multipleChoice: true,
+    trueFalse: true,
+    shortAnswer: true
+  });
 
-  const handleFileUpload = (event) => {
-    setFile(event.target.files[0]);
-  };
+  // Thêm states cho số lượng câu hỏi mỗi loại
+  const [numMultipleChoice, setNumMultipleChoice] = useState('');
+  const [numTrueFalse, setNumTrueFalse] = useState('');
+  const [numShortAnswer, setNumShortAnswer] = useState('');
 
   const closeModal = () => {
     setModalOpen(false);
   };
-  const extractTextFromImage = async (file) => {
-    const text = await Tesseract.recognize(file, 'eng');
-    return text.data.text;
-  };
-
-  const generateQuestionsFromAI = async (text) => {
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghiệm cho giáo dục. 
-      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm với độ khó: ${difficulty}. Các câu hỏi được tạo dựa trên văn bản sau: ${text}. 
-      Mỗi câu hỏi cần có bốn lựa chọn đáp án, một đáp án đúng và giải thích kèm theo. 
-      Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4). 
-      Câu hỏi phải được viết bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh).
-      Kết quả trả về dưới dạng JSON với cấu trúc sau:
-      ${JSON.stringify([
-      {
-        type: "multiple-choice",
-        question: "Câu hỏi 1",
-        options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-        correctAnswer: "Đáp án đúng",
-        explain: "Giải thích cho đáp án đúng"
-      }
-    ])}
-    `;
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const cleanText = response.text()
-      .replace(/`/g, '')
-      .replace(/json/g, '')
-      .replace(/\*/g, '')
-      .replace(/\\"/g, '"')
-      .replace(/'/g, "'") // Remove the backslash before the single quote
-      .replace(/\\n/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
-      console.log(cleanText);
-      let generatedQuestions;
-    try {
-      generatedQuestions = JSON.parse(cleanText);
-    } catch (parseError) {
-      console.error('Error parsing JSON:', parseError);
-      alert('Đã xảy ra lỗi khi phân tích cú pháp JSON.');
-      return;
-    }
-      const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
-      questionsArray.forEach(question => {
-        const newQuestion = {
-          type: 'multiple-choice',
-          question: question.question,
-          options: question.options,
-          correctAnswer: question.correctAnswer,
-          explain: question.explain,
-        };
-        setQuestions(prevQuestions => [...prevQuestions, newQuestion]);
-      });
-    } catch (error) {
-      console.error('Error generating questions from AI:', error);
-      alert('Đã xảy ra lỗi khi tạo câu hỏi từ AI.');
-    }
-  };
-
-  const handleGenerateQuestions = async () => {
-    if (!numQuestions || numQuestions <= 0) {
-      alert('Vui lòng nhập số lượng câu hỏi hợp lệ.');
-      return;
-    }
-    if (!file) {
-      alert('Vui lòng tải lên tệp để trích xuất văn bản.');
-      return;
-    }
   
-    let extractedText = '';
-    const fileType = file.type;
-    setLoading(true);
 
-    try {
-      if (fileType.startsWith('image/')) {
-        extractedText = await extractTextFromImage(file);
-      }
-      await generateQuestionsFromAI(extractedText);
-    } catch (error) {
-      console.error('Error extracting text from file:', error);
-      alert('Đã xảy ra lỗi khi trích xuất văn bản từ tệp.');
-    }finally {
-      // Tắt trạng thái loading sau khi hoàn tất
-      setLoading(false);
-    }
-  };
+  
 
   const handleAddQuestionsFromAPI = async () => {
-    // Kiểm tra các thông tin bắt buộc
-    if (!numQuestions || numQuestions <= 0) {
-      alert('Vui lòng nhập số lượng câu hỏi hợp lệ.');
+    // Tính tổng số câu hỏi đã chọn
+    const selectedMultipleChoice = parseInt(numMultipleChoice) || 0;
+    const selectedTrueFalse = parseInt(numTrueFalse) || 0;
+    const selectedShortAnswer = parseInt(numShortAnswer) || 0;
+    const totalSelectedQuestions = selectedMultipleChoice + selectedTrueFalse + selectedShortAnswer;
+
+    // Kiểm tra tổng số câu
+    if (totalSelectedQuestions === 0) {
+      alert('Vui lòng nhập số lượng câu hỏi cho ít nhất một loại.');
       return;
     }
-  
+
     if (!grade) {
       alert('Vui lòng chọn lớp.');
       return;
     }
-  
+
     if (!topic.trim()) {
       alert('Vui lòng nhập chủ đề.');
       return;
     }
+
     setLoading(true);
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
       
-      // Thêm một bước kiểm tra chủ đề trước khi tạo câu hỏi
-      const checkTopicPrompt = `Chủ đề "${topic}" có phải là một chủ đ trong môn hóa học không? Trả lời "yes" hoặc "no".`;
-      const checkTopicResult = await model.generateContent(checkTopicPrompt);
-      const isChemistryTopic = checkTopicResult.response.text().toLowerCase().includes('yes');
+      const prompt = `Bạn là một chuyên gia trong việc tạo đề thi hóa học.
+        Hãy tạo bộ câu hỏi hóa học lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty}.
+        Tổng số câu hỏi cần tạo là ${totalSelectedQuestions} câu, bao gồm:
+        ${selectedMultipleChoice > 0 ? `- ${selectedMultipleChoice} câu hỏi trắc nghiệm với 4 lựa chọn` : ''}
+        ${selectedTrueFalse > 0 ? `- ${selectedTrueFalse} câu hỏi đúng/sai với 4 phát biểu` : ''}
+        ${selectedShortAnswer > 0 ? `- ${selectedShortAnswer} câu hỏi điền đáp án ngắn` : ''}
 
-      let finalTopic = topic;
-      if (!isChemistryTopic) {
-        finalTopic = "hóa học ngẫu nhiên";
-      }
+        Lưu ý quan trọng: nếu chủ đề không liên quan tới hóa thì tự tạo ngẫu nhiên một chủ đề liên quan tới hóa học.
+        
+        Yêu cầu QUAN TRỌNG về định dạng:
+        1. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ thẻ HTML nào (<sub>, <sup>, <br>, etc.)
+        2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp;
+        3. Chỉ sử dụng văn bản thuần túy (plain text)
+        4. Với các công thức hóa học:
+         - Viết chỉ số dưới bằng ký tự Unicode trực tiếp (ví dụ: H₂O, CO₂)
+         - Sử dụng ký tự → cho mũi tên phản ứng
+         - Sử dụng dấu ⇌ cho phản ứng thuận nghịch
+        5. Với các đơn vị đo:
+         - Viết m³ thay vì m3
+         - Viết cm³ thay vì cm3
+         - Viết độ C thay vì °C
+        6. Với các số mũ và chỉ số:
+         - Sử dụng ký tự Unicode trực tiếp (ví dụ: x², x₁, x₂)
 
-      const prompt = `Bạn là một chuyên gia hóa học có kinh nghiệm trong việc thiết kế câu hỏi trắc nghim cho giáo dục. 
-      Hãy tạo cho tôi ${numQuestions} câu hỏi trắc nghiệm môn hóa học lớp ${grade} với chủ đề ${finalTopic} và độ khó: ${difficulty}. 
-      Mỗi câu hỏi cần có đáp án đúng và giải thích chi tiết kèm theo.
-      Câu hỏi phải đa dạng về nội dung và hình thức.
-      Đảm bảo rằng các công thức hóa học trong câu hỏi và đáp án có các chỉ số hóa học được hiển thị dưới dạng subscript (ví dụ: CH₄ thay vì CH4). 
-      Lưu ý:Câu hỏi được đặt bằng tiếng Việt, nhưng tất cả các chất hóa học (trong câu hỏi, đáp án và giải thích) phải được viết theo danh pháp IUPAC (tiếng Anh). 
-      Đảm bảo rằng các câu hỏi chỉ liên quan đến môn hóa học.
-      Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
-      ${JSON.stringify([
-        {
-          type: "multiple-choice",
-          question: "Câu hỏi 1",
-          options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-          correctAnswer: "Đáp án đúng",
-          explain: "Giải thích cho đáp án đúng"
-        }
-      ])}
-      `;
+        Các yêu cầu về nội dung:
+        1. Tạo đủ số lượng câu hỏi theo yêu cầu
+        2. Các câu hỏi không được giống nhau, các đáp án trong cùng một câu không được giống nhau
+        3. ĐẶC BIỆT QUAN TRỌNG: Sử dụng danh pháp hóa học IUPAC (tiếng Anh) cho tất cả các chất
+        4. Câu hỏi được đặt bằng tiếng Việt
+        5. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+        6. Đảm bảo các câu hỏi chỉ liên quan đến môn hóa học
+        
+        Yêu cầu cho từng loại câu hỏi:
+        - Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết
+        - Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất
+        - Trả lời ngắn: phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(không có chữ nha), bỏ các dạng toán đốt cháy.
+        Trả về kết quả dưới dạng JSON với cấu trúc sau:
+        ${JSON.stringify([
+          {
+            type: "multiple-choice",
+            question: "Câu hỏi trắc nghiệm",
+            options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+            correctAnswer: "Đáp án đúng",
+            explain: "Giải thích cho đáp án đúng"
+          },
+          {
+            type: "true-false",
+            question: "Câu hỏi đúng/sai",
+            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"],
+            correctAnswer: ["Đúng", "Sai", "Đúng", "Sai"]
+          },
+          {
+            type: "short-answer",
+            question: "Câu hỏi điền đáp án(câu hỏi tính toán)",
+            correctAnswer: "Đáp án ngắn gọn(kết quả tính toán)"
+          }
+        ])}`;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();    
-      // Gi�� sử text trả về là một chuỗi JSON các câu hỏi
+      
+      // Làm sạch text response
       const cleanText = text
-      .replace(/`/g, '')
-      .replace(/json/g, '')
-      .replace(/\*/g, '')
-      .replace(/\\"/g, '"')
-      .replace(/'/g, "'") // Remove the backslash before the single quote
-      .replace(/\\n/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
-      console.log(cleanText);
+        .replace(/`/g, '')
+        .replace(/json/g, '')
+        .replace(/\*/g, '')
+        .replace(/\\"/g, '"')
+        .replace(/'/g, "'")
+        .replace(/\\n/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\\u([a-fA-F0-9]{4})/g, (match, p1) => String.fromCharCode(parseInt(p1, 16)));
 
-      // Kiểm tra nếu cleanText là JSON hợp lệ
+      // Parse JSON và kiểm tra
       let generatedQuestions;
       try {
         generatedQuestions = JSON.parse(cleanText);
@@ -201,24 +156,22 @@ const CreateQuiz = () => {
         return;
       }
 
-      // Kiểm tra nếu generatedQuestions là một mảng
+      // Đảm bảo generatedQuestions là một mảng
       const questionsArray = Array.isArray(generatedQuestions) ? generatedQuestions : [generatedQuestions];
-      questionsArray.forEach(question => {
-        const newQuestion = {
-            type: 'multiple-choice',
-            question: question.question,
-            options: question.options,
-            correctAnswer: question.correctAnswer,
-            explain: question.explain,
-        };
-  
-        setQuestions(prevQuestions => [...prevQuestions, newQuestion]);
-      });
+
+      // Thay đổi phần này để thay thế hoàn toàn bộ câu hỏi cũ
+      setQuestions(questionsArray.map(question => ({
+        type: question.type,
+        question: question.question,
+        options: question.options || [],
+        correctAnswer: question.correctAnswer,
+        explain: question.explain || ''
+      })));
+
     } catch (error) {
       console.error('Error generating questions from AI:', error);
       alert('Đã xảy ra lỗi khi tạo câu hỏi từ AI vui lòng thử lại.');
-    }finally {
-      // Tắt trạng thái loading sau khi hoàn tất
+    } finally {
       setLoading(false);
     }
   };
@@ -229,25 +182,55 @@ const CreateQuiz = () => {
       return;
     }
 
-    if (currentQuestion.type === 'multiple-choice' && currentQuestion.options.some(option => option.trim() === '')) {
-      alert('Vui lòng điền đầy đủ các lựa chọn cho câu hỏi.');
-      return;
-    }
+    switch (currentQuestion.type) {
+      case 'multiple-choice':
+        if (currentQuestion.options.some(option => option.trim() === '')) {
+          alert('Vui lòng điền đầy đủ các lựa chọn cho câu hỏi.');
+          return;
+        }
+        if (!currentQuestion.correctAnswer) {
+          alert('Vui lòng chọn đáp án đúng.');
+          return;
+        }
+        break;
 
-    if (currentQuestion.type === 'fill-in-the-blank' && currentQuestion.correctAnswer.trim() === '') {
-      alert('Vui lòng nhập đáp án cho câu hỏi điền từ.');
-      return;
+      case 'true-false':
+        if (currentQuestion.options.some(option => option.trim() === '')) {
+          alert('Vui lòng điền đầy đủ các phát biểu.');
+          return;
+        }
+        if (!currentQuestion.correctAnswers || currentQuestion.correctAnswers.length !== 4) {
+          alert('Vui lòng chọn đáp án đúng/sai cho tất cả các phát biểu.');
+          return;
+        }
+        break;
+
+      case 'short-answer':
+        if (!currentQuestion.correctAnswer.trim()) {
+          alert('Vui lòng nhập đáp án.');
+          return;
+        }
+        break;
     }
 
     const newQuestion = {
       type: currentQuestion.type,
       question: currentQuestion.question.trim(),
-      correctAnswer: currentQuestion.correctAnswer.trim(),
       explain: currentQuestion.explain.trim(),
     };
 
-    if (currentQuestion.type === 'multiple-choice') {
-      newQuestion.options = currentQuestion.options.map(option => option.trim());
+    switch (currentQuestion.type) {
+      case 'multiple-choice':
+        newQuestion.options = currentQuestion.options.map(option => option.trim());
+        newQuestion.correctAnswer = currentQuestion.correctAnswer.trim();
+        break;
+      case 'true-false':
+        newQuestion.options = currentQuestion.options.map(option => option.trim());
+        newQuestion.correctAnswer = currentQuestion.correctAnswers;
+        break;
+      case 'short-answer':
+        newQuestion.correctAnswer = currentQuestion.correctAnswer.trim();
+        break;
     }
 
     setQuestions(prevQuestions => [...prevQuestions, newQuestion]);
@@ -303,10 +286,41 @@ const CreateQuiz = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCurrentQuestion(prevQuestion => ({
-      ...prevQuestion,
-      [name]: value,
-    }));
+    
+    if (name === 'type') {
+      // Reset state với giá trị mặc định dựa trên loại câu hỏi
+      const newState = {
+        type: value,
+        question: '',
+        explain: '',
+      };
+
+      switch (value) {
+        case 'multiple-choice':
+          newState.options = ['', '', '', ''];
+          newState.correctAnswer = '';
+          newState.correctAnswers = undefined;
+          break;
+        case 'true-false':
+          newState.options = ['', '', '', ''];
+          newState.correctAnswers = ['Đúng', 'Đúng', 'Đúng', 'Đúng'];
+          newState.correctAnswer = undefined;
+          break;
+        case 'short-answer':
+          newState.correctAnswer = '';
+          newState.options = undefined;
+          newState.correctAnswers = undefined;
+          break;
+      }
+
+      setCurrentQuestion(newState);
+    } else {
+      // Cập nhật bình thường cho các trường khác
+      setCurrentQuestion(prevQuestion => ({
+        ...prevQuestion,
+        [name]: value,
+      }));
+    }
   };
 
   const handleOptionChange = (index, value) => {
@@ -317,6 +331,29 @@ const CreateQuiz = () => {
       options: newOptions,
     }));
   };
+
+  const handleTrueFalseAnswerChange = (index, value) => {
+    setCurrentQuestion(prevQuestion => {
+      const newAnswers = [...prevQuestion.correctAnswers];
+      newAnswers[index] = value;
+      return {
+        ...prevQuestion,
+        correctAnswers: newAnswers
+      };
+    });
+  };
+
+  const handleQuestionTypeChange = (type) => {
+    setQuestionTypes(prev => {
+      const newTypes = { ...prev, [type]: !prev[type] };
+      // Đảm bảo ít nhất một loại được chọn
+      if (!newTypes.multipleChoice && !newTypes.trueFalse && !newTypes.shortAnswer) {
+        return prev;
+      }
+      return newTypes;
+    });
+  };
+
   return (
     <container fluid>
       <Navbar />
@@ -324,7 +361,7 @@ const CreateQuiz = () => {
         <div className="create-quiz-page">
           <div className="solver-tag"><p className="solver-name"><img alt="magici" src={magic} className="magic-icon" /> AI trong giáo dục</p></div>
           <h2 className="solver-form-title">AI tạo đề thi</h2>
-          <p className="solver-intro">Giải pháp hoàn hảo cho giáo viên và học sinh. Tự động tạo đề thi chất lợng cao, đa dạng, phù hợp mọi cấp học. Tiết kiệm thời gian, nâng cao hiệu quả</p>
+          <p className="solver-intro">Giải pháp hoàn hảo cho giáo viên và học sinh. Tự động tạo đề thi chất lượng cao, đa dạng, phù hợp mọi cấp học. Tiết kiệm thời gian, nâng cao hiệu quả</p>
           
           <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
             <Tab eventKey="student" title={<span style={{ color: activeTab === 'student' ? '#7b31c9' : 'black', fontWeight: activeTab === 'student' ? 'bold' : 'normal' }}>Học sinh</span>}>
@@ -337,17 +374,7 @@ const CreateQuiz = () => {
         onChange={(e) => setQuizTitle(e.target.value)}
         placeholder="Nhập tiêu đề bộ đề thi"
       />
-          <input
-          id="numQuestions"
-          name="numQuestions"
-          type="number"
-          value={numQuestions}
-          onChange={(e) => setNumQuestions(e.target.value)}
-          placeholder="Nhập số lượng câu hỏi"
-          min="1"
-
-        />
-         <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+        <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
             <option value="easy">Dễ</option>
             <option value="medium">Trung bình</option>
             <option value="hard">Khó</option>
@@ -370,6 +397,70 @@ const CreateQuiz = () => {
           onChange={(e) => setTopic(e.target.value)}
           placeholder="Nhập chủ đề của đề thi"
         />
+        <div className="createquiz-types-container">
+          <div className="createquiz-type-row">
+            <label>
+              <input
+                type="checkbox"
+                checked={questionTypes.multipleChoice}
+                onChange={() => handleQuestionTypeChange('multipleChoice')}
+              />
+              Trắc nghiệm
+            </label>
+            {questionTypes.multipleChoice && (
+              <input
+                type="number"
+                value={numMultipleChoice}
+                onChange={(e) => setNumMultipleChoice(e.target.value)}
+                placeholder="Số câu trắc nghiệm"
+                min="0"
+                className="createquiz-count-input"
+              />
+            )}
+          </div>
+
+          <div className="createquiz-type-row">
+            <label>
+              <input
+                type="checkbox"
+                checked={questionTypes.trueFalse}
+                onChange={() => handleQuestionTypeChange('trueFalse')}
+              />
+              Đúng/sai
+            </label>
+            {questionTypes.trueFalse && (
+              <input
+                type="number"
+                value={numTrueFalse}
+                onChange={(e) => setNumTrueFalse(e.target.value)}
+                placeholder="Số câu đúng/sai"
+                min="0"
+                className="createquiz-count-input"
+              />
+            )}
+          </div>
+
+          <div className="createquiz-type-row">
+            <label>
+              <input
+                type="checkbox"
+                checked={questionTypes.shortAnswer}
+                onChange={() => handleQuestionTypeChange('shortAnswer')}
+              />
+              Điền đáp án
+            </label>
+            {questionTypes.shortAnswer && (
+              <input
+                type="number"
+                value={numShortAnswer}
+                onChange={(e) => setNumShortAnswer(e.target.value)}
+                placeholder="Số câu điền đáp án"
+                min="0"
+                className="createquiz-count-input"
+              />
+            )}
+          </div>
+        </div>
     </div>
       <button className="create-quiz-add-question-btn" onClick={handleAddQuestionsFromAPI}>Tạo câu hỏi từ AI</button>
       {loading && (
@@ -378,19 +469,7 @@ const CreateQuiz = () => {
     <p>Đang tạo đề thi, vui lòng chờ...</p>
   </div>
 )}
-      <div className="create-quiz-file-upload">
-      <h2 className="Createquizz-title-feature">Biến hình ảnh thành bài tập chỉ trong nháy mắt!</h2>
-      <p className="solver-intro">Nếu bạn có hình ảnh câu hỏi hãy dùng tính năng này tạo đề thi</p>
-      <label htmlFor="file">Tải lên tệp (png, jpg, ...):</label>
-      <input
-        id="file"
-        name="file"
-        type="file"
-        onChange={handleFileUpload}
-      />
-    </div>
-    <div className="create-quiz-add-questions">
-    <button onClick={handleGenerateQuestions}>Tạo câu hỏi tự động</button>
+      <div className="create-quiz-add-questions">
       </div>
       <div className="create-quiz-question-form">
       <h2 className="Createquizz-title-feature">Tự do sáng tạo đề: Bổ sung câu hỏi, tùy chỉnh theo ý muốn.</h2>
@@ -403,7 +482,7 @@ const CreateQuiz = () => {
         >
           <option value="multiple-choice">Trắc nghiệm</option>
           <option value="true-false">Đúng/Sai</option>
-          <option value="fill-in-the-blank">Điền từ</option>
+          <option value="short-answer">Điền đáp án</option>
         </select>
         <textarea
           id="question"
@@ -441,26 +520,40 @@ const CreateQuiz = () => {
           </>
         )}
         {currentQuestion.type === 'true-false' && (
-          <div>
-            <select
-              name="correctAnswer"
-              value={currentQuestion.correctAnswer}
-              onChange={handleInputChange}
-            >
-              <option value="">Chọn đáp án</option>
-              <option value="true">Đúng</option>
-              <option value="false">Sai</option>
-            </select>
-          </div>
+          <>
+            <label className="solver-intro">Nhập 4 phát biểu và chọn đúng/sai cho mỗi phát biểu</label>
+            {[0, 1, 2, 3].map(index => (
+              <div key={index} className="true-false-option">
+                <input
+                  type="text"
+                  value={currentQuestion.options[index]}
+                  onChange={(e) => handleOptionChange(index, e.target.value)}
+                  placeholder={`Phát biểu ${index + 1}`}
+                />
+                <select
+                  value={currentQuestion.correctAnswers[index]}
+                  onChange={(e) => handleTrueFalseAnswerChange(index, e.target.value)}
+                >
+                  <option value="">Chọn đáp án</option>
+                  <option value="Đúng">Đúng</option>
+                  <option value="Sai">Sai</option>
+                </select>
+              </div>
+            ))}
+          </>
         )}
-        {currentQuestion.type === 'fill-in-the-blank' && (
+        {currentQuestion.type === 'short-answer' && (
           <>
             <input
-              id="correctAnswer"
-              name="correctAnswer"
+              type="text"
               value={currentQuestion.correctAnswer}
-              onChange={handleInputChange}
-              placeholder="Nhập đáp án đúng..."
+              onChange={(e) => handleInputChange({
+                target: {
+                  name: 'correctAnswer',
+                  value: e.target.value
+                }
+              })}
+              placeholder="Nhập đáp án..."
             />
           </>
         )}
@@ -476,26 +569,64 @@ const CreateQuiz = () => {
     <div className="create-quiz-question-list">
       <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
       <ul>
-      {questions.map((question, index) => (
-      <li key={index}>
-        <div className="create-quiz-question-content">
-          <p dangerouslySetInnerHTML={{ __html: `<strong>Câu hỏi:</strong> ${question.question}` }} />            
-          {question.type === 'multiple-choice' && (
-            <div className="create-quiz-question-options">
-              {question.options.map((option, i) => (
-                <p key={i} dangerouslySetInnerHTML={{ __html: `${String.fromCharCode(65 + i)}) ${option}` }} />
-              ))}
-            </div>
-          )}
-          {question.type === 'fill-in-the-blank' && (
-            <p><strong>Đáp án:</strong> {question.correctAnswer}</p>
-          )}
-          <p className="create-quiz-correct-answer" dangerouslySetInnerHTML={{ __html: `<strong>Đáp án đúng:</strong> ${question.correctAnswer || ''}` }} />
-          <p dangerouslySetInnerHTML={{ __html: `<strong>Giải thích:</strong> ${question.explain}` }} />
-          <button className='create-quiz-delete-question-btn' onClick={() => handleDeleteQuestion(index)}>Xóa</button>
-        </div>
-      </li>
-    ))}
+        {questions && questions.length > 0 ? (
+          // Sắp xếp và nhóm câu hỏi theo loại
+          [...questions]
+            .sort((a, b) => {
+              const typeOrder = {
+                'multiple-choice': 1,
+                'true-false': 2,
+                'short-answer': 3
+              };
+              return typeOrder[a.type] - typeOrder[b.type];
+            })
+            .map((question, index) => (
+              <li key={index}>
+                <div className="create-quiz-question-content">
+                  <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
+                  
+                  {question.type === 'multiple-choice' && (
+                    <div className="create-quiz-question-options">
+                      {question.options.map((option, i) => (
+                        <p key={i}>{String.fromCharCode(65 + i)}) {option}</p>
+                      ))}
+                      <p className="create-quiz-correct-answer">
+                        <strong>Đáp án đúng:</strong> {question.correctAnswer}
+                      </p>
+                      <p><strong>Giải thích:</strong> {question.explain}</p>
+                    </div>
+                  )}
+
+                  {question.type === 'true-false' && (
+                    <div className="create-quiz-question-options">
+                      {question.options.map((option, i) => (
+                        <p key={i}>
+                          {String.fromCharCode(97 + i)}) {option} - <span className='create-quiz-correct-answer'>{question.correctAnswer[i]}</span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === 'short-answer' && (
+                    <div className="create-quiz-question-options">
+                      <p className="create-quiz-correct-answer">
+                        <strong>Đáp án:</strong> {question.correctAnswer}
+                      </p>
+                    </div>
+                  )}
+
+                  <button 
+                    className='create-quiz-delete-question-btn' 
+                    onClick={() => handleDeleteQuestion(index)}
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </li>
+            ))
+        ) : (
+          <p>Chưa có câu hỏi nào.</p>
+        )}
       </ul>
     </div>
     <button className="create-quiz-save-quiz-btn" onClick={handleSaveQuiz}>Lưu Bộ Câu Hỏi</button>
