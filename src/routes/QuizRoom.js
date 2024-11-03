@@ -90,11 +90,13 @@ const QuizRoom = () => {
     }
   };
 
-  // Check if all questions are answered
-  const areAllQuestionsAnswered = () => {
+  // Sửa lại hàm areAllQuestionsAnswered để không cần kiểm tra tất cả câu trả lời
+  const areAllQuestionsAnswered = (isTimeUp = false) => {
+    // Nếu hết giờ, không cần kiểm tra câu trả lời
+    if (isTimeUp) return true;
+    
     return questions.every((question, index) => {
       if (question.type === 'true-false') {
-        // Kiểm tra xem tất cả các options đã được trả lời chưa
         return userAnswers[index] && 
                question.options.every((_, optIdx) => 
                  userAnswers[index][optIdx] !== undefined
@@ -104,11 +106,34 @@ const QuizRoom = () => {
     });
   };
 
-  // Handle quiz submission
-  const handleSubmitQuiz = async () => {
+  // Sửa lại hàm handleSubmitQuiz để xử lý khi hết giờ
+  const handleSubmitQuiz = async (isTimeUp = false) => {
     try {
       if (!auth.currentUser) {
         setNotificationMessage("Bạn cần đăng nhập để nộp bài");
+        setShowNotification(true);
+        return;
+      }
+
+      // Nếu hết giờ, điền giá trị mặc định cho các câu chưa làm
+      let finalUserAnswers = { ...userAnswers };
+      if (isTimeUp) {
+        questions.forEach((question, index) => {
+          if (!finalUserAnswers[index]) {
+            if (question.type === 'multiple-choice') {
+              finalUserAnswers[index] = '';
+            } else if (question.type === 'true-false') {
+              finalUserAnswers[index] = {};
+              question.options.forEach((_, optIdx) => {
+                finalUserAnswers[index][optIdx] = "";
+              });
+            } else if (question.type === 'short-answer') {
+              finalUserAnswers[index] = '';
+            }
+          }
+        });
+      } else if (!areAllQuestionsAnswered()) {
+        setNotificationMessage("Vui lòng trả lời tất cả các câu hỏi");
         setShowNotification(true);
         return;
       }
@@ -131,7 +156,7 @@ const QuizRoom = () => {
       // Tính điểm thô theo thang chuẩn
       let rawScore = 0;
       const detailedAnswers = questions.map((question, index) => {
-        const userAnswer = userAnswers[index];
+        const userAnswer = finalUserAnswers[index];
         const correctAnswer = question.correctAnswer;
         let isCorrect = false;
         let questionScore = 0;
@@ -141,15 +166,18 @@ const QuizRoom = () => {
           questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
         } 
         else if (question.type === 'true-false') {
-          const correctCount = question.options.reduce((count, _, optIdx) => {
-            return userAnswer[optIdx] === correctAnswer[optIdx] ? count + 1 : count;
-          }, 0);
-
-          // Thang điểm cho câu đúng sai theo số ý đúng
-          questionScore = correctCount === 1 ? 0.1 :
-                         correctCount === 2 ? 0.25 :
-                         correctCount === 3 ? 0.5 :
-                         correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
+          if (Object.values(userAnswer).some(ans => ans === "")) {
+            questionScore = 0;
+          } else {
+            const correctCount = question.options.reduce((count, _, optIdx) => {
+              return userAnswer[optIdx] === correctAnswer[optIdx] ? count + 1 : count;
+            }, 0);
+            
+            questionScore = correctCount === 1 ? 0.1 :
+                           correctCount === 2 ? 0.25 :
+                           correctCount === 3 ? 0.5 :
+                           correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
+          }
         } 
         else if (question.type === 'short-answer') {
           isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
@@ -250,7 +278,7 @@ const QuizRoom = () => {
     }
   };
 
-  // Timer effect
+  // Sửa lại effect của timer
   useEffect(() => {
     if (remainingTime > 0 && !isSubmitted) {
       const timer = setInterval(() => {
@@ -258,7 +286,7 @@ const QuizRoom = () => {
       }, 1000);
       return () => clearInterval(timer);
     } else if (remainingTime === 0 && !isSubmitted) {
-      handleSubmitQuiz();
+      handleSubmitQuiz(true); // Truyền true để chỉ định là nộp bài do hết giờ
     }
   }, [remainingTime, isSubmitted]);
 

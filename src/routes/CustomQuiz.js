@@ -85,14 +85,21 @@ const CustomQuiz = () => {
       const quizRef = doc(db, 'createdQuizzes', quizId);
       await deleteDoc(quizRef);
 
-      // Delete submission if exists
-      const submissionRef = doc(db, 'quizSubmissions', `${user.uid}_${quizId}`);
-      await deleteDoc(submissionRef);
+      // Get all submissions
+      const submissionsRef = collection(db, 'quizSubmissions');
+      const submissionsSnapshot = await getDocs(submissionsRef);
+      
+      // Filter and delete only submissions that belong to current user and contain the quizId
+      const deletePromises = submissionsSnapshot.docs
+        .filter(doc => doc.id.startsWith(user.uid) && doc.id.includes(quizId))
+        .map(doc => deleteDoc(doc.ref));
+      
+      await Promise.all(deletePromises);
 
       // Update local state
       setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizId));
       
-      setNotificationMessage("Đã xóa bài kiểm tra thành công");
+      setNotificationMessage("Đã xóa bài kiểm tra và kết quả thành công");
       setShowNotification(true);
     } catch (error) {
       console.error('Error deleting quiz:', error);
