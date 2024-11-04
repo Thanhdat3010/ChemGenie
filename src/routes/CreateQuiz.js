@@ -39,6 +39,10 @@ const CreateQuiz = () => {
   const [numTrueFalse, setNumTrueFalse] = useState('');
   const [numShortAnswer, setNumShortAnswer] = useState('');
 
+  // Thêm state mới cho việc chỉnh sửa
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editingData, setEditingData] = useState(null);
+
   const closeModal = () => {
     setModalOpen(false);
   };
@@ -182,6 +186,7 @@ const CreateQuiz = () => {
       return;
     }
 
+    // eslint-disable-next-line default-case
     switch (currentQuestion.type) {
       case 'multiple-choice':
         if (currentQuestion.options.some(option => option.trim() === '')) {
@@ -219,6 +224,7 @@ const CreateQuiz = () => {
       explain: currentQuestion.explain.trim(),
     };
 
+    // eslint-disable-next-line default-case
     switch (currentQuestion.type) {
       case 'multiple-choice':
         newQuestion.options = currentQuestion.options.map(option => option.trim());
@@ -295,6 +301,7 @@ const CreateQuiz = () => {
         explain: '',
       };
 
+      // eslint-disable-next-line default-case
       switch (value) {
         case 'multiple-choice':
           newState.options = ['', '', '', ''];
@@ -352,6 +359,25 @@ const CreateQuiz = () => {
       }
       return newTypes;
     });
+  };
+
+  // Thêm các hàm xử lý chỉnh sửa
+  const handleEditClick = (index, question) => {
+    setEditingQuestion(index);
+    setEditingData({ ...question });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuestion(null);
+    setEditingData(null);
+  };
+
+  const handleSaveEdit = (index) => {
+    const newQuestions = [...questions];
+    newQuestions[index] = editingData;
+    setQuestions(newQuestions);
+    setEditingQuestion(null);
+    setEditingData(null);
   };
 
   return (
@@ -570,7 +596,6 @@ const CreateQuiz = () => {
       <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
       <ul>
         {questions && questions.length > 0 ? (
-          // Sắp xếp và nhóm câu hỏi theo loại
           [...questions]
             .sort((a, b) => {
               const typeOrder = {
@@ -583,44 +608,139 @@ const CreateQuiz = () => {
             .map((question, index) => (
               <li key={index}>
                 <div className="create-quiz-question-content">
-                  <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
-                  
-                  {question.type === 'multiple-choice' && (
-                    <div className="create-quiz-question-options">
-                      {question.options.map((option, i) => (
-                        <p key={i}>{String.fromCharCode(65 + i)}) {option}</p>
-                      ))}
-                      <p className="create-quiz-correct-answer">
-                        <strong>Đáp án đúng:</strong> {question.correctAnswer}
-                      </p>
-                      <p><strong>Giải thích:</strong> {question.explain}</p>
-                    </div>
-                  )}
+                  {editingQuestion === index ? (
+                    <div className="create-quiz-edit-form">
+                      <div className="create-quiz-edit-group">
+                        <label>Câu hỏi:</label>
+                        <textarea
+                          value={editingData.question}
+                          onChange={(e) => setEditingData({
+                            ...editingData,
+                            question: e.target.value
+                          })}
+                          className="create-quiz-edit-textarea"
+                        />
+                      </div>
+                      
+                      {editingData.type === 'multiple-choice' && (
+                        <>
+                          <div className="create-quiz-edit-options">
+                            {editingData.options.map((option, i) => (
+                              <div key={i} className="create-quiz-edit-option-item">
+                                <label>{String.fromCharCode(65 + i)}:</label>
+                                <input
+                                  type="text"
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newOptions = [...editingData.options];
+                                    newOptions[i] = e.target.value;
+                                    setEditingData({
+                                      ...editingData,
+                                      options: newOptions
+                                    });
+                                  }}
+                                  className="create-quiz-edit-input"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="create-quiz-edit-group">
+                            <label>Đáp án đúng:</label>
+                            <select
+                              value={editingData.correctAnswer}
+                              onChange={(e) => setEditingData({
+                                ...editingData,
+                                correctAnswer: e.target.value
+                              })}
+                              className="create-quiz-edit-select"
+                            >
+                              {editingData.options.map((option, i) => (
+                                <option key={i} value={option}>
+                                  {String.fromCharCode(65 + i)}: {option}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </>
+                      )}
 
-                  {question.type === 'true-false' && (
-                    <div className="create-quiz-question-options">
-                      {question.options.map((option, i) => (
-                        <p key={i}>
-                          {String.fromCharCode(97 + i)}) {option} - <span className='create-quiz-correct-answer'>{question.correctAnswer[i]}</span>
-                        </p>
-                      ))}
-                    </div>
-                  )}
+                      <div className="create-quiz-edit-group">
+                        <label>Giải thích:</label>
+                        <textarea
+                          value={editingData.explain}
+                          onChange={(e) => setEditingData({
+                            ...editingData,
+                            explain: e.target.value
+                          })}
+                          className="create-quiz-edit-textarea"
+                        />
+                      </div>
 
-                  {question.type === 'short-answer' && (
-                    <div className="create-quiz-question-options">
-                      <p className="create-quiz-correct-answer">
-                        <strong>Đáp án:</strong> {question.correctAnswer}
-                      </p>
+                      <div className="create-quiz-edit-actions">
+                        <button 
+                          className="create-quiz-edit-cancel"
+                          onClick={handleCancelEdit}
+                        >
+                          Hủy
+                        </button>
+                        <button 
+                          className="create-quiz-edit-save"
+                          onClick={() => handleSaveEdit(index)}
+                        >
+                          Lưu
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  ) : (
+                    <>
+                      <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
+                      
+                      {question.type === 'multiple-choice' && (
+                        <div className="create-quiz-question-options">
+                          {question.options.map((option, i) => (
+                            <p key={i}>{String.fromCharCode(65 + i)}) {option}</p>
+                          ))}
+                          <p className="create-quiz-correct-answer">
+                            <strong>Đáp án đúng:</strong> {question.correctAnswer}
+                          </p>
+                          <p><strong>Giải thích:</strong> {question.explain}</p>
+                        </div>
+                      )}
 
-                  <button 
-                    className='create-quiz-delete-question-btn' 
-                    onClick={() => handleDeleteQuestion(index)}
-                  >
-                    Xóa
-                  </button>
+                      {question.type === 'true-false' && (
+                        <div className="create-quiz-question-options">
+                          {question.options.map((option, i) => (
+                            <p key={i}>
+                              {String.fromCharCode(97 + i)}) {option} <span className="create-quiz-correct-answer">{question.correctAnswer[i]}</span>
+                            </p>
+                          ))}
+                        </div>
+                      )}
+
+                      {question.type === 'short-answer' && (
+                        <div className="create-quiz-question-options">
+                          <p className="create-quiz-correct-answer">
+                            <strong>Đáp án:</strong> {question.correctAnswer}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="create-quiz-actions">
+                        <button 
+                          className="create-quiz-edit-btn"
+                          onClick={() => handleEditClick(index, question)}
+                        >
+                          Sửa
+                        </button>
+                        <button 
+                          className="create-quiz-delete-question-btn"
+                          onClick={() => handleDeleteQuestion(index)}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </li>
             ))

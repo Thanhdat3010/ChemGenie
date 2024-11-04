@@ -474,6 +474,17 @@
   font-size: 1.2em;
   color: #333;
   margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: center;
+}
+
+.recommend-exercises-score span {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .recommend-exercises-detailed-results {
@@ -485,6 +496,9 @@
   margin-bottom: 20px;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .recommend-exercises-result-item.recommend-exercises-correct {
@@ -551,6 +565,242 @@
   }
   
   .recommend-exercises-score {
+    font-size: 0.9em;
+    line-height: 1.4;
+    text-align: center;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .recommend-exercises-quiz-container {
+    flex-direction: column;
+  }
+
+  .recommend-exercises-question-navigator {
+    width: 100%;
+    position: static;
+    margin-bottom: 20px;
+  }
+
+  .recommend-exercises-questions-section {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .recommend-exercises-page {
+    margin-top: 100px;
+    padding: 10px;
+  }
+
+  .recommend-exercises-analysis-content {
+    padding: 10px;
+  }
+
+  .recommend-exercises-question-box {
+    padding: 15px;
+  }
+
+  .recommend-exercises-option-button {
+    padding: 10px 15px;
+    font-size: 0.95em;
+  }
+
+  .recommend-exercises-true-false-option {
+    padding: 10px;
+  }
+
+  .recommend-exercises-option-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .recommend-exercises-radio-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .recommend-exercises-question-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .recommend-exercises-result-container {
+    padding: 15px;
+  }
+
+  .recommend-exercises-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .recommend-exercises-home, 
+  .recommend-exercises-retry {
+    width: 100%;
+    margin: 5px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .recommend-exercises-page {
+    margin-top: 80px;
+  }
+
+  .recommend-exercises-generate-btn {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px 15px;
+  }
+
+  .recommend-exercises-question-text {
+    font-size: 1em;
+  }
+
+  .recommend-exercises-option-button {
+    font-size: 0.9em;
+    padding: 8px 12px;
+  }
+
+  .recommend-exercises-question-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .recommend-exercises-question-number {
+    font-size: 0.9em;
+  }
+
+  .recommend-exercises-radio-group {
+    gap: 10px;
+  }
+
+  .recommend-exercises-radio-text {
+    font-size: 0.9em;
+  }
+
+  .recommend-exercises-short-answer-input {
+    padding: 8px 12px;
+    font-size: 0.95em;
+  }
+
+  .recommend-exercises-explanation {
+    padding: 10px;
+    font-size: 0.95em;
+  }
+
+  .recommend-exercises-score {
+    font-size: 1em;
+  }
+}
+
+/* Thêm styles cho màn hình siêu nhỏ */
+@media (max-width: 320px) {
+  .recommend-exercises-question-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .recommend-exercises-option-button {
+    font-size: 0.85em;
+    padding: 8px 10px;
+  }
+
+  .recommend-exercises-radio-group {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+/* Responsive styles cho result page */
+@media (max-width: 768px) {
+  .recommend-exercises-result-page {
+    padding: 15px;
+  }
+
+  .recommend-exercises-result-container {
+    padding: 20px;
+  }
+  
+  .recommend-exercises-result-item {
+    padding: 15px;
+  }
+
+  .recommend-exercises-detailed-results {
+    font-size: 0.95em;
+  }
+
+  .recommend-exercises-result-item h3 {
     font-size: 1.1em;
+  }
+}
+
+@media (max-width: 480px) {
+  .recommend-exercises-result-page {
+    padding: 10px;
+  }
+  
+  .recommend-exercises-result-container {
+    padding: 15px;
+  }
+
+  .recommend-exercises-score {
+    font-size: 1.1em;
+  }
+
+  .recommend-exercises-detailed-results {
+    font-size: 0.9em;
+  }
+
+  .recommend-exercises-result-item {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .recommend-exercises-result-item h3 {
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+
+  .recommend-exercises-explanation {
+    margin-top: 15px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .recommend-exercises-result-container {
+    padding: 10px;
+  }
+
+  .recommend-exercises-detailed-results {
+    font-size: 0.85em;
+  }
+
+  .recommend-exercises-result-item {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+}
+
+/* Thêm style mới cho score text */
+.recommend-exercises-score-text {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+@media (max-width: 480px) {
+  .recommend-exercises-result-item {
+    padding: 12px;
+    margin-bottom: 15px;
+    /* Giảm min-width để tránh overflow */
+    min-width: 0;
+  }
+  
+  /* Điều chỉnh font-size và line-height */
+  .recommend-exercises-score,
+  .recommend-exercises-score-text {
+    font-size: 0.9em;
+    line-height: 1.4;
   }
 }

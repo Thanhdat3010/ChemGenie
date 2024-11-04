@@ -32,6 +32,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [extractedText, setExtractedText] = useState('');
   const [questions, setQuestions] = useState([]);
   const [combinedContent, setCombinedContent] = useState('');
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editingData, setEditingData] = useState(null);
 
   const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
   // AIzaSyBc1fHj2tGSwmVraM39ZXzFjvy_qubMct8 API dự phòng
@@ -322,7 +324,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp;
       3. Chỉ sử dụng văn bản thuần túy (plain text)
       4. Với các công thức hóa học:
-       - Viết chỉ số dưới bằng ký tự Unicode trực tiếp (ví dụ: H₂O, CO₂)
+       - Viết chỉ số dưới bằng ký tự Unicode tr���c tiếp (ví dụ: H₂O, CO₂)
        - Sử dụng ký tự → cho mũi tên phản ứng
        - Sử dụng dấu ⇌ cho phản ứng thuận nghịch
       5. Với các đơn vị đo:
@@ -622,7 +624,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
               }),
               new Paragraph({
                 children: [
-                  new TextRun({ text: `Đáp án: `, bold: true }),
+                  new TextRun({ text: `Đáp ��n: `, bold: true }),
                 ],
                 alignment: AlignmentType.LEFT,
               }),
@@ -782,6 +784,24 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     setCombinedContent('');
   };
 
+  const handleEditClick = (index, question) => {
+    setEditingQuestion(index);
+    setEditingData({ ...question });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuestion(null);
+    setEditingData(null);
+  };
+
+  const handleSaveEdit = (index) => {
+    const newQuestions = [...questions];
+    newQuestions[index] = editingData;
+    setQuestions(newQuestions);
+    setEditingQuestion(null);
+    setEditingData(null);
+  };
+
   return (
     <div className="create-quiz-title-form">
       <h2 className="Createquizz-title-feature">Tạo bài tập từ bài giảng</h2>
@@ -927,7 +947,6 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
         <ul>
           {questions && questions.length > 0 ? (
-            // Sắp xếp và nhóm câu hỏi theo loại
             [...questions]
               .sort((a, b) => {
                 const typeOrder = {
@@ -940,47 +959,224 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
               .map((question, index) => (
                 <li key={index}>
                   <div className="create-quiz-question-content">
-                    <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
-                    
-                    {question.type === 'multiple-choice' && (
-                      <div className="create-quiz-question-options">
-                        {question.options.map((option, i) => (
-                          <p key={i}>{String.fromCharCode(65 + i)}) {option}</p>
-                        ))}
-                        <p className="create-quiz-correct-answer">
-                          <strong>Đáp án đúng:</strong> {question.correctAnswer}
-                        </p>
-                        <p><strong>Giải thích:</strong> {question.explain}</p>
-                      </div>
-                    )}
+                    {editingQuestion === index ? (
+                      <div className="teacher-quiz-creator-edit-form">
+                        {editingData.type === 'multiple-choice' && (
+                          <>
+                            <div className="teacher-quiz-creator-edit-group">
+                              <label>Câu hỏi:</label>
+                              <textarea
+                                value={editingData.question}
+                                onChange={(e) => setEditingData({
+                                  ...editingData,
+                                  question: e.target.value
+                                })}
+                                className="teacher-quiz-creator-edit-textarea"
+                                placeholder="Nhập câu hỏi"
+                              />
+                            </div>
+                            <div className="teacher-quiz-creator-edit-options">
+                              {editingData.options.map((option, i) => (
+                                <div key={i} className="teacher-quiz-creator-edit-option-item">
+                                  <label>{String.fromCharCode(65 + i)}:</label>
+                                  <input
+                                    type="text"
+                                    value={option}
+                                    onChange={(e) => {
+                                      const newOptions = [...editingData.options];
+                                      newOptions[i] = e.target.value;
+                                      setEditingData({
+                                        ...editingData,
+                                        options: newOptions
+                                      });
+                                    }}
+                                    className="teacher-quiz-creator-edit-input"
+                                    placeholder={`Lựa chọn ${String.fromCharCode(65 + i)}`}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                            <div className="teacher-quiz-creator-edit-group">
+                              <label>Đáp án đúng:</label>
+                              <select
+                                value={editingData.correctAnswer}
+                                onChange={(e) => setEditingData({
+                                  ...editingData,
+                                  correctAnswer: e.target.value
+                                })}
+                                className="teacher-quiz-creator-edit-select"
+                              >
+                                {editingData.options.map((option, i) => (
+                                  <option key={i} value={option}>
+                                    {String.fromCharCode(65 + i)}: {option}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="teacher-quiz-creator-edit-group">
+                              <label>Giải thích:</label>
+                              <textarea
+                                value={editingData.explain}
+                                onChange={(e) => setEditingData({
+                                  ...editingData,
+                                  explain: e.target.value
+                                })}
+                                className="teacher-quiz-creator-edit-textarea"
+                                placeholder="Giải thích đáp án"
+                              />
+                            </div>
+                          </>
+                        )}
 
-                    {question.type === 'true-false' && (
-                      <div className="create-quiz-question-options">
-                        {question.options.map((option, i) => (
-                          <p key={i}>
-                            {String.fromCharCode(97 + i)}) {option}  <span className='create-quiz-correct-answer'>{question.correctAnswer[i]}</span>
-                          </p>
-                        ))}
-                      </div>
-                    )}
+                        {editingData.type === 'true-false' && (
+                          <>
+                            <div className="teacher-quiz-creator-edit-group">
+                              <label>Câu dẫn:</label>
+                              <textarea
+                                value={editingData.question}
+                                onChange={(e) => setEditingData({
+                                  ...editingData,
+                                  question: e.target.value
+                                })}
+                                className="teacher-quiz-creator-edit-textarea"
+                                placeholder="Nhập câu dẫn"
+                              />
+                            </div>
+                            {editingData.options.map((option, i) => (
+                              <div key={i} className="teacher-quiz-creator-edit-option-item">
+                                <label>{String.fromCharCode(97 + i)}):</label>
+                                <input
+                                  type="text"
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newOptions = [...editingData.options];
+                                    newOptions[i] = e.target.value;
+                                    setEditingData({
+                                      ...editingData,
+                                      options: newOptions
+                                    });
+                                  }}
+                                  className="teacher-quiz-creator-edit-input"
+                                  placeholder={`Phát biểu ${i + 1}`}
+                                />
+                                <select
+                                  value={editingData.correctAnswer[i]}
+                                  onChange={(e) => {
+                                    const newCorrectAnswer = [...editingData.correctAnswer];
+                                    newCorrectAnswer[i] = e.target.value;
+                                    setEditingData({
+                                      ...editingData,
+                                      correctAnswer: newCorrectAnswer
+                                    });
+                                  }}
+                                  className="teacher-quiz-creator-edit-select"
+                                >
+                                  <option value="Đúng">Đúng</option>
+                                  <option value="Sai">Sai</option>
+                                </select>
+                              </div>
+                            ))}
+                          </>
+                        )}
 
-                    {question.type === 'short-answer' && (
-                      <div className="create-quiz-question-options">
-                        <p className="create-quiz-correct-answer">
-                          <strong>Đáp án:</strong> {question.correctAnswer}
-                        </p>
-                      </div>
-                    )}
+                        {editingData.type === 'short-answer' && (
+                          <>
+                            <div className="teacher-quiz-creator-edit-group">
+                              <label>Câu hỏi:</label>
+                              <textarea
+                                value={editingData.question}
+                                onChange={(e) => setEditingData({
+                                  ...editingData,
+                                  question: e.target.value
+                                })}
+                                className="teacher-quiz-creator-edit-textarea"
+                                placeholder="Nhập câu hỏi"
+                              />
+                            </div>
+                            <div className="teacher-quiz-creator-edit-group">
+                              <label>Đáp án:</label>
+                              <input
+                                type="text"
+                                value={editingData.correctAnswer}
+                                onChange={(e) => setEditingData({
+                                  ...editingData,
+                                  correctAnswer: e.target.value
+                                })}
+                                className="teacher-quiz-creator-edit-input"
+                                placeholder="Nhập đáp án"
+                              />
+                            </div>
+                          </>
+                        )}
 
-                    <button 
-                      className='create-quiz-delete-question-btn' 
-                      onClick={() => {
-                        const newQuestions = questions.filter((_, i) => i !== index);
-                        setQuestions(newQuestions);
-                      }}
-                    >
-                      Xóa
-                    </button>
+                        <div className="teacher-quiz-creator-edit-actions">
+                          <button 
+                            className="teacher-quiz-creator-edit-cancel"
+                            onClick={handleCancelEdit}
+                          >
+                            Hủy
+                          </button>
+                          <button 
+                            className="teacher-quiz-creator-edit-save"
+                            onClick={() => handleSaveEdit(index)}
+                          >
+                            Lưu
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
+                        
+                        {question.type === 'multiple-choice' && (
+                          <div className="create-quiz-question-options">
+                            {question.options.map((option, i) => (
+                              <p key={i}>{String.fromCharCode(65 + i)}) {option}</p>
+                            ))}
+                            <p className="create-quiz-correct-answer">
+                              <strong>Đáp án đúng:</strong> {question.correctAnswer}
+                            </p>
+                            <p><strong>Giải thích:</strong> {question.explain}</p>
+                          </div>
+                        )}
+
+                        {question.type === 'true-false' && (
+                          <div className="create-quiz-question-options">
+                            {question.options.map((option, i) => (
+                              <p key={i}>
+                                {String.fromCharCode(97 + i)}) {option} <span className="create-quiz-correct-answer">{question.correctAnswer[i]}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {question.type === 'short-answer' && (
+                          <div className="create-quiz-question-options">
+                            <p className="create-quiz-correct-answer">
+                              <strong>Đáp án:</strong> {question.correctAnswer}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="teacher-quiz-creator-actions">
+                          <button 
+                            className="teacher-quiz-creator-edit-btn"
+                            onClick={() => handleEditClick(index, question)}
+                          >
+                            Sửa
+                          </button>
+                          <button 
+                            className="create-quiz-delete-question-btn"
+                            onClick={() => {
+                              const newQuestions = questions.filter((_, i) => i !== index);
+                              setQuestions(newQuestions);
+                            }}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </li>
               ))

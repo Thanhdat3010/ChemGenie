@@ -373,7 +373,10 @@ const RecommendExercises = () => {
       <div className="recommend-exercises-result-page">
         <div className="recommend-exercises-result-container">
           <h2>Kết quả</h2>
-          <p className="recommend-exercises-score">Điểm số của bạn: {score}/10</p>
+          <div className="recommend-exercises-score">
+            <span>Điểm số của bạn:</span>
+            <span>{score}/10</span>
+          </div>
           
           <div className="recommend-exercises-detailed-results">
             {questions.map((question, index) => {
