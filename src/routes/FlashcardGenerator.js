@@ -20,6 +20,9 @@ function FlashcardGenerator() {
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const [editingCard, setEditingCard] = useState(null);
+  const [flippedCards, setFlippedCards] = useState({});
+  const [deckName, setDeckName] = useState('');
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -73,28 +76,27 @@ function FlashcardGenerator() {
         throw new Error('Unsupported file type');
       }
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const flashcardStructure = {
-        title: "Tiêu đề chi tiết",
-        summary: "Tóm tắt chi tiết về kiến thức mà người dùng cần học (khoảng 50 từ)",
-        keyPoints: [
-          "Kiến thức cần học 1: Mô tả ngắn gọn(khoảng 30 từ)",
-          "Kiến thức cần học 2: Mô tả ngắn gọn(khoảng 30 từ)",
-          "Kiến thức cần học 3: Mô tả ngắn gọn(khoảng 30 từ)",
-          "Kiến thức cần học 4: Mô tả ngắn gọn(khoảng 30 từ)",
-          "Tùy theo bài dài hay ngắn mà số lượng kiến thức cần học có thể thay đổi"
-        ]
+        flashcards: [
+          {
+            front: "Thuật ngữ 1",
+            back: "Định nghĩa chi tiết 1"
+          }
+          // Có thể có nhiều flashcard
+        ],
+        summary: "Tóm tắt chi tiết về kiến thức mà người dùng cần học (khoảng 50 từ)"
       };
+
       const prompt = `Bạn là một chuyên gia giáo dục có kinh nghiệm trong việc tạo flashcard. 
-      Hãy tạo một flashcard từ văn bản sau đây. 
-      Flashcard nên tóm tắt chi tiết thông tin chính của văn bản để người học có thể dễ dàng học tập.
+      Hãy tạo một bộ flashcard từ văn bản sau đây. 
+      Mỗi flashcard sẽ có mặt trước là thuật ngữ quan trọng và mặt sau là định nghĩa/giải thích chi tiết.
       Nếu là môn hóa thì phải ghi đúng danh pháp quốc tế cho các chất(tiếng anh).
       Lưu ý: Ngôn ngữ phải sử dụng tiếng việt.
-      Flashcard phải ngắn gọn, dễ học.
       Kết quả cần được trả về dưới dạng JSON với cấu trúc sau:
       ${JSON.stringify(flashcardStructure, null, 2)}
       Văn bản: ${extractedText}`;
 
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const generatedText = response.text();
@@ -120,9 +122,8 @@ function FlashcardGenerator() {
 
       // Ensure all properties exist
       flashcard = {
-        title: flashcard.title || 'Không có tiêu đề',
-        summary: flashcard.summary || 'Không có tóm tắt',
-        keyPoints: Array.isArray(flashcard.keyPoints) ? flashcard.keyPoints : []
+        flashcards: Array.isArray(flashcard.flashcards) ? flashcard.flashcards : [],
+        summary: flashcard.summary || 'Không có tóm tắt'
       };
 
       setFlashcards([flashcard]);
@@ -134,23 +135,49 @@ function FlashcardGenerator() {
     }
   };
 
-  const saveFlashcard = async (flashcard) => {
+  const saveFlashcardDeck = async () => {
     if (!user) {
       alert("Vui lòng đăng nhập để lưu flashcard.");
       return;
     }
 
-    try {
-      await addDoc(collection(db, "flashcards"), {
-        ...flashcard,
-        userId: user.uid,
-        createdAt: new Date()
-      });
-      alert("Flashcard đã được lưu thành công!");
-    } catch (error) {
-      console.error("Error saving flashcard:", error);
-      alert("Có lỗi xảy ra khi lưu flashcard. Vui lòng thử lại.");
+    if (!deckName.trim()) {
+      alert("Vui lòng nhập tên cho bộ flashcard.");
+      return;
     }
+
+    try {
+      await addDoc(collection(db, "flashcard_decks"), {
+        name: deckName,
+        summary: flashcards[0].summary,
+        cards: flashcards[0].flashcards,
+        userId: user.uid,
+        createdAt: new Date(),
+        lastModified: new Date()
+      });
+      alert("Bộ flashcard đã được lưu thành công!");
+      setDeckName(''); // Reset tên sau khi lưu
+    } catch (error) {
+      console.error("Error saving flashcard deck:", error);
+      alert("Có lỗi xảy ra khi lưu bộ flashcard. Vui lòng thử lại.");
+    }
+  };
+
+  const handleEditCard = (index, side, value) => {
+    const updatedFlashcards = [...flashcards];
+    if (side === 'front') {
+      updatedFlashcards[0].flashcards[index].front = value;
+    } else {
+      updatedFlashcards[0].flashcards[index].back = value;
+    }
+    setFlashcards(updatedFlashcards);
+  };
+
+  const handleFlip = (index) => {
+    setFlippedCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
   };
 
   return (
@@ -198,25 +225,70 @@ function FlashcardGenerator() {
           </button>
           {flashcards.length > 0 && flashcards[0] && (
             <div className="flashcard-generator-page__flashcard-content">
-              <p>
-                <img src={icon1} alt="Title icon" style={{ marginRight: '5px', width: '24px', height: '24px' }} />
-                <strong style={{ color: '#7b31c9' }}>{flashcards[0].title}</strong>
-              </p>
               <p className="AI-content"><strong>Tóm tắt:</strong> {flashcards[0].summary}</p>
-              <p>
-                <img src={icon2} alt="Key points icon" style={{ marginRight: '5px', width: '24px', height: '24px' }} />
-                <strong style={{ color: '#7b31c9' }}>Điểm chính:</strong>
-              </p>
-              <ul>
-                {flashcards[0].keyPoints.map((point, index) => (
-                  <li key={index} className="AI-content">{point}</li>
+              
+              <div className="deck-name-input">
+                <input
+                  type="text"
+                  value={deckName}
+                  onChange={(e) => setDeckName(e.target.value)}
+                  placeholder="Nhập tên bộ flashcard"
+                  className="deck-name-field"
+                />
+              </div>
+
+              <div className="flashcards-container">
+                {flashcards[0].flashcards.map((card, index) => (
+                  <div className="flashcard" key={index} onClick={() => handleFlip(index)}>
+                    <div className={`flashcard-inner ${flippedCards[index] ? 'is-flipped' : ''}`}>
+                      <div className="flashcard-front">
+                        <h3>Thuật ngữ:</h3>
+                        {editingCard === `${index}-front` ? (
+                          <textarea
+                            value={card.front}
+                            onChange={(e) => handleEditCard(index, 'front', e.target.value)}
+                            onBlur={() => setEditingCard(null)}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                            className="flashcard-edit"
+                          />
+                        ) : (
+                          <p onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCard(`${index}-front`);
+                          }}>{card.front}</p>
+                        )}
+                        <small className="edit-hint">Nhấp để chỉnh sửa</small>
+                      </div>
+                      <div className="flashcard-back">
+                        <h3>Định nghĩa:</h3>
+                        {editingCard === `${index}-back` ? (
+                          <textarea
+                            value={card.back}
+                            onChange={(e) => handleEditCard(index, 'back', e.target.value)}
+                            onBlur={() => setEditingCard(null)}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                            className="flashcard-edit"
+                          />
+                        ) : (
+                          <p onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCard(`${index}-back`);
+                          }}>{card.back}</p>
+                        )}
+                        <small className="edit-hint">Nhấp để chỉnh sửa</small>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
               <button 
                 className="flashcard-generator-page__save-btn" 
-                onClick={() => saveFlashcard(flashcards[0])}
+                onClick={saveFlashcardDeck}
+                disabled={!deckName.trim()}
               >
-                Lưu Flashcard
+                Lưu Bộ Flashcard
               </button>
             </div>
           )}

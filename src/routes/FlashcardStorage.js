@@ -22,7 +22,7 @@ function FlashcardStorage() {
 
   const fetchFlashcards = async (userId) => {
     try {
-      const q = query(collection(db, "flashcards"), where("userId", "==", userId));
+      const q = query(collection(db, "flashcard_decks"), where("userId", "==", userId));
       const querySnapshot = await getDocs(q);
       const fetchedFlashcards = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setFlashcards(fetchedFlashcards);
@@ -44,9 +44,11 @@ function FlashcardStorage() {
           <div className="flashcard-storage__grid">
             {flashcards.map((flashcard) => (
               <div key={flashcard.id} className="flashcard-storage__item">
-                <h3 className="flashcard-storage__item-title">{flashcard.title}</h3>
+                <h3 className="flashcard-storage__item-title">{flashcard.name}</h3>
                 <p className="flashcard-storage__item-summary">{flashcard.summary.substring(0, 100)}...</p>
-                <button className="flashcard-storage__item-button" onClick={() => handleViewDetails(flashcard.id)}>Xem chi tiết</button>
+                <button className="flashcard-storage__item-button" onClick={() => handleViewDetails(flashcard.id)}>
+                  Xem chi tiết
+                </button>
               </div>
             ))}
           </div>
