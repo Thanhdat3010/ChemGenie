@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../components/firebase';
 import "./FlashcardStorage.css";
 import Navbar from '../components/Navbar';
@@ -35,6 +35,18 @@ function FlashcardStorage() {
     navigate(`/flashcard/${flashcardId}`);
   };
 
+  const handleDelete = async (flashcardId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa bộ flashcard này không?')) {
+      try {
+        await deleteDoc(doc(db, "flashcard_decks", flashcardId));
+        // Cập nhật lại danh sách sau khi xóa
+        setFlashcards(flashcards.filter(card => card.id !== flashcardId));
+      } catch (error) {
+        console.error("Error deleting flashcard:", error);
+      }
+    }
+  };
+
   return (
     <div className="flashcard-storage">
       <Navbar />
@@ -45,10 +57,23 @@ function FlashcardStorage() {
             {flashcards.map((flashcard) => (
               <div key={flashcard.id} className="flashcard-storage__item">
                 <h3 className="flashcard-storage__item-title">{flashcard.name}</h3>
-                <p className="flashcard-storage__item-summary">{flashcard.summary.substring(0, 100)}...</p>
-                <button className="flashcard-storage__item-button" onClick={() => handleViewDetails(flashcard.id)}>
-                  Xem chi tiết
-                </button>
+                <p className="flashcard-storage__item-summary">
+                  {flashcard.summary.substring(0, 100)}...
+                </p>
+                <div className="flashcard-storage__item-actions">
+                  <button 
+                    className="flashcard-storage__item-button flashcard-storage__item-button--view"
+                    onClick={() => handleViewDetails(flashcard.id)}
+                  >
+                    Xem chi tiết
+                  </button>
+                  <button 
+                    className="flashcard-storage__item-button flashcard-storage__item-button--delete"
+                    onClick={() => handleDelete(flashcard.id)}
+                  >
+                    Xóa
+                  </button>
+                </div>
               </div>
             ))}
           </div>

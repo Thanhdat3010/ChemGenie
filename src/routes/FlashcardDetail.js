@@ -5,20 +5,23 @@ import { db } from '../components/firebase';
 import Navbar from '../components/Navbar';
 import "./FlashcardDetail.css";
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import flipSound from '../assets/flipSound.mp3'
+import matchSound from '../assets/correctSound.mp3'
+import wrongSound from '../assets/wrongSound.mp3'
+import victorySound from '../assets/victorySound.mp3'
+
+
+
 
 function FlashcardDetail() {
   const [flashcard, setFlashcard] = useState(null);
-  const [studyMode, setStudyMode] = useState('preview'); // preview, flashcard, write, quiz
+  const [studyMode, setStudyMode] = useState('preview'); // preview, flashcard, write, memory
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [randomWord, setRandomWord] = useState(null);
   const [flippedCards, setFlippedCards] = useState({});
-  const [userAnswers, setUserAnswers] = useState({});
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [score, setScore] = useState(0);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
-  const [quizOptions, setQuizOptions] = useState({});
   const [userWrittenAnswer, setUserWrittenAnswer] = useState('');
   const [aiFeedback, setAiFeedback] = useState('');
   const [hintText, setHintText] = useState('');
@@ -32,6 +35,28 @@ function FlashcardDetail() {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [hintLevel, setHintLevel] = useState(0); // 0: chưa xem, 1: gợi ý nhẹ, 2: gợi ý chi tiết
+  const [memoryCards, setMemoryCards] = useState([]);
+  const [flippedIndexes, setFlippedIndexes] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [memoryMoves, setMemoryMoves] = useState(0);
+  const [memoryStartTime, setMemoryStartTime] = useState(null);
+  const [memoryCompleted, setMemoryCompleted] = useState(false);
+  const [difficulty, setDifficulty] = useState(null); // 'easy', 'medium', 'hard'
+  const [gameStarted, setGameStarted] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const sounds = {
+    flip: new Audio(flipSound),
+    match: new Audio(matchSound),
+    wrong: new Audio(wrongSound),
+    victory: new Audio(victorySound)
+  };
+
+  const playSound = (soundName) => {
+    if (isSoundEnabled) {
+      sounds[soundName].currentTime = 0; // Reset sound to start
+      sounds[soundName].play();
+    }
+  };
 
   useEffect(() => {
     const fetchFlashcard = async () => {
@@ -52,16 +77,6 @@ function FlashcardDetail() {
 
     fetchFlashcard();
   }, [id]);
-
-  useEffect(() => {
-    if (flashcard && flashcard.cards) {
-      const options = {};
-      flashcard.cards.forEach((card, index) => {
-        options[index] = generateQuizOptions(card.back);
-      });
-      setQuizOptions(options);
-    }
-  }, [flashcard]);
 
   const handleNextCard = () => {
     setIsFlipped(false);
@@ -84,39 +99,13 @@ function FlashcardDetail() {
     }));
   };
 
-  const handleOptionClick = (questionIndex, selectedAnswer) => {
-    if (!quizCompleted) {
-      setUserAnswers(prev => ({
-        ...prev,
-        [questionIndex]: selectedAnswer
-      }));
+  const shuffleArray = (array) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
     }
-  };
-
-  const areAllQuestionsAnswered = () => {
-    return flashcard.cards.every((_, index) => userAnswers[index] !== undefined);
-  };
-
-  const handleSubmitQuiz = () => {
-    let correctAnswers = 0;
-    flashcard.cards.forEach((card, index) => {
-      if (userAnswers[index] === card.back) {
-        correctAnswers++;
-      }
-    });
-
-    const totalQuestions = flashcard.cards.length;
-    setScore(correctAnswers);
-    setQuizCompleted(true);
-    
-    setNotificationMessage(`Điểm của bạn: ${correctAnswers}/${totalQuestions}`);
-    setShowNotification(true);
-  };
-
-  const calculateScore = (feedback) => {
-    if (feedback.toLowerCase().includes('đúng')) return 10;
-    if (feedback.toLowerCase().includes('gần đúng')) return 5;
-    return 0;
+    return newArray;
   };
 
   const checkAnswerWithAI = async () => {
@@ -206,13 +195,13 @@ function FlashcardDetail() {
             <div className="flashcard-detail__random-word">
               <h3>Từ gợi ý hôm nay:</h3>
               {randomWord && (
-                <div className="flashcard" onClick={() => setIsFlipped(!isFlipped)}>
-                  <div className={`flashcard-inner ${isFlipped ? 'is-flipped' : ''}`}>
-                    <div className="flashcard-front">
+                <div className="flashcard-detail__card" onClick={() => setIsFlipped(!isFlipped)}>
+                  <div className={`flashcard-detail__card-inner ${isFlipped ? 'is-flipped' : ''}`}>
+                    <div className="flashcard-detail__card-front">
                       <h3>Thuật ngữ:</h3>
                       <p>{randomWord.front}</p>
                     </div>
-                    <div className="flashcard-back">
+                    <div className="flashcard-detail__card-back">
                       <h3>Định nghĩa:</h3>
                       <p>{randomWord.back}</p>
                     </div>
@@ -228,14 +217,14 @@ function FlashcardDetail() {
 
       case 'flashcard':
         return (
-          <div className="flashcards-container">
-            <div className="flashcard" onClick={() => handleFlip(currentCardIndex)}>
-              <div className={`flashcard-inner ${flippedCards[currentCardIndex] ? 'is-flipped' : ''}`}>
-                <div className="flashcard-front">
+          <div className="flashcard-detail__flashcards-container">
+            <div className="flashcard-detail__flashcard" onClick={() => handleFlip(currentCardIndex)}>
+              <div className={`flashcard-detail__flashcard-inner ${flippedCards[currentCardIndex] ? 'is-flipped' : ''}`}>
+                <div className="flashcard-detail__flashcard-front">
                   <h3>Thuật ngữ:</h3>
                   <p>{flashcard.cards[currentCardIndex].front}</p>
                 </div>
-                <div className="flashcard-back">
+                <div className="flashcard-detail__flashcard-back">
                   <h3>Định nghĩa:</h3>
                   <p>{flashcard.cards[currentCardIndex].back}</p>
                 </div>
@@ -349,7 +338,7 @@ function FlashcardDetail() {
                 <div className="score-modal-content">
                   <h3>Kết quả luyện tập</h3>
                   <p>Tổng điểm: {writeScore}/{flashcard.cards.length * 10}</p>
-                  <p>Số câu đã làm: {totalAttempts}/{flashcard.cards.length}</p>
+                  <p>Số câu đã lm: {totalAttempts}/{flashcard.cards.length}</p>
                   <button onClick={() => setShowScoreModal(false)}>Đóng</button>
                 </div>
               </div>
@@ -357,61 +346,103 @@ function FlashcardDetail() {
           </div>
         );
 
-      case 'quiz':
+      case 'memory':
         return (
-          <div className="flashcard-detail__quiz-mode">
-            <div className="flashcard-detail__questions-section">
-              {flashcard.cards.map((card, index) => (
-                <div key={index} className="flashcard-detail__question-box">
-                  <h3>Câu {index + 1}</h3>
-                  <p className="flashcard-detail__question-text">{card.front}</p>
-                  <div className="flashcard-detail__options-grid">
-                    {quizOptions[index]?.map((option, optionIndex) => (
-                      <button
-                        key={optionIndex}
-                        className={`flashcard-detail__option-button 
-                          ${userAnswers[index] === option ? 'selected' : ''} 
-                          ${quizCompleted ? 
-                            option === card.back ? 'correct' : // Đáp án đúng
-                            userAnswers[index] === option ? 'incorrect' : '' // Đáp án sai người dùng đã chọn
-                            : ''
-                          }`}
-                        onClick={() => handleOptionClick(index, option)}
-                        disabled={quizCompleted}
-                      >
-                        {String.fromCharCode(65 + optionIndex)}. {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="flashcard-detail__quiz-submit">
-              {!quizCompleted ? (
-                <button
-                  className="flashcard-detail__submit-button"
-                  onClick={handleSubmitQuiz}
-                  disabled={!areAllQuestionsAnswered()}
-                >
-                  Nộp bài
-                </button>
-              ) : (
-                <div className="flashcard-detail__quiz-result">
-                  <h3>Kết quả: {score}/{flashcard.cards.length} câu đúng</h3>
-                  <button
-                    className="flashcard-detail__retry-button"
-                    onClick={() => {
-                      setQuizCompleted(false);
-                      setUserAnswers({});
-                      setScore(0);
-                    }}
+          <div className="flashcard-detail__memory">
+            {!gameStarted ? (
+              <div className="flashcard-detail__memory-menu">
+                <h3>Chọn độ khó</h3>
+                <div className="flashcard-detail__memory-difficulties">
+                  <button 
+                    className="flashcard-detail__memory-difficulty-btn"
+                    onClick={() => initializeMemoryGame('easy')}
                   >
-                    Làm lại
+                    Dễ (4 cặp)
+                  </button>
+                  <button 
+                    className="flashcard-detail__memory-difficulty-btn"
+                    onClick={() => initializeMemoryGame('medium')}
+                  >
+                    Trung bình (6 cặp)
+                  </button>
+                  <button 
+                    className="flashcard-detail__memory-difficulty-btn"
+                    onClick={() => initializeMemoryGame('hard')}
+                  >
+                    Khó (8 cặp)
                   </button>
                 </div>
-              )}
-            </div>
+                <p className="flashcard-detail__memory-instruction">
+                  Chọn độ khó phù hợp với bạn. Càng nhiều cặp thẻ, trò chơi càng thử thách!
+                </p>
+                <div className="flashcard-detail__memory-sound">
+                  <button 
+                    className="flashcard-detail__memory-sound-btn"
+                    onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+                  >
+                    {isSoundEnabled ? '🔊 Tắt âm thanh' : '🔈 Bật âm thanh'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flashcard-detail__memory-stats">
+                  <span>Độ khó: {
+                    difficulty === 'easy' ? 'Dễ' : 
+                    difficulty === 'medium' ? 'Trung bình' : 'Khó'
+                  }</span>
+                  <span>Số lượt: {memoryMoves}</span>
+                  <span>Cặp đã ghép: {matchedPairs.length / 2}</span>
+                  <button 
+                    className="flashcard-detail__memory-restart"
+                    onClick={() => setGameStarted(false)}
+                  >
+                    Chơi lại
+                  </button>
+                  <button 
+                    className="flashcard-detail__memory-sound-btn"
+                    onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+                  >
+                    {isSoundEnabled ? '🔊' : '🔈'}
+                  </button>
+                </div>
+                <div className="flashcard-detail__memory-grid">
+                  {memoryCards.map((card, index) => (
+                    <div
+                      key={card.id}
+                      className={`flashcard-detail__memory-card ${
+                        flippedIndexes.includes(index) || matchedPairs.includes(index)
+                          ? 'is-flipped'
+                          : ''
+                      } ${matchedPairs.includes(index) ? 'is-matched' : ''}`}
+                      onClick={() => handleMemoryCardClick(index)}
+                    >
+                      <div className="flashcard-detail__memory-card-inner">
+                        <div className="flashcard-detail__memory-card-front">?</div>
+                        <div className="flashcard-detail__memory-card-back">{card.content}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {memoryCompleted && (
+                  <div className="flashcard-detail__memory-complete">
+                    <h3>Chúc mừng! Bạn đã hoàn thành!</h3>
+                    <p>Độ khó: {
+                      difficulty === 'easy' ? 'Dễ' : 
+                      difficulty === 'medium' ? 'Trung bình' : 'Khó'
+                    }</p>
+                    <p>Số lượt: {memoryMoves}</p>
+                    <p>Thời gian: {Math.floor((Date.now() - memoryStartTime) / 1000)} giây</p>
+                    <button 
+                      className="flashcard-detail__memory-restart"
+                      onClick={() => setGameStarted(false)}
+                    >
+                      Chơi lại
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         );
 
@@ -420,20 +451,98 @@ function FlashcardDetail() {
     }
   };
 
-  // Hàm tạo các lựa chọn cho chế độ quiz
-  const generateQuizOptions = (correctAnswer) => {
-    const options = [correctAnswer];
-    const otherCards = flashcard.cards.filter(card => card.back !== correctAnswer);
+  // Thêm hàm khởi tạo trò chơi memory
+  const initializeMemoryGame = (selectedDifficulty) => {
+    if (!flashcard?.cards) return;
     
-    // Chọn ngẫu nhiên 3 đáp án khác
-    for (let i = 0; i < 3 && otherCards.length > 0; i++) {
-      const randomIndex = Math.floor(Math.random() * otherCards.length);
-      options.push(otherCards[randomIndex].back);
-      otherCards.splice(randomIndex, 1);
+    // Xác định số cặp thẻ dựa theo độ khó
+    let numberOfPairs;
+    switch (selectedDifficulty) {
+      case 'easy':
+        numberOfPairs = 4; // 8 thẻ
+        break;
+      case 'medium':
+        numberOfPairs = 6; // 12 thẻ
+        break;
+      case 'hard':
+        numberOfPairs = 8; // 16 thẻ
+        break;
+      default:
+        return;
     }
 
-    // Trộn ngẫu nhiên các đáp án và trả về
-    return options.sort(() => Math.random() - 0.5);
+    // Lấy ngẫu nhiên số cặp thẻ theo độ khó
+    const randomCards = shuffleArray([...flashcard.cards])
+      .slice(0, numberOfPairs)
+      .map((card, index) => [
+        { id: `term-${index}`, content: card.front, type: 'term' },
+        { id: `def-${index}`, content: card.back, type: 'definition' }
+      ]).flat();
+    
+    setMemoryCards(shuffleArray([...randomCards]));
+    setFlippedIndexes([]);
+    setMatchedPairs([]);
+    setMemoryMoves(0);
+    setMemoryStartTime(Date.now());
+    setMemoryCompleted(false);
+    setDifficulty(selectedDifficulty);
+    setGameStarted(true);
+  };
+
+  // Thêm hàm xử lý lật thẻ trong memory game
+  const handleMemoryCardClick = (index) => {
+    if (flippedIndexes.length === 2 || flippedIndexes.includes(index) || matchedPairs.includes(index)) {
+      return;
+    }
+
+    playSound('flip'); // Phát âm thanh lật thẻ
+
+    const newFlipped = [...flippedIndexes, index];
+    setFlippedIndexes(newFlipped);
+
+    if (newFlipped.length === 2) {
+      setMemoryMoves(prev => prev + 1);
+      const [firstIndex, secondIndex] = newFlipped;
+      const firstCard = memoryCards[firstIndex];
+      const secondCard = memoryCards[secondIndex];
+
+      if (
+        firstCard.type !== secondCard.type &&
+        ((firstCard.type === 'term' && secondCard.type === 'definition') || 
+         (firstCard.type === 'definition' && secondCard.type === 'term')) &&
+        firstCard.id.split('-')[1] === secondCard.id.split('-')[1]
+      ) {
+        // Ghép đúng
+        setTimeout(() => {
+          playSound('match');
+          setMatchedPairs([...matchedPairs, firstIndex, secondIndex]);
+          setFlippedIndexes([]);
+          
+          // Kiểm tra chiến thắng
+          if (matchedPairs.length + 2 === memoryCards.length) {
+            setTimeout(() => {
+              playSound('victory');
+              setMemoryCompleted(true);
+            }, 500);
+          }
+        }, 500);
+      } else {
+        // Ghép sai
+        setTimeout(() => {
+          playSound('wrong');
+          setFlippedIndexes([]);
+        }, 1000);
+      }
+    }
+  };
+
+  const calculateScore = (feedback) => {
+    // Tìm dòng chứa [Điểm số]:
+    const scoreMatch = feedback.match(/\[Điểm số\]:\s*(\d+)/);
+    if (scoreMatch && scoreMatch[1]) {
+      return parseInt(scoreMatch[1]);
+    }
+    return 0;
   };
 
   if (!flashcard) {
@@ -465,10 +574,10 @@ function FlashcardDetail() {
             Luyện viết
           </button>
           <button 
-            onClick={() => setStudyMode('quiz')}
-            className={`flashcard-detail__mode-btn ${studyMode === 'quiz' ? 'active' : ''}`}
+            onClick={() => setStudyMode('memory')}
+            className={`flashcard-detail__mode-btn ${studyMode === 'memory' ? 'active' : ''}`}
           >
-            Trắc nghiệm
+            Trò chơi trí nhớ
           </button>
         </div>
         <div className="flashcard-detail__content">
@@ -480,3 +589,4 @@ function FlashcardDetail() {
 }
 
 export default FlashcardDetail;
+

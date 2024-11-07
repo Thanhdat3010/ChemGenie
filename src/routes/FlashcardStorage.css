@@ -1,57 +1,109 @@
 .flashcard-storage {
-  padding: 20px;
+  padding: 2rem;
   margin-top: 120px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.flashcard-storage__content {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .flashcard-storage__title {
   text-align: center;
-  color: #7b31c9;
-  margin-bottom: 20px;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 600;
 }
 
 .flashcard-storage__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
 }
 
 .flashcard-storage__item {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 15px;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 200px;
+  height: 250px;
+}
+
+.flashcard-storage__item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 
 .flashcard-storage__item-title {
-  color: #7b31c9;
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.2em;
+  color: var(--primary-color);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-right: 2rem; /* Để tránh chồng lên nút xóa */
 }
 
 .flashcard-storage__item-summary {
-  font-size: 0.9em;
-  color: #333;
-  margin-bottom: 10px;
+  color: var(--text-color);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
   flex-grow: 1;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.flashcard-storage__item-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
 }
 
 .flashcard-storage__item-button {
-  background-color: #7b31c9;
-  color: white;
+  flex: 1;
+  padding: 0.75rem 1rem;
   border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
 }
 
-.flashcard-storage__item-button:hover {
-  background-color: #6422a6;
+.flashcard-storage__item-button--view {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.flashcard-storage__item-button--view:hover {
+  background-color: var(--secondary-color);
+}
+
+.flashcard-storage__item-button--delete {
+  background-color: #dc3545;
+  color: white;
+}
+
+.flashcard-storage__item-button--delete:hover {
+  background-color: #c82333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .flashcard-storage__grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .flashcard-storage__item {
+    height: auto;
+    min-height: 200px;
+  }
 }
