@@ -11,10 +11,7 @@ const Chatbot = () => {
   const [input, setInput] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
   const [userName, setUserName] = useState('');
-  const [isCameraOn, setIsCameraOn] = useState(false);
   const messagesEndRef = useRef(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
 
   const chatbotAvatar = logo;
 
@@ -65,46 +62,6 @@ const Chatbot = () => {
     sendInitialMessage();
   }, []);
 
-  const toggleCamera = async () => {
-    if (!isCameraOn) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        videoRef.current.srcObject = stream;
-        setIsCameraOn(true);
-      } catch (err) {
-        console.error("Error accessing the camera:", err);
-      }
-    } else {
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setIsCameraOn(false);
-    }
-  };
-
-  const captureImage = () => {
-    if (!isCameraOn || !videoRef.current || !canvasRef.current) {
-      console.error("Camera is not on or refs are not available");
-      return null;
-    }
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    return new Promise(resolve => {
-      canvas.toBlob(blob => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          console.error("Failed to create blob from canvas");
-          resolve(null);
-        }
-      }, 'image/jpeg');
-    });
-  };
-
   const sendMessage = async () => {
     if (input.trim() === '') return;
 
@@ -117,56 +74,21 @@ const Chatbot = () => {
       const formData = new FormData();
       formData.append('message', input);
 
-      if (isCameraOn) {
-        const imageBlob = await captureImage();
-        if (imageBlob) {
-          formData.append('image', imageBlob, 'user_image.jpg');
-          console.log("Image blob appended to form data");
-        } else {
-          console.error("Failed to capture image");
-        }
-      }
-
-      console.log("Sending request to server...");
       const response = await axios.post('http://127.0.0.1:5000/chat', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log("Received response from server:", response.data);
 
       const botMessage = { 
         sender: 'bot', 
         text: response.data.response.replace(/\*/g, ''), 
-        avatar: chatbotAvatar,
-        emotion: translateEmotion(response.data.detected_emotion) 
+        avatar: chatbotAvatar
       };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
-
-      console.log("Detected emotion:", response.data.detected_emotion);
     } catch (error) {
       console.error('Error sending message:', error);
-      if (error.response) {
-        console.error("Server responded with error:", error.response.data);
-        console.error("Status code:", error.response.status);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-      } else {
-        console.error("Error setting up request:", error.message);
-      }
     }
-  };
-
-  const translateEmotion = (emotion) => {
-    const emotionTranslations = {
-      "happy": "vui vẻ",
-      "sad": "buồn",
-      "angry": "tức giận",
-      "surprise": "ngạc nhiên",
-      "neutral": "bình thường",
-      "fear": "sợ hãi",
-    };
-    return emotionTranslations[emotion.toLowerCase()] || emotion;
   };
 
   return (
@@ -185,7 +107,6 @@ const Chatbot = () => {
               <div className="message-content">
                 <div className="name">{msg.sender === 'bot' ? 'Chatbot AI' : msg.name}</div>
                 <div className="text">{msg.text}</div>
-                {msg.emotion && <div className="emotion">Cảm xúc của bạn: {msg.emotion}</div>}
               </div>
             </div>
           ))}
@@ -204,11 +125,6 @@ const Chatbot = () => {
           />
           <button onClick={sendMessage}>Gửi</button>
         </div>
-      </div>
-      <div className="camera-container">
-        <video ref={videoRef} autoPlay style={{ display: isCameraOn ? 'block' : 'none' }} />
-        <canvas ref={canvasRef} style={{ display: 'none' }} />
-        <button onClick={toggleCamera}>{isCameraOn ? 'Tắt Camera' : 'Bật Camera'}</button>
       </div>
     </div>
   );
