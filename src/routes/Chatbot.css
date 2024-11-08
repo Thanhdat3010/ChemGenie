@@ -72,7 +72,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 15px 20px;
-  background-color: #f0f0f0;
+  background-color: #fff;
   border-top: 1px solid #ccc;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -80,7 +80,7 @@
 .chatbot-input input {
   flex: 1;
   padding: 12px;
-  border: none;
+  border: 1px solid #c0c0c0;
   border-radius: 24px;
   margin-right: 15px;
   outline: none;
@@ -94,18 +94,19 @@
 
 .chatbot-input button {
   padding: 12px 24px;
-  background-color: #007bff;
+  background-color: transparent;
   color: white;
   border: none;
-  border-radius: 24px;
   cursor: pointer;
   outline: none;
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
-.chatbot-input button:hover {
-  background-color: #0056b3;
+.chatbot-input button img {
+  width: 25px;
+  height: 25px;
 }
+
 
 .chatbot-input button:active {
   transform: scale(0.98);
@@ -156,4 +157,66 @@
   font-style: italic;
   color: #666;
   margin-top: 5px;
+}
+
+/* Hiệu ứng loading cho avatar của bot */
+.loading {
+  animation: spin 1s linear infinite; /* Xoay liên tục */
+}
+
+/* Định nghĩa keyframes cho hiệu ứng xoay */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Bắt đầu từ 0 độ */
+  }
+  100% {
+    transform: rotate(360deg); /* Kết thúc ở 360 độ */
+  }
+}
+
+/* Bạn có thể thêm các kiểu dáng khác cho avatar nếu cần */
+.avatar {
+  width: 50px; /* Kích thước của avatar */
+  height: 50px; /* Kích thước của avatar */
+  border-radius: 50%; /* Làm tròn avatar */
+  /* Thêm các kiểu dáng khác nếu cần */
+}
+
+.loading-message {
+  text-align: left;
+}
+
+/* Định nghĩa kiểu dáng cho loading spinner */
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3); /* Màu sắc và độ dày của viền */
+  border-top: 4px solid #ffffff; /* Màu sắc của phần trên cùng */
+  border-radius: 50%; /* Làm tròn spinner */
+  width: 30px; /* Đường kính của spinner */
+  height: 30px; /* Đường kính của spinner */
+  animation: spin 1s linear infinite; /* Hiệu ứng xoay liên tục */
+}
+
+/* Định nghĩa keyframes cho hiệu ứng xoay */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Bắt đầu từ 0 độ */
+  }
+  100% {
+    transform: rotate(360deg); /* Kết thúc ở 360 độ */
+  }
+}
+
+/* Hiệu ứng ẩn hiện cho dòng chữ loading */
+.loading-text {
+  animation: fade 1.5s infinite; /* Hiệu ứng ẩn hiện liên tục */
+}
+
+/* Định nghĩa keyframes cho hiệu ứng ẩn hiện */
+@keyframes fade {
+  0%, 100% {
+    opacity: 0; /* Ẩn */
+  }
+  50% {
+    opacity: 1; /* Hiện */
+  }
 }

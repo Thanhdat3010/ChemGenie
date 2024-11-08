@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './Chatbot.css';
-import logo from "../assets/logo.png"
+import logo from "../assets/genai.png"
+import send from "../assets/send.png"
 import { auth, db } from '../components/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Navbar from '../components/Navbar';
@@ -12,6 +13,8 @@ const Chatbot = () => {
   const [userAvatar, setUserAvatar] = useState('');
   const [userName, setUserName] = useState('');
   const messagesEndRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingTime, setLoadingTime] = useState(0);
 
   const chatbotAvatar = logo;
 
@@ -70,6 +73,12 @@ const Chatbot = () => {
 
     setInput('');
 
+    setLoading(true);
+    setLoadingTime(0);
+    const loadingInterval = setInterval(() => {
+      setLoadingTime((prev) => prev + 1);
+    }, 1000);
+
     try {
       const formData = new FormData();
       formData.append('message', input);
@@ -80,13 +89,25 @@ const Chatbot = () => {
         }
       });
 
-      const botMessage = { 
-        sender: 'bot', 
-        text: response.data.response.replace(/\*/g, ''), 
-        avatar: chatbotAvatar
-      };
+      clearInterval(loadingInterval);
+      setLoading(false);
+
+      const botMessageText = response.data.response.replace(/\*/g, '');
+      const botMessage = { sender: 'bot', text: '', avatar: chatbotAvatar };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
+
+      for (let i = 0; i < botMessageText.length; i++) {
+        setTimeout(() => {
+          setMessages((prevMessages) => {
+            const updatedMessages = [...prevMessages];
+            updatedMessages[updatedMessages.length - 1].text += botMessageText[i];
+            return updatedMessages;
+          });
+        }, i * 30);
+      }
     } catch (error) {
+      clearInterval(loadingInterval);
+      setLoading(false);
       console.error('Error sending message:', error);
     }
   };
@@ -99,7 +120,11 @@ const Chatbot = () => {
           {messages.map((msg, index) => (
             <div key={index} className={`message ${msg.sender === 'user' ? 'user-message' : 'bot-message'}`}>
               {msg.sender === 'bot' && (
-                <img src={msg.avatar || chatbotAvatar} alt="Bot Avatar" className="avatar" />
+                <img 
+                  src={msg.avatar || chatbotAvatar} 
+                  alt="Bot Avatar" 
+                  className={`avatar ${loading && index === messages.length - 1 ? 'loading' : ''}`}
+                />
               )}
               {msg.sender === 'user' && (
                 <img src={msg.avatar || userAvatar} alt="User Avatar" className="avatar" />
@@ -110,6 +135,12 @@ const Chatbot = () => {
               </div>
             </div>
           ))}
+          {loading && (
+            <div className="loading-message">
+              <div className="spinner"></div>
+              <p className="loading-text">Đang truy vấn... {loadingTime} giây</p>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
         <div className="chatbot-input">
@@ -122,9 +153,13 @@ const Chatbot = () => {
                 sendMessage();
               }
             }}
+            placeholder="Nhập câu hỏi của bạn tại đây..."
           />
-          <button onClick={sendMessage}>Gửi</button>
+          <button onClick={sendMessage}>
+            <img src={send} alt="Send" />
+          </button>
         </div>
+        <p>Lưu ý: Đôi lúc, Chemgenie bot có thể vẫn đưa ra câu trả lời không chính xác. Do đó, bạn nên xác nhận mọi dữ kiện một cách độc lập.</p>
       </div>
     </div>
   );
