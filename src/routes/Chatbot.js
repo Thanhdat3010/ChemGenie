@@ -15,6 +15,7 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [loadingTime, setLoadingTime] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
 
   const chatbotAvatar = logo;
 
@@ -66,7 +67,7 @@ const Chatbot = () => {
   }, []);
 
   const sendMessage = async () => {
-    if (input.trim() === '') return;
+    if (input.trim() === '' || loading || isTyping) return;
 
     const userMessage = { sender: 'user', text: input, avatar: userAvatar, name: userName };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
@@ -96,6 +97,7 @@ const Chatbot = () => {
       const botMessage = { sender: 'bot', text: '', avatar: chatbotAvatar };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
 
+      setIsTyping(true);
       for (let i = 0; i < botMessageText.length; i++) {
         setTimeout(() => {
           setMessages((prevMessages) => {
@@ -103,12 +105,16 @@ const Chatbot = () => {
             updatedMessages[updatedMessages.length - 1].text += botMessageText[i];
             return updatedMessages;
           });
+          if (i === botMessageText.length - 1) {
+            setIsTyping(false);
+          }
         }, i * 30);
       }
     } catch (error) {
       clearInterval(loadingInterval);
       setLoading(false);
       console.error('Error sending message:', error);
+      setIsTyping(false);
     }
   };
 
@@ -149,13 +155,14 @@ const Chatbot = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === 'Enter' && !loading && !isTyping) {
                 sendMessage();
               }
             }}
             placeholder="Nhập câu hỏi của bạn tại đây..."
+            disabled={loading || isTyping}
           />
-          <button onClick={sendMessage}>
+          <button onClick={sendMessage} disabled={loading || isTyping}>
             <img src={send} alt="Send" />
           </button>
         </div>

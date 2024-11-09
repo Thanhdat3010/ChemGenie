@@ -15,7 +15,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [teacherNumTrueFalse, setTeacherNumTrueFalse] = useState();
   const [differentiationLevel, setDifferentiationLevel] = useState('medium');
   const [mainTitle, setMainTitle] = useState('Trường THPT Nguyễn Chí Thanh');
-  const [subTitle, setSubTitle] = useState('ĐỀ KIỂM TRA 15 PHÚT');
+  const [subTitle, setSubTitle] = useState('Đề kiểm tra hệ số 1');
   const [subject, setSubject] = useState('HÓA HỌC');
   const [examTime, setExamTime] = useState('15 phút');
   const [loading, setLoading] = useState(false);
@@ -624,7 +624,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
               }),
               new Paragraph({
                 children: [
-                  new TextRun({ text: `Đáp ��n: `, bold: true }),
+                  new TextRun({ text: `Đáp án: `, bold: true }),
                 ],
                 alignment: AlignmentType.LEFT,
               }),
