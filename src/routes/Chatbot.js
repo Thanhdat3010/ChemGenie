@@ -44,26 +44,6 @@ const Chatbot = () => {
     };
 
     fetchUserData();
-
-    const sendInitialMessage = async () => {
-      try {
-        const formData = new FormData();
-        formData.append('message', 'Xin chào');
-
-        const response = await axios.post('http://127.0.0.1:5000/chat', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-
-        const botMessage = { sender: 'bot', text: response.data.response.replace(/\*/g, ''), avatar: chatbotAvatar };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-      } catch (error) {
-        console.error('Error sending initial message:', error);
-      }
-    };
-
-    sendInitialMessage();
   }, []);
 
   const sendMessage = async () => {

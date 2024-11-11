@@ -324,7 +324,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp;
       3. Chỉ sử dụng văn bản thuần túy (plain text)
       4. Với các công thức hóa học:
-       - Viết chỉ số dưới bằng ký tự Unicode tr���c tiếp (ví dụ: H₂O, CO₂)
+       - Viết chỉ số dưới bằng ký tự Unicode trực tiếp (ví dụ: H₂O, CO₂)
        - Sử dụng ký tự → cho mũi tên phản ứng
        - Sử dụng dấu ⇌ cho phản ứng thuận nghịch
       5. Với các đơn vị đo:
