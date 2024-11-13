@@ -73,7 +73,13 @@ const Chatbot = () => {
       clearInterval(loadingInterval);
       setLoading(false);
 
-      const botMessageText = response.data.response.replace(/\*/g, '');
+      const botMessageText = response.data.response
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Xử lý in đậm
+        .replace(/\*/g, '')
+        .replace(/##\s*(.*?)(?=\n|$)/g, '<strong>$1</strong>') // Chuyển ## thành in đậm
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
       const botMessage = { sender: 'bot', text: '', avatar: chatbotAvatar };
       setMessages((prevMessages) => [...prevMessages, botMessage]);
 
@@ -117,7 +123,11 @@ const Chatbot = () => {
               )}
               <div className="message-content">
                 <div className="name">{msg.sender === 'bot' ? 'Chatbot AI' : msg.name}</div>
-                <div className="text">{msg.text}</div>
+                <div 
+                className="text" 
+                style={{ whiteSpace: 'pre-wrap' }}
+                dangerouslySetInnerHTML={{ __html: msg.text }}
+              />
               </div>
             </div>
           ))}
