@@ -11,8 +11,9 @@ import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
 import icon1 from '../assets/clipboard-list-check.png';
 import icon2 from '../assets/magic-wand.png';
+import { API_KEY } from '../config';
 
-const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 function FlashcardGenerator() {
   const [file, setFile] = useState(null);

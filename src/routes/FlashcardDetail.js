@@ -9,7 +9,7 @@ import flipSound from '../assets/flipSound.mp3'
 import matchSound from '../assets/correctSound.mp3'
 import wrongSound from '../assets/wrongSound.mp3'
 import victorySound from '../assets/victorySound.mp3'
-
+import { API_KEY } from '../config';
 
 
 
@@ -26,7 +26,7 @@ function FlashcardDetail() {
   const [aiFeedback, setAiFeedback] = useState('');
   const [hintText, setHintText] = useState('');
   const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
-  const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+  const genAI = new GoogleGenerativeAI(API_KEY);
   const { id } = useParams();
   const navigate = useNavigate();
   const [writeScore, setWriteScore] = useState(0);

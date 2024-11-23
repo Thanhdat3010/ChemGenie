@@ -8,7 +8,7 @@ import { Document, Packer, Paragraph, TextRun,  AlignmentType, TabStopPosition, 
 import { saveAs } from 'file-saver';
 import magic from "../assets/magic-dust.png";
 import './TeacherQuizCreator.css';
-
+import { API_KEY } from '../config';
 const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [teacherFiles, setTeacherFiles] = useState([]);
   const [teacherNumMultipleChoice, setTeacherNumMultipleChoice] = useState();
@@ -35,7 +35,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [editingData, setEditingData] = useState(null);
 
-  const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+  const genAI = new GoogleGenerativeAI(API_KEY);
   // AIzaSyBc1fHj2tGSwmVraM39ZXzFjvy_qubMct8 API dự phòng
   const handleTeacherFileUpload = (event) => {
     const newFiles = Array.from(event.target.files);

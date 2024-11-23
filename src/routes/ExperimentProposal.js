@@ -4,12 +4,12 @@ import './ExperimentProposal.css';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
-
+import { API_KEY } from '../config';
 const ExperimentProposal = () => {
     const [phenomenon, setPhenomenon] = useState('');
     const [proposal, setProposal] = useState('');
     const [loading, setLoading] = useState(false);
-    const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+    const genAI = new GoogleGenerativeAI(API_KEY);
 
     const handleGenerateProposal = async () => {
         if (!phenomenon.trim()) {

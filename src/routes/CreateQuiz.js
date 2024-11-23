@@ -8,6 +8,7 @@ import Footer from '../components/Footer';
 import magic from "../assets/magic-dust.png";
 import { Tabs, Tab } from 'react-bootstrap';
 import TeacherQuizCreator from './TeacherQuizCreator';
+import { API_KEY } from '../config';
 const CreateQuiz = () => {
   const initialQuestionState = {
     type: 'multiple-choice',
@@ -25,7 +26,8 @@ const CreateQuiz = () => {
   const [grade, setGrade] = useState('');
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
-  const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+  const genAI = new GoogleGenerativeAI(API_KEY);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('student');
   const [questionTypes, setQuestionTypes] = useState({

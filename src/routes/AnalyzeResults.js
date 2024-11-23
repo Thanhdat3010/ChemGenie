@@ -10,7 +10,7 @@ import icon4 from "../assets/magic-dust.png";
 import icon1 from '../assets/clipboard-list-check.png';
 import icon2 from '../assets/magic-wand.png';
 import icon3 from '../assets/highlighter.png';
-
+import { API_KEY } from '../config';
 
 
 const AnalyzeResults = () => {
@@ -20,7 +20,7 @@ const AnalyzeResults = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedType, setSelectedType] = useState('chapter');
   const [selectedItem, setSelectedItem] = useState('');
-  const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+  const genAI = new GoogleGenerativeAI(API_KEY);
   useEffect(() => {
     const fetchChapters = async () => {
       try {
@@ -164,7 +164,7 @@ const AnalyzeResults = () => {
         `;
       }).join('\n\n')}
       
-      Với vai trò là một chuyên gia phân tích giáo dục, hãy đánh giá chi tiết theo các mục sau:
+      Với vai trò là một chuyên gia phân tích giáo dục, hãy đánh giá chi tiết theo các mục sau bằng tiếng Việt:
 
       1. Phân tích kết quả:
       - Thống kê chi tiết số câu trả lời đúng và sai

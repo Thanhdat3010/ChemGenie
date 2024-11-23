@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import magic from "../assets/magic-dust.png";
 import { SwapOutlined } from '@ant-design/icons';
-
+import { API_KEY } from '../config';
 function IUPACPronunciationGame() {
   const [currentCompound, setCurrentCompound] = useState(null);
   const [isListening, setIsListening] = useState(false);
@@ -17,7 +17,7 @@ function IUPACPronunciationGame() {
   const [isVisuallyImpairedMode, setIsVisuallyImpairedMode] = useState(false);
   const [hasWelcomed, setHasWelcomed] = useState(false);
 
-  const genAI = new GoogleGenerativeAI("AIzaSyB3QUai2Ebio9MRYYtkR5H21hRlYFuHXKQ");
+  const genAI = new GoogleGenerativeAI(API_KEY);
 
   useEffect(() => {
     if (!hasWelcomed) {
