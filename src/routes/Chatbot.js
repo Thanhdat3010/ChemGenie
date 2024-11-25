@@ -94,7 +94,7 @@ const Chatbot = () => {
           if (i === botMessageText.length - 1) {
             setIsTyping(false);
           }
-        }, i * 30);
+        }, i * 5);
       }
     } catch (error) {
       clearInterval(loadingInterval);

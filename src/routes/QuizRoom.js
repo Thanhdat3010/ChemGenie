@@ -23,6 +23,9 @@ const QuizRoom = () => {
   // Thêm state leaderboard
   const [leaderboard, setLeaderboard] = useState([]);
 
+  // Thêm state mới ở đầu component
+  const [detailedAnswers, setDetailedAnswers] = useState([]);
+
   // Thêm hàm fetchLeaderboard
   const fetchLeaderboard = useCallback(async () => {
     try {
@@ -165,7 +168,7 @@ const QuizRoom = () => {
 
       // Tính điểm thô theo thang chuẩn
       let rawScore = 0;
-      const detailedAnswers = questions.map((question, index) => {
+      const detailedResults = questions.map((question, index) => {
         const userAnswer = finalUserAnswers[index];
         const correctAnswer = question.correctAnswer;
         let isCorrect = false;
@@ -188,6 +191,7 @@ const QuizRoom = () => {
                            correctCount === 3 ? 0.5 :
                            correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
           }
+          isCorrect = questionScore === STANDARD_STRUCTURE[question.type].points;
         } 
         else if (question.type === 'short-answer') {
           isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
@@ -221,13 +225,16 @@ const QuizRoom = () => {
         rawScore: rawScore,
         maxPossibleScore: maxPossibleScore,
         finalScore: totalScore,
-        detailedScores: detailedAnswers.map((a, i) => ({
+        detailedScores: detailedResults.map((a, i) => ({
           question: i + 1,
           type: a.questionType,
           rawScore: a.score,
           adjustedScore: (a.score * 10) / maxPossibleScore
         }))
       });
+
+      // Lưu detailed answers vào state
+      setDetailedAnswers(detailedResults);
 
       // Batch write để đảm bảo tính nhất quán của dữ liệu
       const batch = writeBatch(db);
@@ -240,7 +247,7 @@ const QuizRoom = () => {
         quizId: quizId,
         roomId: roomId,
         score: totalScore,
-        detailedAnswers: detailedAnswers,
+        detailedAnswers: detailedResults,  // Sử dụng detailed results ở đây
         submittedAt: serverTimestamp(),
         timeSpent: timeLimit * 60 - remainingTime
       });
@@ -360,7 +367,7 @@ const QuizRoom = () => {
       <div className="quiz-room-page">
         <div className="quiz-result">
           <h2>Kết quả</h2>
-          <p>Điểm số của bạn: {score}/10</p>
+          <p className="final-score">Điểm số của bạn: {score}/10</p>
           
           <div className="leaderboard-container">
             <h3>Bảng xếp hạng</h3>
@@ -381,6 +388,83 @@ const QuizRoom = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="quiz-review-section">
+            <h3>Chi tiết bài làm</h3>
+            {questions.map((question, index) => {
+              const detail = detailedAnswers[index];
+              return (
+                <div key={index} className={`quiz-review-item ${detail.isCorrect ? 'correct' : 'incorrect'}`}>
+                  <div className="quiz-review-header">
+                    <h4>Câu {index + 1}</h4>
+                    <span className={`quiz-status-badge ${detail.isCorrect ? 'correct' : 'incorrect'}`}>
+                      {detail.isCorrect ? 'Đúng' : 'Sai'}
+                    </span>
+                  </div>
+
+                  <p className="question-text">{question.question}</p>
+
+                  {question.type === 'multiple-choice' && (
+                    <div className="quiz-review-options">
+                      {question.options.map((option, optIndex) => (
+                        <div
+                          key={optIndex}
+                          className={`quiz-review-option 
+                            ${detail.userAnswer === option ? 'user-selected' : ''}
+                            ${detail.correctAnswer === option ? 'correct-answer' : ''}`}
+                        >
+                          {String.fromCharCode(65 + optIndex)}. {option}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === 'true-false' && (
+                    <div className="quiz-review-true-false">
+                      {question.options.map((option, optIndex) => (
+                        <div key={optIndex} className="quiz-review-tf-item">
+                          <span className="quiz-option-text">{option}</span>
+                          <div className={`quiz-review-answer ${
+                            detail.userAnswer[optIndex] === detail.correctAnswer[optIndex] 
+                              ? 'correct' 
+                              : 'incorrect'
+                          }`}>
+                            <div className="quiz-user-answer">
+                              <span className="quiz-answer-label">Bạn chọn:</span>
+                              {detail.userAnswer[optIndex] || 'Không chọn'}
+                            </div>
+                            <div className="quiz-correct-answer">
+                              <span className="quiz-answer-label">Đáp án đúng:</span>
+                              {detail.correctAnswer[optIndex]}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {question.type === 'short-answer' && (
+                    <div className="quiz-review-answer-box">
+                      <div className={`quiz-review-answer ${detail.isCorrect ? 'correct' : 'incorrect'}`}>
+                        <div className="quiz-user-answer">
+                          <span className="quiz-answer-label">Bạn chọn:</span>
+                          {detail.userAnswer || 'Không có câu trả lời'}
+                        </div>
+                        <div className="quiz-correct-answer">
+                          <span className="quiz-answer-label">Đáp án đúng:</span>
+                          {detail.correctAnswer}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="quiz-question-score">
+                    Điểm: {detail.score}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <button onClick={handleReturnHome} className="home-button">
