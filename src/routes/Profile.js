@@ -9,7 +9,6 @@ import { debounce } from 'lodash';
 import "./Profile.css";
 import MyPost from '../Blog/MyPost';
 import { AiOutlineMenu } from 'react-icons/ai'; // For sidebar toggle icon
-
 const Profile = () => {
   const navigate = useNavigate;
   const { background, setBackground } = useContext(BackgroundContext);
@@ -253,7 +252,12 @@ const Profile = () => {
           ))}
         </div>
           )}
-          {activeTab === 'Lịch sử bài học' && <div>Lịch sử bài học content</div>}
+          {activeTab === 'Lịch sử bài học' &&
+           <div>
+           <Link className='Profile-link' to="/DatasetCreator">
+            LLM
+          </Link>
+           </div>}
           {activeTab === 'Bộ câu hỏi' && 
           <div>
           <Link className='Profile-link' to="/CustomQuiz">
