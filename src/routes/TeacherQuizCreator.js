@@ -4,11 +4,10 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../components/firebase';
 
 import mammoth from 'mammoth';
-import { Document, Packer, Paragraph, TextRun,  AlignmentType, TabStopPosition, TabStopType } from 'docx';
-import { saveAs } from 'file-saver';
 import magic from "../assets/magic-dust.png";
 import './TeacherQuizCreator.css';
 import { API_KEY } from '../config';
+import { generateWordDocument, generateAnswerDocument } from './generateWordDocument';
 const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
   const [teacherFiles, setTeacherFiles] = useState([]);
   const [teacherNumMultipleChoice, setTeacherNumMultipleChoice] = useState();
@@ -110,9 +109,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       return newTypes;
     });
   };
-  const handleDeleteQuestion = (index) => {
-    setQuestions(prevQuestions => prevQuestions.filter((_, i) => i !== index));
-  };
+
   const supplementMissingQuestions = async (existingQuestions, targetCounts, originalText, difficultyDistribution) => {
     const currentCounts = {
       'multiple-choice': existingQuestions.filter(q => q.type === 'multiple-choice').length,
@@ -147,6 +144,39 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
 
     Hiện tại đã có các câu hỏi: ${JSON.stringify(existingQuestions)}
 
+    CHUẨN NĂNG LỰC CẦN ĐÁNH GIÁ (GDPT 2018):
+    ${COMPETENCY_STANDARDS}
+
+   Lưu ý QUAN TRỌNG về phân bổ năng lực:
+        1. Phải đảm bảo sử dụng đều các nhóm năng lực (HH1, HH2, HH3)
+        2. Trong mỗi nhóm, cần phân bổ đều các năng lực con
+        3. Tỷ lệ phân bổ các nhóm năng lực:
+           - Nhóm HH1 (Nhận thức): 40%
+           - Nhóm HH2 (Tìm hiểu): 35%
+           - Nhóm HH3 (Vận dụng): 25%
+        4. Không được sử dụng lặp lại một năng lực quá nhiều lần
+        5. Với câu hỏi đúng/sai, 4 phát biểu phải sử dụng năng lực từ các nhóm khác nhau
+
+        Lưu ý quan trọng câu hỏi phải có:
+            - Mã năng lực được đánh giá (theo chuẩn GDPT 2018 ở trên)
+            - Mỗi câu chỉ được DUY NHẤT 1 năng lực (riêng câu đúng/sai có 4 năng lực tương ứng với 4 phát biểu)
+            - Giải thích cách đánh giá năng lực đó
+            - Quan trọng nhất: Mỗi câu hỏi đều bắt buộc có năng lực
+            - Phải sử dụng hết các năng lực đã được định sẵn
+            - Giải thích đánh giá năng lực PHẢI theo format:
+              "Đánh giấ năng lực: (Mã năng lực) [trích nguyên văn mô tả năng lực từ chuẩn], câu hỏi này đánh giá thông qua việc [mô tả cụ thể cách câu hỏi đánh giá năng lực đó]"
+              
+              Ví dụ: 
+              - "Đánh giá năng lực: (HH1.1) Nhận biết và nêu được tên của các đối tượng, sự kiện, khái niệm hoặc quá trình hoá học, câu hỏi này đánh giá thông qua việc yêu cầu học sinh nhận biết và nêu tên các chất trong phản ứng hóa học"
+              
+              - "Đánh giá năng lực: (HH2.4) Thu thập và phân tích dữ liệu, rút ra kết luận, câu hỏi này đánh giá thông qua việc yêu cầu học sinh phân tích dữ kiện bài toán và tính toán kết quả"
+              
+              - "Đánh giá năng lực: (HH3.1) Vận dụng để giải thích hiện tượng tự nhiên và ứng dụng trong cuộc sống, câu hỏi này đánh giá thông qua việc yêu cầu học sinh giải thích hiện tượng hóa học trong thực tế"
+
+            - Quan trọng nhất: Mỗi câu hỏi đều bắt buộc có năng lực và giải thích chi tiết
+            - Phải sử dụng hết các năng lực đã được định sẵn
+            - TUYỆT ĐỐI KHÔNG được tự ý thêm bớt nội dung của chuẩn năng lực, phải trích nguyên văn
+
     Hãy tạo thêm:
     ${missingRequests.join('\n')}
 
@@ -169,6 +199,7 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     3. QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh)
     4. Câu hỏi được đặt bằng tiếng Việt
     5. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+    
 
     Yêu cầu cho từng loại câu hỏi:
     ${missingCounts['multiple-choice'] > 0 ? '- Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết' : ''}
@@ -179,21 +210,26 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     [
       {
         "type": "multiple-choice",
-        "question": "Nội dung câu hỏi",
-        "options": ["A", "B", "C", "D"],
-        "correctAnswer": "A",
-        "explain": "Giải thích chi tiết"
+        "question": "Câu hỏi trắc nghiệm",
+        "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+        "correctAnswer": "Đáp án đúng",
+        "explain": "Giải thích cho đáp án đúng",
+        "competency": "HH1.1",
+        "competencyExplanation": "Giải thích cách câu hỏi đánh giá năng lực"
       },
       {
         "type": "true-false",
-        "question": "Câu dẫn + Nội dung câu hỏi",
-        "options": ["Phát biểu 1", "Phát biểu 2", "Phát biểu 3", "Phát biểu khó nhất"],
-        "correctAnswer": ["Đúng", "Sai", "Đúng", "Sai"]
+        "question": "Câu dẫn cho 4 phát biểu",
+        "options": ["Phát biểu 1", "Phát biểu 2", "Phát biểu 3", "Phát biểu 4"],
+        "correctAnswer": ["Đúng", "Sai", "Đúng", "Sai"],
+        "competencies": ["HH1.1", "HH1.2", "HH1.3", "HH1.4"]
       },
       {
         "type": "short-answer",
         "question": "Nội dung câu hỏi tính toán",
-        "correctAnswer": "Đáp án ngắn gọn"
+        "correctAnswer": "Đáp án ngắn gọn",
+        "competency": "HH2.4",
+        "competencyExplanation": "Giải thích cách câu hỏi đánh giá năng lực"
       }
     ]`;
 
@@ -223,41 +259,111 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
 
       // Chuẩn hóa format cho từng câu hỏi
       supplementaryQuestions = supplementaryQuestions.map(question => {
+        if (!question.type || !question.question) return null;
+
+        const baseQuestion = {
+          type: question.type,
+          question: question.question
+        };
+
         switch (question.type) {
           case 'multiple-choice':
+            if (!question.options?.length || !question.correctAnswer || !question.explain) return null;
             return {
-              type: 'multiple-choice',
-              question: question.question,
-              options: question.options || [],
-              correctAnswer: question.correctAnswer || question.options?.[0],
-              explain: question.explain || 'Không có giải thích'
+              ...baseQuestion,
+              options: question.options,
+              correctAnswer: question.correctAnswer,
+              explain: question.explain,
+              competency: question.competency || '',
+              competencyExplanation: question.competencyExplanation || ''
             };
+
           case 'true-false':
+            if (!question.options?.length || !question.correctAnswer?.length) return null;
             return {
-              type: 'true-false',
-              question: question.question,
-              options: question.options || [],
-              correctAnswer: Array.isArray(question.correctAnswer) ? 
-                question.correctAnswer : 
-                question.options?.map(() => 'Đúng') || []
+              ...baseQuestion,
+              options: question.options,
+              correctAnswer: question.correctAnswer,
+              competencies: question.competencies || []
             };
+
           case 'short-answer':
+            if (!question.correctAnswer) return null;
             return {
-              type: 'short-answer',
-              question: question.question,
-              correctAnswer: question.correctAnswer || ''
+              ...baseQuestion,
+              correctAnswer: question.correctAnswer,
+              competency: question.competency || '',
+              competencyExplanation: question.competencyExplanation || ''
             };
+
           default:
-            return question;
+            return null;
+        }
+      }).filter(Boolean); // Lọc bỏ các câu hỏi null
+
+      // Validate từng câu hỏi
+      const validQuestions = supplementaryQuestions.filter(question => {
+        switch (question.type) {
+          case 'multiple-choice':
+            return question.options.length === 4 &&
+                   question.correctAnswer &&
+                   question.explain &&
+                   question.competency &&
+                   question.competencyExplanation;
+
+          case 'true-false':
+            return question.options.length === 4 &&
+                   question.correctAnswer.length === 4 &&
+                   question.competencies?.length === 4;
+
+          case 'short-answer':
+            return question.correctAnswer &&
+                   question.competency &&
+                   question.competencyExplanation;
+
+          default:
+            return false;
         }
       });
 
-      return [...existingQuestions, ...supplementaryQuestions];
+      if (validQuestions.length < supplementaryQuestions.length) {
+        console.error('Một số câu hỏi bổ sung không hợp lệ:', 
+          supplementaryQuestions.filter(q => !validQuestions.includes(q))
+        );
+        throw new Error('Một số câu hỏi bổ sung thiếu thông tin. Vui lòng tạo lại.');
+      }
+
+      return [...existingQuestions, ...validQuestions];
     } catch (error) {
       console.error('Error supplementing questions:', error);
-      throw new Error('Không thể tạo thêm câu hỏi bổ sung');
+      throw new Error('Không thể tạo thêm câu hỏi bổ sung: ' + error.message);
     }
   };
+
+  const COMPETENCY_STANDARDS = `
+  HH1. NHẬN THỨC HÓA HỌC:
+  HH1.1. Nhận biết và nêu được tên của các đối tượng, sự kiện, khái niệm hoặc quá trình hoá học
+  HH1.2. Trình bày được các sự kiện, đặc điểm, vai trò của các đối tượng, khái niệm hoặc quá trình hoá học
+  HH1.3. Mô tả được đối tượng bằng các hình thức nói, viết, công thức, sơ đồ, biểu đồ, bảng
+  HH1.4. So sánh, phân loại, lựa chọn được các đối tượng, khái niệm hoặc quá trình hoá học
+  HH1.5. Phân tích được các khía cạnh của các đối tượng, khái niệm hoặc quá trình hoá học
+  HH1.6. Giải thích và lập luận được về mối quan hệ giữa các đối tượng, khái niệm hoặc quá trình hoá học
+  HH1.7. Tìm được từ khoá, sử dụng được thuật ngữ khoa học, kết nối được thông tin theo logic
+  HH1.8. Thảo luận, đưa ra được những nhận định phê phán có liên quan đến chủ đề
+
+  HH2. TÌM HIỂU THẾ GIỚI TỰ NHIÊN:
+  HH2.1. Đề xuất vấn đề: nhận ra và đặt được câu hỏi liên quan đến vấn đề
+  HH2.2. Đưa ra phán đoán và xây dựng giả thuyết nghiên cứu
+  HH2.3. Lập kế hoạch thực hiện: xây dựng được khung logic nội dung tìm hiểu
+  HH2.4. Thực hiện kế hoạch: thu thập và phân tích dữ liệu, rút ra kết luận
+  HH2.5. Viết, trình bày báo cáo và thảo luận kết quả tìm hiểu
+
+  HH3. VẬN DỤNG KIẾN THỨC:
+  HH3.1. Vận dụng để giải thích hiện tượng tự nhiên và ứng dụng trong cuộc sống
+  HH3.2. Vận dụng để phản biện, đánh giá ảnh hưởng của vấn đề thực tiễn
+  HH3.3. Vận dụng tổng hợp để đánh giá và đề xuất giải pháp cho vấn đề thực tiễn
+  HH3.4. Định hướng được ngành nghề liên quan
+  HH3.5. Ứng xử phù hợp với phát triển bền vững và bảo vệ môi trường`;
 
   const generateQuestionsFromWord = async () => {
     if (teacherFiles.length === 0) {
@@ -319,6 +425,39 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         ${questionTypes.shortAnswer ? teacherNumShortAnswer + ' câu hỏi trả lời ngắn' : ''}
         từ Nội dung bài giảng này: ${combined}.
 
+        CHUẨN NĂNG LỰC CẦN ĐÁNH GIÁ (GDPT 2018):
+        ${COMPETENCY_STANDARDS}
+
+       Lưu ý QUAN TRỌNG về phân bổ năng lực:
+        1. Phải đảm bảo sử dụng đều các nhóm năng lực (HH1, HH2, HH3)
+        2. Trong mỗi nhóm, cần phân bổ đều các năng lực con
+        3. Tỷ lệ phân bổ các nhóm năng lực:
+           - Nhóm HH1 (Nhận thức): 40%
+           - Nhóm HH2 (Tìm hiểu): 35%
+           - Nhóm HH3 (Vận dụng): 25%
+        4. Không được sử dụng lặp lại một năng lực quá nhiều lần
+        5. Với câu hỏi đúng/sai, 4 phát biểu phải sử dụng năng lực từ các nhóm khác nhau
+
+        Lưu ý quan trọng câu hỏi phải có:
+            - Mã năng lực được đánh giá (theo chuẩn GDPT 2018 ở trên)
+            - Mỗi câu chỉ được DUY NHẤT 1 năng lực (riêng câu đúng/sai có 4 năng lực tương ứng với 4 phát biểu)
+            - Giải thích cách đánh giá năng lực đó
+            - Quan trọng nhất: Mỗi câu hỏi đều bắt buộc có năng lực
+            - Phải sử dụng hết các năng lực đã được định sẵn
+            - Giải thích đánh giá năng lực PHẢI theo format:
+              "Đánh giấ năng lực: (Mã năng lực) [trích nguyên văn mô tả năng lực từ chuẩn], câu hỏi này đánh giá thông qua việc [mô tả cụ thể cách câu hỏi đánh giá năng lực đó]"
+              
+               Ví dụ: 
+              - "Đánh giá năng lực: (HH1.1) Nhận biết và nêu được tên của các đối tượng, sự kiện, khái niệm hoặc quá trình hoá học, câu hỏi này đánh giá thông qua việc yêu cầu học sinh nhận biết và nêu tên các chất trong phản ứng hóa học"
+              
+              - "Đánh giá năng lực: (HH2.4) Thu thập và phân tích dữ liệu, rút ra kết luận, câu hỏi này đánh giá thông qua việc yêu cầu học sinh phân tích dữ kiện bài toán và tính toán kết quả"
+              
+              - "Đánh giá năng lực: (HH3.1) Vận dụng để giải thích hiện tượng tự nhiên và ứng dụng trong cuộc sống, câu hỏi này đánh giá thông qua việc yêu cầu học sinh giải thích hiện tượng hóa học trong thực tế"
+
+            - Quan trọng nhất: Mỗi câu hỏi đều bắt buộc có năng lực và giải thích chi tiết
+            - Phải sử dụng hết các năng lực đã được định sẵn
+            - TUYỆT ĐỐI KHÔNG được tự ý thêm bớt nội dung của chuẩn năng lực, phải trích nguyên văn
+
         Yêu cầu QUAN TRỌNG về định dạng:
       1. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ thẻ HTML nào (<sub>, <sup>, <br>, etc.)
       2. KHÔNG sử dụng các ký tự đặc biệt hay định dạng HTML như &nbsp;
@@ -344,30 +483,36 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         7. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
         8. Phân bố câu hỏi đều giữa các bài giảng, không tập trung quá nhiều vào một bài
         9. Tạo các câu hỏi có tính liên kết giữa các bài giảng khi có thể
+        
 
         Yêu cầu cho từng loại câu hỏi:
-        - Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết
-        - Đúng/sai: 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất
-        - Trả lời ngắn: phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(không có chữ nha), bỏ các dạng toán đốt cháy.
+        - Trắc nghiệm: 4 lựa chọn, 1 đáp án đúng và giải thích chi tiết, mỗi câu có 1 năng lực đánh giá
+        - Đúng/sai: mỗi câu có 4 phát biểu liên kết, có câu dẫn, phát biểu cuối khó nhất. ĐẶC BIỆT: Mỗi câu sẽ có 4 năng lực tương ứng với 4 phát biểu
+        - Trả lời ngắn: phần này luôn trả về câu hỏi là câu hỏi tính toán và có đáp án ngắn gọn(không có chữ nha), bỏ các dạng toán đốt cháy, mỗi câu có 1 năng lực đánh giá
 
         Trả về kết quả dưới dạng JSON với cấu trúc sau: ${JSON.stringify([
           {
-            type: "multiple-choice",
-            question: "Câu hỏi trắc nghiệm 1",
-            options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
-            correctAnswer: "Đáp án đúng",
-            explain: "Giải thích cho đáp án đúng",
+            "type": "multiple-choice",
+            "question": "Câu hỏi trắc nghiệm",
+            "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+            "correctAnswer": "Đáp án đúng",
+            "explain": "Giải thích cho đáp án đúng",
+            "competency": "HH1.1",
+            "competencyExplanation": "Giải thích cách câu hỏi đánh giá năng lực"
           },
           {
-            type: "true-false",
-            question: "Câu hỏi đúng/sai 1",
-            options: ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D(khó nhất)"],
-            correctAnswer: ["Đúng", "Sai", "Đúng", "Sai"],
+            "type": "true-false",
+            "question": "Câu dẫn cho 4 phát biểu",
+            "options": ["Phát biểu 1", "Phát biểu 2", "Phát biểu 3", "Phát biểu 4"],
+            "correctAnswer": ["Đúng", "Sai", "Đúng", "Sai"],
+            "competencies": ["HH1.1", "HH1.2", "HH1.3", "HH1.4"]
           },
           {
-            type: "short-answer",
-            question: "Nội dung câu hỏi tính toán",
-            correctAnswer: "Đáp án ngắn gọn",
+            "type": "short-answer",
+            "question": "Nội dung câu hỏi tính toán",
+            "correctAnswer": "Đáp án ngắn gọn",
+            "competency": "HH2.4",
+            "competencyExplanation": "Giải thích cách câu hỏi đánh giá năng lực"
           }
         ])}.`;
 
@@ -435,307 +580,19 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     }
   };
 
-  const generateWordDocument = async (questions, headerInfo) => {
-    const multipleChoiceQuestions = questions.filter(q => q.type === 'multiple-choice');
-    const trueFalseQuestions = questions.filter(q => q.type === 'true-false');
-    const shortAnswerQuestions = questions.filter(q => q.type === 'short-answer');
-
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({ text: headerInfo.mainTitle, bold: true }),
-              new TextRun({ text: '\t' }),
-              new TextRun({ text: headerInfo.subTitle, bold: true }),
-            ],
-            tabStops: [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: `Môn: ${headerInfo.subject}`, bold: true }),
-              new TextRun({ text: '\t' }),
-              new TextRun({ text: `Thời gian làm bài: ${headerInfo.examTime} (không kể thời gian giao đề)`, italics: true }),
-            ],
-            tabStops: [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "(Đề thi gồm ....trang, có ... câu)" }),
-              new TextRun({ text: '\t' }),
-              new TextRun({ text: "Ngày thi :.../.../...."}),
-            ],
-            tabStops: [
-              {
-                type: TabStopType.RIGHT,
-                position: TabStopPosition.MAX,
-              },
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Họ và tên thí sinh:.......................................................",bold: true }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "Số báo danh: ............................................................", bold: true }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: `PHẦN I. Câu trắc nghiệm nhiều phương án lựa chọn. Thí sinh trả lời từ câu 1 đến câu ${multipleChoiceQuestions.length}. Mỗi câu hỏi thí sinh chỉ chọn một phương án.`, bold: true }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-          ...multipleChoiceQuestions.flatMap((question, index) => [
-            new Paragraph({
-              children: [
-                new TextRun({ text: `Câu ${index + 1}:`, bold: true }),
-                new TextRun({ text: ` ${question.question}` }),
-              ],
-              alignment: AlignmentType.LEFT,
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: 'A.', bold: true }),
-                new TextRun(` ${question.options[0]}`),
-                new TextRun({ text: '\t' }),
-                new TextRun({ text: 'B.', bold: true }),
-                new TextRun(` ${question.options[1]}`),
-              ],
-              tabStops: [
-                {
-                  type: TabStopType.LEFT,
-                  position: TabStopPosition.MAX / 2,
-                },
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: 'C.', bold: true }),
-                new TextRun(` ${question.options[2]}`),
-                new TextRun({ text: '\t' }),
-                new TextRun({ text: 'D.', bold: true }),
-                new TextRun(` ${question.options[3]}`),
-              ],
-              tabStops: [
-                {
-                  type: TabStopType.LEFT,
-                  position: TabStopPosition.MAX / 2,
-                },
-              ],
-            }),
-          ]),
-          ...(trueFalseQuestions.length > 0 ? [
-            new Paragraph({
-              children: [
-                new TextRun({ text: " " }), // Adding a blank line for spacing
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: `PHẦN II. Câu trắc nghiệm đúng sai. Thí sinh trả lời từ câu ${multipleChoiceQuestions.length + 1} đến câu ${multipleChoiceQuestions.length + trueFalseQuestions.length}. Trong mỗi ý a), b), c), d) ở mỗi câu, thí sinh chọn đúng hoặc sai.`, bold: true }),
-              ],
-              alignment: AlignmentType.LEFT,
-            }),
-            ...trueFalseQuestions.flatMap((question, index) => [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: `Câu `, bold: true }),
-                  new TextRun({ text: `${multipleChoiceQuestions.length + index + 1}: `, bold: true }),
-                  new TextRun({ text: `${question.question}` }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'a) ', bold: true }),
-                  new TextRun({ text: `${question.options[0]}` }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'b) ', bold: true }),
-                  new TextRun({ text: `${question.options[1]}` }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'c) ', bold: true }),
-                  new TextRun({ text: `${question.options[2]}` }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'd) ', bold: true }),
-                  new TextRun({ text: `${question.options[3]}` }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-
-            ]),
-          ] : []),
-          ...(shortAnswerQuestions.length > 0 ? [
-            new Paragraph({
-              children: [
-                new TextRun({ text: " " }), // Adding a blank line for spacing
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: `PHẦN III: Câu trắc nghiệm yêu cầu trả lời ngắn. Thí sinh trả lời từ câu ${multipleChoiceQuestions.length + trueFalseQuestions.length + 1} đến câu ${questions.length}.`, bold: true }),
-              ],
-              alignment: AlignmentType.LEFT,
-            }),
-            ...shortAnswerQuestions.flatMap((question, index) => [
-              new Paragraph({
-                children: [
-                  new TextRun({ text: `Câu ${multipleChoiceQuestions.length + trueFalseQuestions.length + index + 1}: `, bold: true }),
-                  new TextRun({ text: `${question.question}` }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: `Đáp án: `, bold: true }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-            ]),
-          ] : []),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: " " }), // Adding a blank line for spacing
-            ],
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "HẾT", bold: true }),
-            ],
-            alignment: AlignmentType.CENTER,
-          }),
-        ],
-      }],
-    });
-  
-    // Thêm metadata ẩn để liên kết với file đáp án
-    doc.coreProperties.keywords = `answer_file:${quizTitle}_answers.docx`;
-
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${quizTitle}.docx`);
+  const handleGenerateWordDocument = () => {
+    generateWordDocument(questions, {
+      mainTitle,
+      subTitle,
+      subject,
+      examTime,
+    }, quizTitle);
   };
 
-  // hàm tạo file đáp án
-  const generateAnswerDocument = async () => {
-    const doc = new Document({
-      sections: [{
-        properties: {},
-        children: [
-          new Paragraph({
-            children: [new TextRun({ text: "Đáp án", bold: true })],
-            alignment: AlignmentType.CENTER,
-          }),
-          // Phần I: Trắc nghiệm
-          new Paragraph({
-            children: [new TextRun({ text: "PHẦN I. TRẮC NGHIỆM", bold: true })],
-            alignment: AlignmentType.LEFT,
-          }),
-          ...questions
-            .filter(q => q.type === 'multiple-choice')
-            .map((question, index) => {
-              const correctAnswerIndex = question.options.indexOf(question.correctAnswer);
-              const correctAnswerLabel = String.fromCharCode(65 + correctAnswerIndex); // A, B, C, D
-              return new Paragraph({
-                children: [
-                  new TextRun({ text: `Câu ${index + 1}: `, bold: true }),
-                  new TextRun({ text: `${correctAnswerLabel}` }), // Hiển thị đáp án đúng là A, B, C, D
-                ],
-              });
-            }),
-          // Phần II: Đúng/Sai
-          ...(questions.some(q => q.type === 'true-false') ? [
-            new Paragraph({
-              children: [new TextRun({ text: "PHẦN II. ĐÚNG/SAI", bold: true })],
-              alignment: AlignmentType.LEFT,
-            }),
-            ...questions
-              .filter(q => q.type === 'true-false')
-              .map((question, index) => {
-                const startIndex = questions.filter(q => q.type === 'multiple-choice').length;
-                return new Paragraph({
-                  children: [
-                    new TextRun({ text: `Câu ${startIndex + index + 1}: `, bold: true }),
-                    ...question.correctAnswer.map((ans, i) => 
-                      new TextRun({ text: `${String.fromCharCode(97 + i)}) ${ans}  ` })
-                    ),
-                  ],
-                });
-              })
-          ] : []),
-          // Phần III: Trả lời ngắn
-          ...(questions.some(q => q.type === 'short-answer') ? [
-            new Paragraph({
-              children: [new TextRun({ text: "PHẦN III. TRẢ LỜI NGẮN", bold: true })],
-              alignment: AlignmentType.LEFT,
-            }),
-            ...questions
-              .filter(q => q.type === 'short-answer')
-              .map((question, index) => {
-                const startIndex = questions.filter(q => 
-                  q.type === 'multiple-choice' || q.type === 'true-false'
-                ).length;
-                return new Paragraph({
-                  children: [
-                    new TextRun({ text: `Câu ${startIndex + index + 1}: `, bold: true }),
-                    new TextRun({ text: question.correctAnswer }),
-                  ],
-                });
-              })
-          ] : []),
-        ],
-      }],
-    });
-  
-    const blob = await Packer.toBlob(doc);
-    saveAs(blob, `${quizTitle}_answers.docx`);
+  const handleGenerateAnswerDocument = () => {
+    generateAnswerDocument(questions, quizTitle);
   };
 
-  const saveQuestions = () => {
-    const blob = new Blob([JSON.stringify(questions)], { type: 'application/json' });
-    saveAs(blob, `${quizTitle}_questions.json`);
-  };
   const handleSaveQuiz = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
@@ -755,21 +612,14 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
       return;
     }
   
-    // Kiểm tra và loại bỏ các thuộc tính có giá trị undefined
-    const cleanQuestions = questions.map(question => {
-      const cleanedQuestion = { ...question };
-      for (const key in cleanedQuestion) {
-        if (cleanedQuestion[key] === undefined) {
-          cleanedQuestion[key] = '';
-        }
-      }
-      return cleanedQuestion;
-    });
-  
     try {
       const userId = user.uid;
       const docRef = doc(db, 'createdQuizzes', `${quizTitle}-${userId}`);
-      await setDoc(docRef, { userId, title: quizTitle, questions: cleanQuestions });
+      await setDoc(docRef, { 
+        userId, 
+        title: quizTitle, 
+        questions: questions // Lưu trực tiếp questions vì đã có đủ thông tin
+      });
       setModalOpen(true);
       setQuizTitle('');
       setQuestions([]);
@@ -801,6 +651,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     setEditingQuestion(null);
     setEditingData(null);
   };
+
+  
 
   return (
     <div className="create-quiz-title-form">
@@ -936,13 +788,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
           placeholder="Thời gian làm bài"
         />
       </div>
-      <button className="create-quiz-download-btn" onClick={() => generateWordDocument(questions, {
-        mainTitle,
-        subTitle,
-        subject,
-        examTime,
-      })}>Tạo file Word</button>
-      <button className="create-quiz-download-btn" onClick={generateAnswerDocument}>Tạo file đáp án</button>
+      <button className="create-quiz-download-btn" onClick={handleGenerateWordDocument}>Tạo file Word</button>
+      <button className="create-quiz-download-btn" onClick={handleGenerateAnswerDocument}>Tạo file đáp án</button>
       <div className="create-quiz-question-list">
         <h2 className="Createquizz-title-feature">Danh sách câu hỏi</h2>
         <ul>
@@ -1126,7 +973,13 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
                       </div>
                     ) : (
                       <>
-                        <p><strong>Câu hỏi {index + 1} ({question.type}):</strong> {question.question}</p>
+                        <p>
+                          <strong>Câu {index + 1} {
+                            question.type === 'true-false' 
+                              ? `(${question.competencies?.join(', ')})` 
+                              : `(${question.competency})`
+                          }:</strong> {question.question}
+                        </p>
                         
                         {question.type === 'multiple-choice' && (
                           <div className="create-quiz-question-options">
@@ -1137,16 +990,36 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
                               <strong>Đáp án đúng:</strong> {question.correctAnswer}
                             </p>
                             <p><strong>Giải thích:</strong> {question.explain}</p>
+                            <p className="competency-explanation">
+                              <strong>Đánh giá năng lực:</strong> {question.competencyExplanation}
+                            </p>
                           </div>
                         )}
 
                         {question.type === 'true-false' && (
                           <div className="create-quiz-question-options">
-                            {question.options.map((option, i) => (
-                              <p key={i}>
-                                {String.fromCharCode(97 + i)}) {option} <span className="create-quiz-correct-answer">{question.correctAnswer[i]}</span>
+                            <p>
+                              <strong>Câu {index + 1}: </strong>
+                              {question.question}
+                            </p>
+                            <div className="create-quiz-question-options">
+                              <p>
+                                <strong>a) </strong>
+                                {question.options[0]} ({question.competencies[0]})
                               </p>
-                            ))}
+                              <p>
+                                <strong>b) </strong>
+                                {question.options[1]} ({question.competencies[1]})
+                              </p>
+                              <p>
+                                <strong>c) </strong>
+                                {question.options[2]} ({question.competencies[2]})
+                              </p>
+                              <p>
+                                <strong>d) </strong>
+                                {question.options[3]} ({question.competencies[3]})
+                              </p>
+                            </div>
                           </div>
                         )}
 
@@ -1154,6 +1027,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
                           <div className="create-quiz-question-options">
                             <p className="create-quiz-correct-answer">
                               <strong>Đáp án:</strong> {question.correctAnswer}
+                            </p>
+                            <p className="competency-explanation">
+                              <strong>Đánh giá năng lực:</strong> {question.competencyExplanation}
                             </p>
                           </div>
                         )}
