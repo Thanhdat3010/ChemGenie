@@ -20,8 +20,9 @@ const DatasetCreator = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [numDatasets, setNumDatasets] = useState(5);
   const [progress, setProgress] = useState(0);
+  const [apiKey, setApiKey] = useState('');
 
-  const genAI = new GoogleGenerativeAI(API_KEY);
+  const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
   const closeModal = () => {
     setModalOpen(false);
@@ -70,6 +71,11 @@ const DatasetCreator = () => {
   };
 
   const generateDatasets = async () => {
+    if (!apiKey) {
+      alert('Vui lòng nhập API key của Google AI');
+      return;
+    }
+
     if (files.length === 0) {
       alert('Vui lòng tải lên ít nhất một tệp');
       return;
@@ -119,7 +125,20 @@ const DatasetCreator = () => {
         8. Viết chỉ số dưới bằng ký tự Unicode trực tiếp (ví dụ: H₂O thay vì H<sub>2</sub>O)
         9. Đừng thêm ký hiệu gì đặc biệt như * mà chỉ sử dụng văn bản thuần túy (plain text)
         10. Mỗi mẫu phải khác biệt với các mẫu trước đó
-        
+        Quy tắc:
+        1. PHẢI dịch toàn bộ nội dung sang tiếng Việt, bao gồm:
+          - Tất cả các giải thích về lý thuyết
+          - Các bước giải
+          - Các định nghĩa và mô tả
+        2. Giữ nguyên danh pháp hóa học và các thuật ngữ chuyên ngành giống trong văn bản**:
+            - Không dịch hoặc thay đổi danh pháp hóa học (bao gồm tên tiếng Anh hoặc IUPAC).
+            - Nếu ngữ cảnh bằng tiếng Anh, hãy dịch sang tiếng Việt nhưng giữ nguyên danh pháp hóa học giống trong văn bản(tiếng anh).
+            - **TUYỆT ĐỐI KHÔNG DỊCH tên các chất hoá học**:
+            - Giữ nguyên 100% tên gọi của các chất hoá học như trong ngữ cảnh
+            - Ví dụ: nếu ngữ cảnh viết "phosphoric acid" thì PHẢI giữ nguyên là "phosphoric acid", KHÔNG được dịch thành "axit photphoric"
+        3. Ví dụ cách dịch:
+          "The Ideal Gas Law is PV = nRT" → "Định luật khí lý tưởng có dạng PV = nRT"
+          "The pressure is 760 mm Hg" → "Áp suất là 760 mm Hg"    
         Trả về kết quả dưới dạng JSON với cấu trúc:
         [
           {
@@ -225,6 +244,14 @@ const DatasetCreator = () => {
       <h2 className="dataset-creator-heading">Tạo Dataset cho LLM</h2>
       
       <div className="dataset-creator-config">
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="Nhập Google AI API key..."
+          className="dataset-creator-title-input"
+        />
+        
         <input
           type="text"
           value={datasetTitle}

@@ -78,7 +78,7 @@ const CreateQuiz = () => {
     setLoading(true);
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-002" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `Bạn là một chuyên gia trong việc tạo đề thi hóa học.
         Hãy tạo bộ câu hỏi hóa học lớp ${grade} với chủ đề ${topic} và độ khó ${difficulty}.
