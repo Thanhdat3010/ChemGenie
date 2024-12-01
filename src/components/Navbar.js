@@ -201,8 +201,8 @@ const Navbar = () => {
       </Link>
     </li>
     <li>
-    <Link className={`nav-links ${isActive('/ExperimentProposal') ? 'active' : ''}`} to="/ExperimentProposal">
-        AI Lab
+    <Link className={`nav-links ${isActive('/CompetencyMapper') ? 'active' : ''}`} to="/CompetencyMapper">
+        AI phân tích đề
       </Link>
     </li>
   </ul>

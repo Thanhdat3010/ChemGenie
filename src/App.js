@@ -37,7 +37,7 @@ import FlashcardDetail from "./routes/FlashcardDetail";
 import IUPACPronunciationGame from "./routes/IUPACPronunciationGame";
 import TeacherQuizCreator from "./routes/TeacherQuizCreator";
 import DatasetCreator from "./routes/DatasetCreator";
-import QuizEvaluator from "./routes/QuizEvaluator";
+import CompetencyMapper from "./routes/CompetencyMapper";
 function App() {
   useEffect(() => {
     // Tìm nạp email và mã thông báo của người dùng từ localStorage
@@ -101,7 +101,7 @@ function App() {
     <Route path="/flashcard/:id" element={<FlashcardDetail />} />
     <Route path="IUPACPronunciationGame" element={<IUPACPronunciationGame />} />
     <Route path="/DatasetCreator" element={<DatasetCreator />} />
-    <Route path="/QuizEvaluator" element={<QuizEvaluator />} />
+    <Route path="/CompetencyMapper" element={<CompetencyMapper />} />
     </Routes>
   </div>
   </BackgroundProvider>

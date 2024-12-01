@@ -147,6 +147,9 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     CHUẨN NĂNG LỰC CẦN ĐÁNH GIÁ (GDPT 2018):
     ${COMPETENCY_STANDARDS}
 
+    ĐẶC BIỆT QUAN TRỌNG: 
+    + Giữ nguyên danh pháp hóa học giống trong bài giảng ở cả câu hỏi và các đáp án về các thuật ngữ hóa học và các chất hóa học (danh pháp hóa học tiếng anh, IUPAC)
+    + Đối với các thuật ngữ hóa học bạn thêm vào cũng để tiếng anh cho tôi
    Lưu ý QUAN TRỌNG về phân bổ năng lực:
         1. Phải đảm bảo sử dụng đều các nhóm năng lực (HH1, HH2, HH3)
         2. Trong mỗi nhóm, cần phân bổ đều các năng lực con
@@ -196,9 +199,8 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
     Các yêu cầu về nội dung:
     1. Các câu hỏi mới KHÔNG ĐƯỢC TRÙNG LẶP với các câu hỏi hiện có
     2. Phải tuân theo phân bố độ khó: ${difficultyDistribution}
-    3. QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh)
-    4. Câu hỏi được đặt bằng tiếng Việt
-    5. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+    3. Câu hỏi được đặt bằng tiếng Việt
+    4. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
     
 
     Yêu cầu cho từng loại câu hỏi:
@@ -427,6 +429,10 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
 
         CHUẨN NĂNG LỰC CẦN ĐÁNH GIÁ (GDPT 2018):
         ${COMPETENCY_STANDARDS}
+      
+        ĐẶC BIỆT QUAN TRỌNG: 
+        + Giữ nguyên danh pháp hóa học giống trong bài giảng ở cả câu hỏi và các đáp án về các thuật ngữ hóa học và các chất hóa học (danh pháp hóa học tiếng anh, IUPAC)
+        + Đối với các thuật ngữ hóa học bạn thêm vào cũng để tiếng anh cho tôi
 
        Lưu ý QUAN TRỌNG về phân bổ năng lực:
         1. Phải đảm bảo sử dụng đều các nhóm năng lực (HH1, HH2, HH3)
@@ -478,11 +484,10 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
         2. Độ khó đa dạng để tạo độ phân hóa: ${difficultyDistribution}
         3. Không tự ý thêm câu hỏi không có trong bài giảng
         4. Các câu hỏi không được giống nhau, các đáp án trong cùng một câu không được giống nhau
-        5. ĐẶC BIỆT QUAN TRỌNG: Giữ nguyên danh pháp hóa học giống trong file ở cả câu hỏi và các đáp án (danh pháp hóa học tiếng anh, IUPAC)
-        6. Câu hỏi được đặt bằng tiếng Việt
-        7. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
-        8. Phân bố câu hỏi đều giữa các bài giảng, không tập trung quá nhiều vào một bài
-        9. Tạo các câu hỏi có tính liên kết giữa các bài giảng khi có thể
+        5. Câu hỏi được đặt bằng tiếng Việt
+        6. Đảm bảo các công thức hóa học có chỉ số dưới dạng subscript (ví dụ: CH₄)
+        7. Phân bố câu hỏi đều giữa các bài giảng, không tập trung quá nhiều vào một bài
+        8. Tạo các câu hỏi có tính liên kết giữa các bài giảng khi có thể
         
 
         Yêu cầu cho từng loại câu hỏi:
