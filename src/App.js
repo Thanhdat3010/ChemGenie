@@ -38,6 +38,7 @@ import IUPACPronunciationGame from "./routes/IUPACPronunciationGame";
 import TeacherQuizCreator from "./routes/TeacherQuizCreator";
 import DatasetCreator from "./routes/DatasetCreator";
 import CompetencyMapper from "./routes/CompetencyMapper";
+import ReferenceUI from "./components/ReferenceUI";
 function App() {
   useEffect(() => {
     // Tìm nạp email và mã thông báo của người dùng từ localStorage
@@ -102,6 +103,7 @@ function App() {
     <Route path="IUPACPronunciationGame" element={<IUPACPronunciationGame />} />
     <Route path="/DatasetCreator" element={<DatasetCreator />} />
     <Route path="/CompetencyMapper" element={<CompetencyMapper />} />
+    <Route path="/ReferenceUI" element={<ReferenceUI />} />
     </Routes>
   </div>
   </BackgroundProvider>

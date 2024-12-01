@@ -1,4 +1,6 @@
 import './Footer.css';
+import './ReferenceUI';
+import { Link } from "react-router-dom";
 import React from 'react';
 function Footer() {
   return (
@@ -14,6 +16,11 @@ function Footer() {
         <p>🐻 Ôn luyện hóa học ngay tại nhà</p>
         <p>💌 Email - fivecreatorsgroup@gmail.com</p>
         <p>🏐 Số điện thoại liên lạc - 0799747780</p>
+
+      <Link className="footer-links" to="/ReferenceUI">
+        Nguồn tài liệu
+      </Link>
+
       </div>
       </div>
   );
