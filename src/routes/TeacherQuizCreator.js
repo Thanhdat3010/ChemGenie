@@ -1003,10 +1003,6 @@ const TeacherQuizCreator = ({ quizTitle, setQuizTitle }) => {
 
                         {question.type === 'true-false' && (
                           <div className="create-quiz-question-options">
-                            <p>
-                              <strong>Câu {index + 1}: </strong>
-                              {question.question}
-                            </p>
                             <div className="create-quiz-question-options">
                               <p>
                                 <strong>a) </strong>

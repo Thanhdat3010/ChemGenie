@@ -7,16 +7,11 @@ import { getDocs, collection, deleteDoc, doc, query, where, setDoc, getDoc } fro
 const CustomQuiz = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [score, setScore] = useState(0);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editingData, setEditingData] = useState(null);
   const [currentQuizId, setCurrentQuizId] = useState(null);
-  const [userAnswers, setUserAnswers] = useState({});
-  const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -28,48 +23,18 @@ const CustomQuiz = () => {
           const querySnapshot = await getDocs(q);
           const quizData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           setQuizzes(quizData);
-        } else {
-          console.log('No user is logged in.');
         }
       } catch (error) {
         console.error('Error fetching quizzes:', error);
-        // Xử lý lỗi ở đây nếu cần thiết
       }
     };
 
     fetchQuizzes();
   }, []);
 
-  const startQuiz = async (quiz) => {
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        setNotificationMessage("Vui lòng đăng nhập để thực hiện thao tác này");
-        setShowNotification(true);
-        return;
-      }
-
-      // Kiểm tra xem đã có submission chưa
-      const submissionRef = doc(db, 'quizSubmissions', `${user.uid}_${quiz.id}`);
-      const submissionSnap = await getDoc(submissionRef);
-
-      if (submissionSnap.exists()) {
-        // Nếu đã có submission, xóa nó để cho phép làm lại
-        await deleteDoc(submissionRef);
-      }
-
-      // Khởi tạo state cho quiz mới
-      setQuestions(quiz.questions || []);
-      setCurrentQuestion(0);
-      setScore(0);
-      setCurrentQuizId(quiz.id);
-      setUserAnswers({});
-      setQuizCompleted(false);
-    } catch (error) {
-      console.error('Error starting quiz:', error);
-      setNotificationMessage("Có lỗi khi bắt đầu bài kiểm tra");
-      setShowNotification(true);
-    }
+  const viewQuizDetails = (quiz) => {
+    setQuestions(quiz.questions || []);
+    setCurrentQuizId(quiz.id);
   };
 
   const deleteQuiz = async (quizId) => {
@@ -81,25 +46,10 @@ const CustomQuiz = () => {
         return;
       }
 
-      // Delete the quiz document
-      const quizRef = doc(db, 'createdQuizzes', quizId);
-      await deleteDoc(quizRef);
-
-      // Get all submissions
-      const submissionsRef = collection(db, 'quizSubmissions');
-      const submissionsSnapshot = await getDocs(submissionsRef);
-      
-      // Filter and delete only submissions that belong to current user and contain the quizId
-      const deletePromises = submissionsSnapshot.docs
-        .filter(doc => doc.id.startsWith(user.uid) && doc.id.includes(quizId))
-        .map(doc => deleteDoc(doc.ref));
-      
-      await Promise.all(deletePromises);
-
-      // Update local state
+      await deleteDoc(doc(db, 'createdQuizzes', quizId));
       setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizId));
       
-      setNotificationMessage("Đã xóa bài kiểm tra và kết quả thành công");
+      setNotificationMessage("Đã xóa bài kiểm tra thành công");
       setShowNotification(true);
     } catch (error) {
       console.error('Error deleting quiz:', error);
@@ -108,232 +58,61 @@ const CustomQuiz = () => {
     }
   };
 
-  const saveProgress = async () => {
-    const user = auth.currentUser;
-    if (user && currentQuizId) {
-      const docRef = doc(db, 'quizProgress', `${user.uid}_${currentQuizId}`);
-      await setDoc(docRef, {
-        questions,
-        currentQuestion,
-        score,
-        quizCompleted  // Lưu trạng thái hoàn thành
-      });
-    }
+  const handleEditClick = (index, question) => {
+    setEditingQuestion(index);
+    setEditingData({ ...question });
   };
 
-  const handleOptionClick = (questionIndex, selectedAnswer) => {
-    if (!quizCompleted) {
-      setUserAnswers(prev => ({
-        ...prev,
-        [questionIndex]: selectedAnswer
-      }));
-    }
+  const handleCancelEdit = () => {
+    setEditingQuestion(null);
+    setEditingData(null);
   };
 
-  const handleTrueFalseClick = (questionIndex, optionIndex, selectedAnswer) => {
-    if (!quizCompleted) {
-      setUserAnswers(prev => ({
-        ...prev,
-        [questionIndex]: {
-          ...(prev[questionIndex] || {}),
-          [optionIndex]: selectedAnswer
-        }
-      }));
-    }
-  };
-
-  const handleShortAnswerChange = (questionIndex, answer) => {
-    if (!quizCompleted) {
-      setUserAnswers(prev => ({
-        ...prev,
-        [questionIndex]: answer.trim()
-      }));
-    }
-  };
-
-  const areAllQuestionsAnswered = () => {
-    return questions.every((question, index) => {
-      if (question.type === 'true-false') {
-        // Kiểm tra xem tất cả các options đã được trả lời chưa
-        return userAnswers[index] && 
-               question.options.every((_, optIdx) => 
-                 userAnswers[index][optIdx] !== undefined
-               );
-      }
-      return userAnswers[index] !== undefined;
-    });
-  };
-
-  const handleSubmitQuiz = async () => {
-    if (!areAllQuestionsAnswered()) {
-      setNotificationMessage("Vui lòng trả lời tất cả câu hỏi trước khi nộp bài");
-      setShowNotification(true);
-      return;
-    }
-
+  const handleSaveEdit = async (index) => {
     try {
-      // Định nghĩa cấu trúc điểm chuẩn
-      const STANDARD_STRUCTURE = {
-        'multiple-choice': { points: 0.25, standardCount: 18, totalPoints: 4.5 },
-        'true-false': { points: 1.0, standardCount: 4, totalPoints: 4.0 },
-        'short-answer': { points: 0.25, standardCount: 6, totalPoints: 1.5 }
-      };
-
-      // Đếm số câu hỏi thực tế cho mỗi loại
-      const actualCounts = questions.reduce((acc, q) => {
-        acc[q.type] = (acc[q.type] || 0) + 1;
-        return acc;
-      }, {});
-
-      console.log('Số câu hỏi thực tế:', actualCounts);
-
-      // Tính điểm thô theo thang chuẩn
-      let rawScore = 0;
-      const detailedAnswers = questions.map((question, index) => {
-        const userAnswer = userAnswers[index];
-        const correctAnswer = question.correctAnswer;
-        let isCorrect = false;
-        let questionScore = 0;
-        
-        if (question.type === 'multiple-choice') {
-          isCorrect = userAnswer === correctAnswer;
-          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
-        } 
-        else if (question.type === 'true-false') {
-          const correctCount = question.options.reduce((count, _, optIdx) => {
-            return userAnswer[optIdx] === correctAnswer[optIdx] ? count + 1 : count;
-          }, 0);
-
-          // Thang điểm cho câu đúng sai theo số ý đúng
-          questionScore = correctCount === 1 ? 0.1 :
-                         correctCount === 2 ? 0.25 :
-                         correctCount === 3 ? 0.5 :
-                         correctCount === 4 ? STANDARD_STRUCTURE[question.type].points : 0;
-        } 
-        else if (question.type === 'short-answer') {
-          isCorrect = userAnswer.toLowerCase() === correctAnswer.toLowerCase();
-          questionScore = isCorrect ? STANDARD_STRUCTURE[question.type].points : 0;
-        }
-
-        rawScore += questionScore;
-        return {
-          questionType: question.type,
-          question: question.question,
-          userAnswer: userAnswer,
-          correctAnswer: correctAnswer,
-          isCorrect: isCorrect,
-          score: questionScore
-        };
-      });
-
-      // Tính điểm tối đa có thể đạt được với số câu hỏi hiện tại
-      let maxPossibleScore = Object.entries(actualCounts).reduce((total, [type, count]) => {
-        if (count > 0) {
-          return total + (STANDARD_STRUCTURE[type].points * count);
-        }
-        return total;
-      }, 0);
-
-      // Quy đổi về thang điểm 10
-      const finalScore = (rawScore * 10) / maxPossibleScore;
-      const totalScore = Math.round(finalScore * 100) / 100;
-
-      console.log({
-        rawScore: rawScore,
-        maxPossibleScore: maxPossibleScore,
-        finalScore: totalScore,
-        detailedScores: detailedAnswers.map((a, i) => ({
-          question: i + 1,
-          type: a.questionType,
-          rawScore: a.score,
-          adjustedScore: (a.score * 10) / maxPossibleScore
-        }))
-      });
-
-      setScore(totalScore);
-      setQuizCompleted(true);
-
+      const newQuestions = [...questions];
+      newQuestions[index] = editingData;
+      setQuestions(newQuestions);
+      
+      // Cập nhật trong Firestore
       if (auth.currentUser) {
-        // Save quiz submission details
-        await setDoc(doc(db, 'quizSubmissions', `${auth.currentUser.uid}_${currentQuizId}`), {
-          uid: auth.currentUser.uid,
-          quizId: currentQuizId,
-          score: totalScore,
-          detailedAnswers: detailedAnswers,
-          submittedAt: new Date().toISOString()
-        });
-
-        await saveProgress();
+        const quizRef = doc(db, 'createdQuizzes', currentQuizId);
+        await setDoc(quizRef, { questions: newQuestions }, { merge: true });
+        setNotificationMessage("Đã cập nhật câu hỏi thành công");
+        setShowNotification(true);
       }
+
+      setEditingQuestion(null);
+      setEditingData(null);
     } catch (error) {
-      console.error('Error submitting quiz:', error);
-      setNotificationMessage("Có lỗi xảy ra khi lưu kết quả");
+      console.error('Error saving question:', error);
+      setNotificationMessage("Có lỗi khi lưu câu hỏi");
       setShowNotification(true);
     }
   };
 
+  const handleDeleteQuestion = async (index) => {
+    const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa câu hỏi này không?");
+    if (confirmDelete) {
+      try {
+        // Xóa câu hỏi khỏi state
+        const newQuestions = questions.filter((_, i) => i !== index);
+        setQuestions(newQuestions);
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      const submitButton = document.getElementById('submit-button');
-      submitButton.click();
+        // Cập nhật trong Firestore
+        if (auth.currentUser) {
+          const quizRef = doc(db, 'createdQuizzes', currentQuizId);
+          await setDoc(quizRef, { questions: newQuestions }, { merge: true });
+          setNotificationMessage("Đã xóa câu hỏi thành công");
+          setShowNotification(true);
+        }
+      } catch (error) {
+        console.error('Error deleting question:', error);
+        setNotificationMessage("Có lỗi khi xóa câu hỏi");
+        setShowNotification(true);
+      }
     }
   };
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-
-  const resetQuiz = async () => {
-    setQuestions([]);
-    setCurrentQuestion(0);
-    setSelectedOption(null);
-    setScore(0);
-    setQuizCompleted(false); // Đặt lại trạng thái quizCompleted
-  
-    const user = auth.currentUser;
-    if (user && currentQuizId) {
-      await deleteDoc(doc(db, 'quizProgress', `${user.uid}_${currentQuizId}`)); // Xóa tiến trình cũ
-    }
-  };
-
-  const isQuestionAnswered = (questionIndex) => {
-    const answer = userAnswers[questionIndex];
-    if (!answer) return false;
-    
-    const question = questions[questionIndex];
-    if (question.type === 'true-false') {
-      return question.options.every((_, optIdx) => answer[optIdx] !== undefined);
-    }
-    return true;
-  };
-
-  const scrollToQuestion = (questionIndex) => {
-    const questionElement = document.getElementById(`question-${questionIndex}`);
-    if (questionElement) {
-      questionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
-
-  if (quizCompleted) {
-    return (
-      <div className="quiz-room-page">
-        <div className="quiz-result">
-          <h2>Kết quả</h2>
-          <p>Điểm số của bạn: {score}/10</p>
-          
-          <button onClick={resetQuiz} className="home-button">
-            Làm lại
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="custom-quiz-room-page">
@@ -344,110 +123,229 @@ const CustomQuiz = () => {
             {quizzes.map((quiz, index) => (
               <div key={index} className="custom-quiz-item">
                 <h3>{quiz.title}</h3>
-                <button onClick={() => startQuiz(quiz)} className="custom-quiz-start-button">Bắt đầu</button>
-                <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">Xóa</button>
+                <button onClick={() => viewQuizDetails(quiz)} className="custom-quiz-start-button">
+                  Xem chi tiết
+                </button>
+                <button onClick={() => deleteQuiz(quiz.id)} className="custom-quiz-delete-button">
+                  Xóa
+                </button>
               </div>
             ))}
           </div>
         </div>
       ) : (
-        <>
-          <div className="custom-quiz-header">
-            <h2>Bài kiểm tra</h2>
-          </div>
-
-          <div className="custom-quiz-container">
-            <div className="custom-quiz-questions-section">
-              {questions.map((question, index) => (
-                <div key={index} className="custom-quiz-question-box" id={`question-${index}`}>
-                  <h3>Câu {index + 1}</h3>
-                  <p className="custom-quiz-question-text">{question.question}</p>
-
-                  {question.type === 'multiple-choice' && (
-                    <div className="custom-quiz-options-grid">
-                      {question.options.map((option, optionIndex) => (
-                        <button
-                          key={optionIndex}
-                          className={`custom-quiz-option-button ${userAnswers[index] === option ? 'selected' : ''}`}
-                          onClick={() => handleOptionClick(index, option)}
-                        >
-                          {String.fromCharCode(65 + optionIndex)}. {option}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {question.type === 'true-false' && (
-                    <div className="custom-quiz-true-false-options">
-                      {question.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="custom-quiz-true-false-option">
-                          <div className="custom-quiz-option-row">
-                            <span className="custom-quiz-option-text">{option}</span>
-                            <div className="custom-quiz-radio-group">
-                              <label className="custom-quiz-radio-label">
-                                <input
-                                  type="radio"
-                                  name={`q${index}-opt${optionIndex}`}
-                                  checked={userAnswers[index]?.[optionIndex] === true}
-                                  onChange={() => handleTrueFalseClick(index, optionIndex, true)}
-                                />
-                                <span className="custom-quiz-radio-text">Đúng</span>
-                              </label>
-                              <label className="custom-quiz-radio-label">
-                                <input
-                                  type="radio"
-                                  name={`q${index}-opt${optionIndex}`}
-                                  checked={userAnswers[index]?.[optionIndex] === false}
-                                  onChange={() => handleTrueFalseClick(index, optionIndex, false)}
-                                />
-                                <span className="custom-quiz-radio-text">Sai</span>
-                              </label>
-                            </div>
-                          </div>
+        <div className="custom-quiz-container">
+          <div className="custom-quiz-questions-section">
+            {questions.map((question, index) => (
+              <div key={index} className="custom-quiz-question-box" id={`question-${index}`}>
+                {editingQuestion === index ? (
+                  <div className="teacher-quiz-creator-edit-form">
+                    {editingData.type === 'multiple-choice' && (
+                      <>
+                        <div className="teacher-quiz-creator-edit-group">
+                          <label>Câu hỏi:</label>
+                          <textarea
+                            value={editingData.question}
+                            onChange={(e) => setEditingData({
+                              ...editingData,
+                              question: e.target.value
+                            })}
+                            className="teacher-quiz-creator-edit-textarea"
+                            placeholder="Nhập câu hỏi"
+                          />
                         </div>
-                      ))}
+                        <div className="teacher-quiz-creator-edit-options">
+                          {editingData.options.map((option, i) => (
+                            <div key={i} className="teacher-quiz-creator-edit-option-item">
+                              <label>{String.fromCharCode(65 + i)}:</label>
+                              <input
+                                type="text"
+                                value={option}
+                                onChange={(e) => {
+                                  const newOptions = [...editingData.options];
+                                  newOptions[i] = e.target.value;
+                                  setEditingData({
+                                    ...editingData,
+                                    options: newOptions
+                                  });
+                                }}
+                                className="teacher-quiz-creator-edit-input"
+                                placeholder={`Lựa chọn ${String.fromCharCode(65 + i)}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="teacher-quiz-creator-edit-group">
+                          <label>Đáp án đúng:</label>
+                          <select
+                            value={editingData.correctAnswer}
+                            onChange={(e) => setEditingData({
+                              ...editingData,
+                              correctAnswer: e.target.value
+                            })}
+                            className="teacher-quiz-creator-edit-select"
+                          >
+                            {editingData.options.map((option, i) => (
+                              <option key={i} value={option}>
+                                {String.fromCharCode(65 + i)}: {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    {editingData.type === 'true-false' && (
+                      <>
+                        <div className="teacher-quiz-creator-edit-group">
+                          <label>Câu dẫn:</label>
+                          <textarea
+                            value={editingData.question}
+                            onChange={(e) => setEditingData({
+                              ...editingData,
+                              question: e.target.value
+                            })}
+                            className="teacher-quiz-creator-edit-textarea"
+                            placeholder="Nhập câu dẫn"
+                          />
+                        </div>
+                        {editingData.options.map((option, i) => (
+                          <div key={i} className="teacher-quiz-creator-edit-option-item">
+                            <label>{String.fromCharCode(97 + i)}):</label>
+                            <input
+                              type="text"
+                              value={option}
+                              onChange={(e) => {
+                                const newOptions = [...editingData.options];
+                                newOptions[i] = e.target.value;
+                                setEditingData({
+                                  ...editingData,
+                                  options: newOptions
+                                });
+                              }}
+                              className="teacher-quiz-creator-edit-input"
+                              placeholder={`Phát biểu ${i + 1}`}
+                            />
+                            <select
+                              value={editingData.correctAnswer[i]}
+                              onChange={(e) => {
+                                const newCorrectAnswer = [...editingData.correctAnswer];
+                                newCorrectAnswer[i] = e.target.value === 'true';
+                                setEditingData({
+                                  ...editingData,
+                                  correctAnswer: newCorrectAnswer
+                                });
+                              }}
+                              className="teacher-quiz-creator-edit-select"
+                            >
+                              <option value="true">Đúng</option>
+                              <option value="false">Sai</option>
+                            </select>
+                          </div>
+                        ))}
+                      </>
+                    )}
+
+                    {editingData.type === 'short-answer' && (
+                      <>
+                        <div className="teacher-quiz-creator-edit-group">
+                          <label>Câu hỏi:</label>
+                          <textarea
+                            value={editingData.question}
+                            onChange={(e) => setEditingData({
+                              ...editingData,
+                              question: e.target.value
+                            })}
+                            className="teacher-quiz-creator-edit-textarea"
+                            placeholder="Nhập câu hỏi"
+                          />
+                        </div>
+                        <div className="teacher-quiz-creator-edit-group">
+                          <label>Đáp án:</label>
+                          <input
+                            type="text"
+                            value={editingData.correctAnswer}
+                            onChange={(e) => setEditingData({
+                              ...editingData,
+                              correctAnswer: e.target.value
+                            })}
+                            className="teacher-quiz-creator-edit-input"
+                            placeholder="Nhập đáp án"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="teacher-quiz-creator-edit-actions">
+                      <button 
+                        className="teacher-quiz-creator-edit-cancel"
+                        onClick={handleCancelEdit}
+                      >
+                        Hủy
+                      </button>
+                      <button 
+                        className="teacher-quiz-creator-edit-save"
+                        onClick={() => handleSaveEdit(index)}
+                      >
+                        Lưu
+                      </button>
                     </div>
-                  )}
-
-                  {question.type === 'short-answer' && (
-                    <input
-                      type="text"
-                      className="custom-quiz-short-answer-input"
-                      value={userAnswers[index] || ''}
-                      onChange={(e) => handleShortAnswerChange(index, e.target.value)}
-                      placeholder="Nhập câu trả lời..."
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="custom-quiz-question-navigator">
-              <h3>Danh sách câu hỏi</h3>
-              <div className="custom-quiz-question-grid">
-                {questions.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`custom-quiz-question-number ${isQuestionAnswered(index) ? 'answered' : ''}`}
-                    onClick={() => scrollToQuestion(index)}
-                  >
-                    {index + 1}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                ) : (
+                  <>
+                    <h3>Câu {index + 1}</h3>
+                    <p className="custom-quiz-question-text">{question.question}</p>
 
-          <div className="custom-quiz-submit-section">
-            <button
-              className="custom-quiz-submit-button"
-              onClick={handleSubmitQuiz}
-              disabled={!areAllQuestionsAnswered()}
-            >
-              Nộp bài
-            </button>
+                    {question.type === 'multiple-choice' && (
+                      <div className="custom-quiz-question-options">
+                        {question.options.map((option, i) => (
+                          <p key={i}>{String.fromCharCode(65 + i)}. {option}</p>
+                        ))}
+                        <p className="custom-quiz-correct-answer">
+                          <strong>Đáp án đúng:</strong> {question.correctAnswer}
+                        </p>
+                        <p><strong>Giải thích:</strong> {question.explain}</p>
+                      </div>
+                    )}
+
+                    {question.type === 'true-false' && (
+                      <div className="custom-quiz-question-options">
+                        {question.options.map((option, i) => (
+                          <p key={i}>
+                            {String.fromCharCode(97 + i)}) {option} - {question.correctAnswer[i] ? 'Đúng' : 'Sai'}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+
+                    {question.type === 'short-answer' && (
+                      <div className="custom-quiz-question-options">
+                        <p className="custom-quiz-correct-answer">
+                          <strong>Đáp án:</strong> {question.correctAnswer}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="teacher-quiz-creator-actions">
+                      <button 
+                        className="teacher-quiz-creator-edit-btn"
+                        onClick={() => handleEditClick(index, question)}
+                      >
+                        Sửa
+                      </button>
+                      <button 
+                        className="create-quiz-delete-question-btn"
+                        onClick={() => handleDeleteQuestion(index)}
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
-        </>
+        </div>
       )}
 
       {showNotification && (
